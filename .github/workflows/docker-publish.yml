@@ -14,7 +14,7 @@ jobs:
       run: echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build Docker image
-      run: docker build -t ghcr.io/abbabon/unity-mcp-sharp:latest .
+      run: docker build -f Server~/unity-mcp-sharp-server/Dockerfile -t ghcr.io/abbabon/unity-mcp-sharp:latest Server~/unity-mcp-sharp-server
 
     - name: Push Docker image
       run: docker push ghcr.io/abbabon/unity-mcp-sharp:latest
