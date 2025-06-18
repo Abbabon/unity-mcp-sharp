@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unity-mcp-sharp-server", "unity-mcp-sharp-server\unity-mcp-sharp-server.csproj", "{31553097-2736-46C2-998E-DCDD0C151935}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unity-mcp-sharp-orchestrator", "unity-mcp-sharp-orchestrator\unity-mcp-sharp-orchestrator.csproj", "{2689DD94-BCEC-4534-8A46-C0810AF295DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{31553097-2736-46C2-998E-DCDD0C151935}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31553097-2736-46C2-998E-DCDD0C151935}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31553097-2736-46C2-998E-DCDD0C151935}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31553097-2736-46C2-998E-DCDD0C151935}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
