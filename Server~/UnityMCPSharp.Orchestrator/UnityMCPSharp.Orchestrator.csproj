@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+    <PackageReference Include="CommandLineParser" Version="2.9.2-ci-210" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\unity-mcp-sharp-container-manager\UnityMcpSharp.ContainerManager.csproj" />
+    <ProjectReference Include="..\UnityMCPSharp.ContainerManager\UnityMcpSharp.ContainerManager.csproj" />
   </ItemGroup>
 
 </Project>
