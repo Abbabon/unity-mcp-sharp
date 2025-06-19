@@ -2,7 +2,7 @@ using Docker.DotNet;
 using Docker.DotNet.Models;
 using System.Runtime.InteropServices;
 
-namespace UnityMcp.ContainerManager;
+namespace UnityMcpSharp.ContainerManager;
 
 /// <summary>
 /// Provides static methods for managing Docker containers for Unity MCP Sharp
