@@ -1,0 +1,10 @@
+{
+  "name": "com.abbabon.unitymcpsharp",
+  "version": "1.0.0",
+  "displayName": "Unity MCP Sharp",
+  "description": "A Unity package for MCP Sharp integration.",
+  "unity": "2022.3",
+  "author": {
+    "name": "Amit Netanel"
+  }
+} 
