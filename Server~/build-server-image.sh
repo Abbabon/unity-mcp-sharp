@@ -33,7 +33,7 @@ cd "$(dirname "$0")"
 
 # Build the Docker image
 echo -e "${YELLOW}Running Docker build command...${NC}"
-docker build $NO_CACHE -t $IMAGE_NAME -f unity-mcp-sharp-server/Dockerfile .
+docker build $NO_CACHE -t $IMAGE_NAME -f UnityMCPSharp.Server/Dockerfile .
 
 # Check if the build was successful
 if [ $? -eq 0 ]; then
