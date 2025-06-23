@@ -1,9 +1,9 @@
-using UnityEngine;
+using Editor.Bridge.Services;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
-using UnityMcpSharp.Editor.Services;
 
-namespace UnityMcpSharp.Editor.Bridge
+namespace Editor.Bridge.UI
 {
     public class UnityMcpSharpWindow : EditorWindow
     {
@@ -138,13 +138,15 @@ namespace UnityMcpSharp.Editor.Bridge
 
         private void ConnectToServer()
         {
-            UnityBridgeService.Instance.Connect();
+            // TODO: implement connect
+            UnityBridgeServer.Instance.StartServer();
             UpdateStatusDisplay();
         }
 
         private void DisconnectFromServer()
         {
-            UnityBridgeService.Instance.Disconnect();
+            // TODO: implement disconnect
+            // UnityBridgeService.Instance.Disconnect();
             UpdateStatusDisplay();
         }
 
@@ -157,7 +159,8 @@ namespace UnityMcpSharp.Editor.Bridge
         {
             if (_statusLabel == null) return;
 
-            bool isConnected = UnityBridgeService.Instance.IsConnected;
+            // TODO: implement
+            bool isConnected = false;
             _statusLabel.text = isConnected ? _onlineText : _offlineText;
 
             // Update status indicator color
@@ -172,7 +175,8 @@ namespace UnityMcpSharp.Editor.Bridge
         private void OnDestroy()
         {
             EditorApplication.update -= UpdateStatus;
-            UnityBridgeService.Instance.Disconnect();
+            // TODO: implement disconnect
+            //UnityBridgeServer.Instance.Disconnect();
         }
     }
 }

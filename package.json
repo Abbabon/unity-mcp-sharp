@@ -4,6 +4,10 @@
   "displayName": "Unity MCP Sharp",
   "description": "A Unity package for MCP Sharp integration.",
   "unity": "2022.3",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.editorcoroutines": "1.0.0"
+  },
   "author": {
     "name": "Amit Netanel"
   }

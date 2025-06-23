@@ -1,5 +1,5 @@
 ﻿using CommandLine;
-using UnityMcpSharp.ContainerManager;
+using UnityMCPSharp.ContainerManager;
 
 namespace UnityMCPSharp.Orchestrator;
 
