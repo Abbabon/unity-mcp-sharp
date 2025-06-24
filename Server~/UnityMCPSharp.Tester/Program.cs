@@ -3,61 +3,62 @@ using UnityMCPSharp.Orchestrator;
 using UnityMCPSharp.Orchestrator.Models;
 using UnityMCPSharp.Orchestrator.Options;
 
-namespace UnityMCPSharp.Tester;
-
-public class Program
+namespace UnityMCPSharp.Tester
 {
-    public static int Main(string[] args)
+    public class Program
     {
-        Console.WriteLine("Unity MCP Sharp Container Orchestrator");
+        public static async Task<int> Main(string[] args)
+        {
+            Console.WriteLine("Unity MCP Sharp Container Orchestrator");
+            
+            return await Parser.Default.ParseArguments<OrchestratorStartOptions, OrchestratorStopOptions>(args)
+                .MapResult(
+                    async (OrchestratorStartOptions opts) => await HandleStartResult(await DockerContainerManager.RunStartAndReturnExitCode(opts), opts),
+                    async (OrchestratorStopOptions opts) => await HandleStopResult(await DockerContainerManager.RunStopAndReturnExitCode(opts)),
+                    _ => Task.FromResult(1));
+        }
         
-        return Parser.Default.ParseArguments<OrchestratorStartOptions, OrchestratorStopOptions>(args)
-            .MapResult(
-                (OrchestratorStartOptions opts) => HandleStartResult(DockerContainerManager.RunStartAndReturnExitCode(opts), opts),
-                (OrchestratorStopOptions opts) => HandleStopResult(DockerContainerManager.RunStopAndReturnExitCode(opts)),
-                errs => 1);
-    }
-    
-    private static int HandleStartResult(ContainerOperationResult result, OrchestratorStartOptions opts)
-    {
-        if (result.IsSuccess)
+        private static Task<int> HandleStartResult(ContainerOperationResult result, OrchestratorStartOptions opts)
         {
-            Console.WriteLine($"Container operation successful. Status: {result.Status}");
-            
-            if (result.Status == ContainerStatus.Started || result.Status == ContainerStatus.AlreadyRunning)
+            if (result.IsSuccess)
             {
-                Console.WriteLine($"MCP Server is accessible at http://localhost:{opts.ServerPort}");
-                Console.WriteLine($"Unity Bridge is available on port {opts.UnityBridgePort}");
+                Console.WriteLine($"Container operation successful. Status: {result.Status}");
+                
+                if (result.Status == ContainerStatus.Started || result.Status == ContainerStatus.AlreadyRunning)
+                {
+                    Console.WriteLine($"MCP Server is accessible at http://localhost:{opts.ServerPort}");
+                    Console.WriteLine($"Unity Bridge is available on port {opts.UnityBridgePort}");
+                }
+                
+                return Task.FromResult(0);
             }
-            
-            return 0;
-        }
-        else
-        {
-            Console.Error.WriteLine($"Container operation failed. Status: {result.Status}");
-            if (!string.IsNullOrEmpty(result.ErrorMessage))
+            else
             {
-                Console.Error.WriteLine($"Error: {result.ErrorMessage}");
+                Console.Error.WriteLine($"Container operation failed. Status: {result.Status}");
+                if (!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    Console.Error.WriteLine($"Error: {result.ErrorMessage}");
+                }
+                return Task.FromResult(1);
             }
-            return 1;
         }
-    }
-    
-    private static int HandleStopResult(ContainerOperationResult result)
-    {
-        if (result.IsSuccess)
+        
+        private static Task<int> HandleStopResult(ContainerOperationResult result)
         {
-            Console.WriteLine($"Container successfully stopped.");
-            return 0;
-        }
-        else
-        {
-            Console.Error.WriteLine($"Failed to stop container. Status: {result.Status}");
-            if (!string.IsNullOrEmpty(result.ErrorMessage))
+            if (result.IsSuccess)
             {
-                Console.Error.WriteLine($"Error: {result.ErrorMessage}");
+                Console.WriteLine($"Container successfully stopped.");
+                return Task.FromResult(0);
             }
-            return 1;
+            else
+            {
+                Console.Error.WriteLine($"Failed to stop container. Status: {result.Status}");
+                if (!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    Console.Error.WriteLine($"Error: {result.ErrorMessage}");
+                }
+                return Task.FromResult(1);
+            }
         }
     }
 }

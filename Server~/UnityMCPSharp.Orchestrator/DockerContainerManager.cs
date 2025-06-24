@@ -15,48 +15,49 @@ namespace UnityMCPSharp.Orchestrator
     /// </summary>
     public static class DockerContainerManager
     {
-        public static ContainerOperationResult RunStartAndReturnExitCode(OrchestratorStartOptions opts)
+        public static Task<ContainerOperationResult> RunStartAndReturnExitCode(OrchestratorStartOptions opts)
         {
             try
             {
-                var result = StartContainerAsync(
-                    opts.ContainerName, 
+                var result = StartContainerAsync
+                (
+                    opts.ContainerName,
                     opts.ImageName,
                     opts.ServerPort,
                     opts.UnityBridgePort,
                     null // No progress callback to avoid console logging
-                ).GetAwaiter().GetResult();
+                );
             
                 return result;
             }
             catch (Exception ex)
             {
-                return new ContainerOperationResult
+                return Task.FromResult(new ContainerOperationResult
                 {
                     Status = ContainerStatus.Error,
                     ErrorMessage = $"Error starting container: {ex.Message}"
-                };
+                });
             }
         }
 
-        public static ContainerOperationResult RunStopAndReturnExitCode(OrchestratorStopOptions opts)
+        public static Task<ContainerOperationResult> RunStopAndReturnExitCode(OrchestratorStopOptions opts)
         {
             try
             {
                 var result = StopContainerAsync(
                     opts.ContainerName,
                     null // No progress callback to avoid console logging
-                ).GetAwaiter().GetResult();
+                );
             
                 return result;
             }
             catch (Exception ex)
             {
-                return new ContainerOperationResult
+                return Task.FromResult(new ContainerOperationResult
                 {
                     Status = ContainerStatus.Error,
                     ErrorMessage = $"Error stopping container: {ex.Message}"
-                };
+                });
             }
         }
     

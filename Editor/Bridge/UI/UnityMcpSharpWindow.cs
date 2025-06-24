@@ -138,16 +138,15 @@ namespace Editor.Bridge.UI
 
         private void ConnectToServer()
         {
-            // TODO: implement connect
             UnityBridgeServer.Instance.StartServer();
-            UpdateStatusDisplay();
+            // UpdateStatusDisplay();
         }
 
         private void DisconnectFromServer()
         {
             // TODO: implement disconnect
-            // UnityBridgeService.Instance.Disconnect();
-            UpdateStatusDisplay();
+            UnityBridgeServer.Instance.StopServer();
+            // UpdateStatusDisplay();
         }
 
         private void UpdateStatus()

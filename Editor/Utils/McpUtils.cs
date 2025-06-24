@@ -12,14 +12,8 @@ namespace Editor.Utils
     /// <summary>
     /// Utility class for MCP configuration operations
     /// </summary>
-    /// <summary>
-    /// Utility class for MCP configuration and system operations
-    /// </summary>
     public static class McpUtils
     {
-        // Shared constants for container name
-        public const string DockerContainerName = "mcp-unity-server";
-
         /// <summary>
         /// Generates the MCP configuration JSON to setup the Unity MCP server in different AI Clients
         /// </summary>
@@ -267,8 +261,6 @@ namespace Editor.Utils
             return Path.Combine(basePath, "claude_desktop_config.json");
         }
         
-        
-        
         /// <summary>
         /// Gets the path to the Cursor config file based on the current OS
         /// </summary>
@@ -298,108 +290,6 @@ namespace Editor.Utils
             
             // Return the path to the mcp_config.json file
             return Path.Combine(basePath, "mcp.json");
-        }
-
-        /// <summary>
-        /// Runs a docker command in the specified working directory and
-        /// returns the standard output.
-        /// </summary>
-        /// <param name="arguments">Arguments to pass to docker.</param>
-        /// <param name="workingDirectory">The working directory where the docker command should be executed.</param>
-        /// <returns>The standard output of the docker command.</returns>
-        public static string RunDockerCommand(string arguments, string workingDirectory)
-        {
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
-            {
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            if (Application.platform == RuntimePlatform.WindowsEditor)
-            {
-                startInfo.FileName = "cmd.exe";
-                startInfo.Arguments = $"/c docker {arguments}";
-            }
-            else
-            {
-                startInfo.FileName = "/bin/bash";
-                startInfo.Arguments = $"-c -l \"docker {arguments}\"";
-            }
-
-            try
-            {
-                using (var process = System.Diagnostics.Process.Start(startInfo))
-                {
-                    if (process == null)
-                    {
-                        Debug.LogError($"[MCP Unity] Failed to start docker process with arguments: {arguments} in {workingDirectory}. Process object is null.");
-                        return string.Empty;
-                    }
-
-                    string output = process.StandardOutput.ReadToEnd();
-                    string error = process.StandardError.ReadToEnd();
-
-                    process.WaitForExit();
-
-                    if (process.ExitCode == 0)
-                    {
-                        Debug.Log($"[MCP Unity] docker {arguments} completed successfully in {workingDirectory}.\n{output}");
-                    }
-                    else
-                    {
-                        Debug.LogError($"[MCP Unity] docker {arguments} failed in {workingDirectory}. Exit Code: {process.ExitCode}. Error: {error}");
-                    }
-
-                    return output;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MCP Unity] Exception while running docker {arguments} in {workingDirectory}. Error: {ex.Message}");
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Builds the Docker image for the MCP Unity server.
-        /// </summary>
-        public static void BuildDockerImage(string workingDirectory)
-        {
-            RunDockerCommand("build -t mcp-unity-server .", workingDirectory);
-        }
-
-        /// <summary>
-        /// Checks if a docker container with the specified name is running.
-        /// </summary>
-        public static bool IsDockerContainerRunning(string workingDirectory, string containerName)
-        {
-            string output = RunDockerCommand($"ps --filter name={containerName} --format {{.Names}}", workingDirectory);
-            return output.Trim() == containerName;
-        }
-
-        /// <summary>
-        /// Starts the docker container if it is not already running.
-        /// </summary>
-        public static void StartDockerContainer(string workingDirectory, string containerName, int port)
-        {
-            if (!IsDockerContainerRunning(workingDirectory, containerName))
-            {
-                RunDockerCommand($"run -d --rm --name {containerName} -p {port}:{port} {DockerContainerName}", workingDirectory);
-            }
-        }
-
-        /// <summary>
-        /// Stops the docker container if it is running.
-        /// </summary>
-        public static void StopDockerContainer(string workingDirectory, string containerName)
-        {
-            if (IsDockerContainerRunning(workingDirectory, containerName))
-            {
-                RunDockerCommand($"stop {containerName}", workingDirectory);
-            }
         }
     }
 }

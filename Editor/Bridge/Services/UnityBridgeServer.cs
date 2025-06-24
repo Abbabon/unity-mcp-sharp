@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 using Editor.Bridge.Models;
 using Editor.Bridge.Tools;
 using Editor.Utils;
 using McpUnity.Resources;
 using UnityEditor;
 using WebSocketSharp.Server;
+using UnityMCPSharp.Orchestrator;
+using UnityMCPSharp.Orchestrator.Models;
+using UnityMCPSharp.Orchestrator.Options;
 
 namespace Editor.Bridge.Services
 {
@@ -25,25 +26,23 @@ namespace Editor.Bridge.Services
         private readonly Dictionary<string, McpResourceBase> _resources = new Dictionary<string, McpResourceBase>();
         
         private WebSocketServer _webSocketServer;
-        private CancellationTokenSource _cts;
         private TestRunnerService _testRunnerService;
         private ConsoleLogsService _consoleLogsService;
-        private Process _nodeProcess;
 
         /// <summary>
         /// Static constructor that gets called when Unity loads due to InitializeOnLoad attribute
         /// </summary>
         static UnityBridgeServer()
         {
-            // Initialize the singleton instance when Unity loads
-            // This ensures the bridge is available as soon as Unity starts
-            EditorApplication.quitting += Instance.StopServer;
-
-            // Auto-restart server after domain reload
-            if (UnityMcpSharpSettings.Instance.AutoStartServer)
-            {
-                Instance.StartServer();
-            }
+            // // Initialize the singleton instance when Unity loads
+            // // This ensures the bridge is available as soon as Unity starts
+            // EditorApplication.quitting += Instance.StopServer;
+            //
+            // // Auto-restart server after domain reload
+            // if (UnityMcpSharpSettings.Instance.AutoStartServer)
+            // {
+            //     Instance.StartServer();
+            // }
         }
         
         /// <summary>
@@ -84,7 +83,7 @@ namespace Editor.Bridge.Services
         /// <summary>
         /// Start the WebSocket Server to communicate with Node.js
         /// </summary>
-        public void StartServer()
+        public async Task StartServer()
         {
             if (IsListening) return;
 
@@ -96,10 +95,21 @@ namespace Editor.Bridge.Services
                 _webSocketServer.AddWebSocketService("/McpUnity", () => new UnityBridgeSocketHandler(this));
                 // Start the server
                 _webSocketServer.Start();
-                
-                StartDockerServer();
-                
+
                 UnityMcpSharpLogger.LogInfo($"WebSocket server started on port {UnityMcpSharpSettings.Instance.Port}");
+                
+                
+                var startOptions = new OrchestratorStartOptions();
+                var result = await Task.Run(() => DockerContainerManager.RunStartAndReturnExitCode(startOptions)); // OK if no Unity API is used
+                if (result.IsSuccess)
+                {
+                    UnityMcpSharpLogger.LogInfo($"WebSocket server and MCP server started on port {UnityMcpSharpSettings.Instance.Port}");
+                }
+                else
+                {
+                    UnityMcpSharpLogger.LogError($"WebSocket server started but MCP server failed to start. Error: {result.ErrorMessage}");
+                }
+                
             }
             catch (Exception ex)
             {
@@ -110,15 +120,27 @@ namespace Editor.Bridge.Services
         /// <summary>
         /// Stop the WebSocket server
         /// </summary>
-        public void StopServer()
+        public async Task StopServer()
         {
             if (!IsListening) return;
             
             try
             {
                 _webSocketServer?.Stop();
-                StopDockerServer();
                 UnityMcpSharpLogger.LogInfo("WebSocket server stopped");
+                
+                var stopOptions = new OrchestratorStopOptions();
+                var result = await Task.Run(() => DockerContainerManager.RunStopAndReturnExitCode(stopOptions));
+                if (result.IsSuccess)
+                {
+                    UnityMcpSharpLogger.LogInfo("MCP server stopped successfully");
+                }
+                else
+                {
+                    UnityMcpSharpLogger.LogError($"Failed to stop MCP server. Error: {result.ErrorMessage}");
+                }
+                
+                
             }
             catch (Exception ex)
             {
@@ -143,131 +165,6 @@ namespace Editor.Bridge.Services
         }
         
         /// <summary>
-        /// Build the Docker image and start the container if necessary.
-        /// </summary>
-        public void StartDockerServer()
-        {
-            var serverPath = McpUtils.GetServerPath();
-            if (string.IsNullOrEmpty(serverPath) || !Directory.Exists(serverPath))
-            {
-                UnityMcpSharpLogger.LogError($"Server path not found or invalid: {serverPath}. Cannot start Docker container.");
-                return;
-            }
-
-            // McpUtils.BuildDockerImage(serverPath);
-            McpUtils.StartDockerContainer(serverPath, McpUtils.DockerContainerName, UnityMcpSharpSettings.Instance.Port);
-        }
-
-        /// <summary>
-        /// Stop the Docker container if it is running.
-        /// </summary>
-        public void StopDockerServer()
-        {
-            var serverPath = McpUtils.GetServerPath();
-            McpUtils.StopDockerContainer(serverPath, McpUtils.DockerContainerName);
-        }
-
-        /// <summary>
-        /// Start the Node.js server locally using the installed Node runtime.
-        /// </summary>
-        public void StartLocalNodeServer()
-        {
-            string serverPath = McpUtils.GetServerPath();
-            if (string.IsNullOrEmpty(serverPath) || !Directory.Exists(serverPath))
-            {
-                UnityMcpSharpLogger.LogError($"Server path not found or invalid: {serverPath}. Cannot start Node.js server.");
-                return;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "node",
-                Arguments = Path.Combine(serverPath, "build", "index.js"),
-                WorkingDirectory = serverPath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            try
-            {
-                _nodeProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-                _nodeProcess.OutputDataReceived += OnNodeProcessOutputDataReceived;
-                _nodeProcess.ErrorDataReceived += OnNodeProcessErrorDataReceived;
-                _nodeProcess.Exited += OnNodeProcessExited;
-
-                if (!_nodeProcess.Start())
-                {
-                    UnityMcpSharpLogger.LogError("Failed to start Node.js process.");
-                    return;
-                }
-                _nodeProcess.BeginOutputReadLine();
-                _nodeProcess.BeginErrorReadLine();
-            }
-            catch (Exception ex)
-            {
-                UnityMcpSharpLogger.LogError($"Failed to start Node.js server: {ex.Message}");
-            }
-        }
-
-        private void OnNodeProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-            {
-                UnityMcpSharpLogger.LogInfo($"[Node.js] {e.Data}");   
-            }
-        }
-
-        private void OnNodeProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-            {
-                UnityMcpSharpLogger.LogError($"[Node.js] {e.Data}");   
-            }
-        }
-
-        private void OnNodeProcessExited(object sender, EventArgs e)
-        {
-            if (_nodeProcess != null)
-            {
-                UnityMcpSharpLogger.LogInfo($"Node.js process exited with code {_nodeProcess.ExitCode}");
-            }
-        }
-
-        [MenuItem("Tools/MCP Unity/Start Docker Server")]
-        private static void MenuStartDockerServer()
-        {
-            Instance.StartDockerServer();
-        }
-
-        /// <summary>
-        /// Stop the locally running Node.js server.
-        /// </summary>
-        public void StopLocalNodeServer()
-        {
-            if (_nodeProcess != null && !_nodeProcess.HasExited)
-            {
-                try
-                {
-                    _nodeProcess.Kill();
-                    _nodeProcess.WaitForExit();
-                }
-                catch (Exception ex)
-                {
-                    UnityMcpSharpLogger.LogError($"Error stopping Node.js server: {ex.Message}");
-                }
-            }
-            _nodeProcess = null;
-        }
-
-        [MenuItem("Tools/MCP Unity/Stop Docker Server")]
-        private static void MenuStopDockerServer()
-        {
-            Instance.StopDockerServer();
-        }
-        
-        /// <summary>
         /// Register all available tools
         /// </summary>
         private void RegisterTools()
@@ -277,34 +174,7 @@ namespace Editor.Bridge.Services
             var menuItemTool = new MenuItemTool();
             _tools.Add(menuItemTool.Name, menuItemTool);
             
-            //
-            // // Register SelectGameObjectTool
-            // SelectGameObjectTool selectGameObjectTool = new SelectGameObjectTool();
-            // _tools.Add(selectGameObjectTool.Name, selectGameObjectTool);
-            //
-            // // Register UpdateGameObjectTool
-            // UpdateGameObjectTool updateGameObjectTool = new UpdateGameObjectTool();
-            // _tools.Add(updateGameObjectTool.Name, updateGameObjectTool);
-            //
-            // // Register PackageManagerTool
-            // AddPackageTool addPackageTool = new AddPackageTool();
-            // _tools.Add(addPackageTool.Name, addPackageTool);
-            //
-            // // Register RunTestsTool
-            // RunTestsTool runTestsTool = new RunTestsTool(_testRunnerService);
-            // _tools.Add(runTestsTool.Name, runTestsTool);
-            //
-            // // Register SendConsoleLogTool
-            // SendConsoleLogTool sendConsoleLogTool = new SendConsoleLogTool();
-            // _tools.Add(sendConsoleLogTool.Name, sendConsoleLogTool);
-            //
-            // // Register UpdateComponentTool
-            // UpdateComponentTool updateComponentTool = new UpdateComponentTool();
-            // _tools.Add(updateComponentTool.Name, updateComponentTool);
-            //
-            // // Register AddAssetToSceneTool
-            // AddAssetToSceneTool addAssetToSceneTool = new AddAssetToSceneTool();
-            // _tools.Add(addAssetToSceneTool.Name, addAssetToSceneTool);
+            // // Register other tools as needed
         }
         
         /// <summary>
@@ -316,29 +186,7 @@ namespace Editor.Bridge.Services
             var getMenuItemsResource = new GetMenuItemsResource();
             _resources.Add(getMenuItemsResource.Name, getMenuItemsResource);
             
-            // // Register GetConsoleLogsResource
-            // GetConsoleLogsResource getConsoleLogsResource = new GetConsoleLogsResource(_consoleLogsService);
-            // _resources.Add(getConsoleLogsResource.Name, getConsoleLogsResource);
-            //
-            // // Register GetScenesHierarchyResource
-            // GetScenesHierarchyResource getScenesHierarchyResource = new GetScenesHierarchyResource();
-            // _resources.Add(getScenesHierarchyResource.Name, getScenesHierarchyResource);
-            //
-            // // Register GetPackagesResource
-            // GetPackagesResource getPackagesResource = new GetPackagesResource();
-            // _resources.Add(getPackagesResource.Name, getPackagesResource);
-            //
-            // // Register GetAssetsResource
-            // GetAssetsResource getAssetsResource = new GetAssetsResource();
-            // _resources.Add(getAssetsResource.Name, getAssetsResource);
-            //
-            // // Register GetTestsResource
-            // GetTestsResource getTestsResource = new GetTestsResource(_testRunnerService);
-            // _resources.Add(getTestsResource.Name, getTestsResource);
-            //
-            // // Register GetGameObjectResource
-            // GetGameObjectResource getGameObjectResource = new GetGameObjectResource();
-            // _resources.Add(getGameObjectResource.Name, getGameObjectResource);
+            // // Register other resources as needed
         }
         
         /// <summary>
