@@ -13,8 +13,8 @@ show_usage() {
     echo "Options:"
     echo "  --release    Build in Release configuration (default is Debug)"
     echo ""
-    echo "This script builds the UnityMCPSharp.Orchestrator project and copies the DLL"
-    echo "to the Unity Editor Lib folder at ../Editor/Editor/Lib"
+    echo "This script builds the UnityMCPSharp.Orchestrator project with its dependencies"
+    echo "and copies them to the Unity Editor Lib folder at ../Editor/Lib"
 }
 
 # Parse command line arguments
@@ -36,6 +36,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ORCHESTRATOR_DIR="$SCRIPT_DIR/UnityMCPSharp.Orchestrator"
 DESTINATION_DIR="$SCRIPT_DIR/../Editor/Lib"
+TEMP_DIR="$SCRIPT_DIR/temp_publish"
 
 # Check if the Orchestrator project exists
 if [ ! -d "$ORCHESTRATOR_DIR" ]; then
@@ -46,35 +47,56 @@ fi
 # Create the destination directory if it doesn't exist
 mkdir -p "$DESTINATION_DIR"
 
-echo "Building UnityMCPSharp.Orchestrator in $BUILD_CONFIG configuration..."
-dotnet build "$ORCHESTRATOR_DIR/UnityMCPSharp.Orchestrator.csproj" -c "$BUILD_CONFIG"
+# Clean up any previous temp directory
+rm -rf "$TEMP_DIR"
+mkdir -p "$TEMP_DIR"
 
-# Get the output directory and DLL path
-DLL_PATH="$ORCHESTRATOR_DIR/bin/$BUILD_CONFIG/net9.0/UnityMCPSharp.Orchestrator.dll"
+echo "Publishing UnityMCPSharp.Orchestrator in $BUILD_CONFIG configuration..."
+# Using dotnet publish to collect all dependencies in one place
+dotnet publish "$ORCHESTRATOR_DIR/UnityMCPSharp.Orchestrator.csproj" -c "$BUILD_CONFIG" -o "$TEMP_DIR" --self-contained false
 
-if [ ! -f "$DLL_PATH" ]; then
-    echo "Error: Built DLL not found at $DLL_PATH"
+if [ ! -d "$TEMP_DIR" ]; then
+    echo "Error: Publish directory not found at $TEMP_DIR"
     exit 1
 fi
 
-# Copy the DLL to the destination
-echo "Copying DLL to $DESTINATION_DIR..."
-cp "$DLL_PATH" "$DESTINATION_DIR/"
+echo "Copying DLLs to $DESTINATION_DIR..."
+# Clean destination directory of DLLs but keep .meta files
+if [ -d "$DESTINATION_DIR" ]; then
+    rm -f "$DESTINATION_DIR"/*.dll
+fi
 
-# Copy dependent DLLs if needed
-DEPENDENCIES_DIR="$ORCHESTRATOR_DIR/bin/$BUILD_CONFIG/net9.0"
-echo "Copying dependencies..."
-cp "$DEPENDENCIES_DIR/Docker.DotNet.dll" "$DESTINATION_DIR/" 2>/dev/null || :
-cp "$DEPENDENCIES_DIR/Newtonsoft.Json.dll" "$DESTINATION_DIR/" 2>/dev/null || :
-cp "$DEPENDENCIES_DIR/CommandLine.dll" "$DESTINATION_DIR/" 2>/dev/null || :
-cp "$DEPENDENCIES_DIR/System.Runtime.InteropServices.RuntimeInformation.dll" "$DESTINATION_DIR/" 2>/dev/null || :
+# Copy required DLLs to destination
+cp "$TEMP_DIR/UnityMCPSharp.Orchestrator.dll" "$DESTINATION_DIR/"
+cp "$TEMP_DIR/CommandLine.dll" "$DESTINATION_DIR/" 2>/dev/null || echo "Warning: CommandLine.dll not found"
+cp "$TEMP_DIR/Docker.DotNet.dll" "$DESTINATION_DIR/" 2>/dev/null || echo "Warning: Docker.DotNet.dll not found"
+cp "$TEMP_DIR/Newtonsoft.Json.dll" "$DESTINATION_DIR/" 2>/dev/null || echo "Warning: Newtonsoft.Json.dll not found"
 
-# Check if the copy was successful
-if [ -f "$DESTINATION_DIR/UnityMCPSharp.Orchestrator.dll" ]; then
-    echo "Success! Orchestrator DLL has been built and copied to:"
-    echo "$DESTINATION_DIR/UnityMCPSharp.Orchestrator.dll"
-    exit 0
-else
-    echo "Error: Failed to copy the DLL to the destination directory."
+# List what was copied
+echo -e "\nFiles copied to $DESTINATION_DIR:"
+ls -l "$DESTINATION_DIR"
+
+# Verify critical dependencies
+echo -e "\nVerifying critical dependencies..."
+MISSING=0
+for critical in "UnityMCPSharp.Orchestrator.dll" "CommandLine.dll" "Docker.DotNet.dll"; do
+    if [ ! -f "$DESTINATION_DIR/$critical" ]; then
+        echo "ERROR: Critical file $critical is missing!"
+        MISSING=1
+    else
+        echo "✓ $critical"
+    fi
+done
+
+# Clean up temp directory
+echo "Cleaning up temporary files..."
+rm -rf "$TEMP_DIR"
+
+if [ $MISSING -eq 1 ]; then
+    echo -e "\nERROR: Some critical dependencies are missing. The build may not work in Unity."
     exit 1
+else
+    echo -e "\nSuccess! All critical dependencies copied successfully."
+    echo "Orchestrator DLL and dependencies have been built and copied to:"
+    echo "$DESTINATION_DIR"
 fi

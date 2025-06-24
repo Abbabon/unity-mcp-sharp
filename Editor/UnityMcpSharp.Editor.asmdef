@@ -12,7 +12,8 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "websocket-sharp.dll",
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "UnityMCPSharp.Orchestrator.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
