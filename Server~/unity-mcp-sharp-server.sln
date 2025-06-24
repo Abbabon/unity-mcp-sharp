@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityMCPSharp.Server", "Uni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityMCPSharp.Orchestrator", "UnityMCPSharp.Orchestrator\UnityMCPSharp.Orchestrator.csproj", "{2689DD94-BCEC-4534-8A46-C0810AF295DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityMcpSharp.ContainerManager", "UnityMCPSharp.ContainerManager\UnityMcpSharp.ContainerManager.csproj", "{8EE40A06-FB8F-4761-9CE7-D5BA3B720A48}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityMCPSharp.Tester", "UnityMCPSharp.Tester\UnityMCPSharp.Tester.csproj", "{4335397E-D668-4757-8F9E-ECA890458FF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,9 +26,9 @@ Global
 		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2689DD94-BCEC-4534-8A46-C0810AF295DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8EE40A06-FB8F-4761-9CE7-D5BA3B720A48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8EE40A06-FB8F-4761-9CE7-D5BA3B720A48}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8EE40A06-FB8F-4761-9CE7-D5BA3B720A48}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8EE40A06-FB8F-4761-9CE7-D5BA3B720A48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4335397E-D668-4757-8F9E-ECA890458FF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4335397E-D668-4757-8F9E-ECA890458FF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4335397E-D668-4757-8F9E-ECA890458FF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4335397E-D668-4757-8F9E-ECA890458FF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

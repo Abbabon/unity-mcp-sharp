@@ -1,18 +1,66 @@
+using System.Runtime.InteropServices;
 using Docker.DotNet;
 using Docker.DotNet.Models;
-using System.Runtime.InteropServices;
+using UnityMCPSharp.Orchestrator.Models;
+using UnityMCPSharp.Orchestrator.Options;
+using ContainerStatus = UnityMCPSharp.Orchestrator.Models.ContainerStatus;
 
-namespace UnityMCPSharp.ContainerManager;
+namespace UnityMCPSharp.Orchestrator;
 
 /// <summary>
 /// Provides static methods for managing Docker containers for Unity MCP Sharp
 /// </summary>
 public static class DockerContainerManager
 {
+    public static ContainerOperationResult RunStartAndReturnExitCode(OrchestratorStartOptions opts)
+    {
+        try
+        {
+            var result = StartContainerAsync(
+                opts.ContainerName, 
+                opts.ImageName,
+                opts.ServerPort,
+                opts.UnityBridgePort,
+                null // No progress callback to avoid console logging
+            ).GetAwaiter().GetResult();
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new ContainerOperationResult
+            {
+                Status = ContainerStatus.Error,
+                ErrorMessage = $"Error starting container: {ex.Message}"
+            };
+        }
+    }
+
+    public static ContainerOperationResult RunStopAndReturnExitCode(OrchestratorStopOptions opts)
+    {
+        try
+        {
+            var result = StopContainerAsync(
+                opts.ContainerName,
+                null // No progress callback to avoid console logging
+            ).GetAwaiter().GetResult();
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new ContainerOperationResult
+            {
+                Status = ContainerStatus.Error,
+                ErrorMessage = $"Error stopping container: {ex.Message}"
+            };
+        }
+    }
+    
     /// <summary>
     /// Creates a Docker client appropriate for the current operating system
     /// </summary>
-    public static DockerClient CreateDockerClient()
+    private static DockerClient CreateDockerClient()
     {
         string dockerApiUri;
         
@@ -39,12 +87,14 @@ public static class DockerContainerManager
     /// </summary>
     /// <param name="containerName">Name for the container</param>
     /// <param name="imageName">Docker image to use</param>
-    /// <param name="serverPort">Port to expose the server on</param>
+    /// <param name="serverPort">Port to expose the MCP server on</param>
+    /// <param name="unityBridgePort">Port to expose the Unity Bridge on</param>
     /// <param name="progressCallback">Optional callback for progress updates</param>
-    public static async Task<ContainerOperationResult> StartContainerAsync(
+    private static async Task<ContainerOperationResult> StartContainerAsync(
         string containerName, 
         string imageName,
         int serverPort = 3001,
+        int unityBridgePort = 8090,
         Action<string>? progressCallback = null)
     {
         var result = new ContainerOperationResult();
@@ -101,37 +151,65 @@ public static class DockerContainerManager
                 result.Status = ContainerStatus.Started;
                 return result;
             }
-
+            
             // Create and start a new container
-            LogProgress(progressCallback, $"Creating container {containerName}...");
+            LogProgress(progressCallback, $"Creating new container {containerName}...");
+            
+            // Port bindings for both MCP and UnityBridge ports
+            var portBindings = new Dictionary<string, IList<PortBinding>>
+            {
+                {
+                    $"{serverPort}/tcp",
+                    new List<PortBinding>
+                    {
+                        new PortBinding
+                        {
+                            HostIP = "0.0.0.0",
+                            HostPort = serverPort.ToString()
+                        }
+                    }
+                },
+                {
+                    $"{unityBridgePort}/tcp",
+                    new List<PortBinding>
+                    {
+                        new PortBinding
+                        {
+                            HostIP = "0.0.0.0",
+                            HostPort = unityBridgePort.ToString()
+                        }
+                    }
+                }
+            };
             
             var createResponse = await dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
             {
                 Name = containerName,
                 Image = imageName,
-                ExposedPorts = new Dictionary<string, EmptyStruct> 
-                { 
-                    [$"{serverPort}/tcp"] = new EmptyStruct() 
+                ExposedPorts = new Dictionary<string, EmptyStruct>
+                {
+                    { $"{serverPort}/tcp", default },
+                    { $"{unityBridgePort}/tcp", default }
                 },
                 HostConfig = new HostConfig
                 {
-                    PortBindings = new Dictionary<string, IList<PortBinding>>
-                    {
-                        [$"{serverPort}/tcp"] = new List<PortBinding>
-                        {
-                            new PortBinding { HostPort = serverPort.ToString() }
-                        }
-                    }
+                    PortBindings = portBindings,
+                    PublishAllPorts = false
+                },
+                Env = new List<string>
+                {
+                    $"SERVER_PORT={serverPort}",
+                    $"UNITY_BRIDGE_PORT={unityBridgePort}"
                 }
             });
-
+            
             result.ContainerId = createResponse.ID;
-
+            
             LogProgress(progressCallback, $"Starting container {containerName}...");
             await dockerClient.Containers.StartContainerAsync(createResponse.ID, new ContainerStartParameters());
             
-            LogProgress(progressCallback, $"Container {containerName} started successfully");
-            result.Status = ContainerStatus.Created;
+            LogProgress(progressCallback, $"Container {containerName} started successfully. MCP Server at port {serverPort}, Unity Bridge at port {unityBridgePort}");
+            result.Status = ContainerStatus.Started;
             return result;
         }
         catch (Exception ex)
@@ -148,7 +226,7 @@ public static class DockerContainerManager
     /// </summary>
     /// <param name="containerName">Name of the container to stop</param>
     /// <param name="progressCallback">Optional callback for progress updates</param>
-    public static async Task<ContainerOperationResult> StopContainerAsync(
+    private static async Task<ContainerOperationResult> StopContainerAsync(
         string containerName, 
         Action<string>? progressCallback = null)
     {
@@ -208,7 +286,7 @@ public static class DockerContainerManager
     /// Gets information about a container
     /// </summary>
     /// <param name="containerName">Name of the container</param>
-    public static async Task<ContainerInfo?> GetContainerInfoAsync(string containerName)
+    private static async Task<ContainerInfo?> GetContainerInfoAsync(string containerName)
     {
         try
         {
@@ -278,46 +356,4 @@ public static class DockerContainerManager
     {
         progressCallback?.Invoke(message);
     }
-}
-
-/// <summary>
-/// Represents the status of a container operation
-/// </summary>
-public enum ContainerStatus
-{
-    Created,
-    Started,
-    AlreadyRunning,
-    Stopped,
-    NotRunning,
-    NotFound,
-    Error
-}
-
-/// <summary>
-/// Represents the result of a container operation
-/// </summary>
-public class ContainerOperationResult
-{
-    public ContainerStatus Status { get; set; }
-    public string? ContainerId { get; set; }
-    public string? ErrorMessage { get; set; }
-    
-    public bool IsSuccess => 
-        Status == ContainerStatus.Created || 
-        Status == ContainerStatus.Started || 
-        Status == ContainerStatus.AlreadyRunning ||
-        Status == ContainerStatus.Stopped;
-}
-
-/// <summary>
-/// Contains information about a Docker container
-/// </summary>
-public class ContainerInfo
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Image { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public string State { get; set; } = string.Empty;
 }

@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using WebSocketSharp;
+using WebSocketSharp; 
 using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
 namespace UnityMCPSharp.Server
@@ -8,7 +8,7 @@ namespace UnityMCPSharp.Server
     public class UnityBridgeClient : IDisposable
     {
         private const string DEFAULT_CLIENT_NAME = "UnityMCPSharpBridgeClient";
-        private static readonly Lazy<UnityBridgeClient> _instance = new(() => new UnityBridgeClient());
+        private static readonly Lazy<UnityBridgeClient> _instance = new Lazy<UnityBridgeClient>(() => new UnityBridgeClient());
         
         public static UnityBridgeClient Instance => _instance.Value;
         
@@ -25,14 +25,21 @@ namespace UnityMCPSharp.Server
         /// <summary>
         /// Private constructor for the singleton pattern
         /// </summary>
-        private UnityBridgeClient(string host = "host.docker.internal", int port = 8090, string path = "/McpUnity", int timeoutSeconds = 10)
+        private UnityBridgeClient(string host = "host.docker.internal", int timeoutSeconds = 10)
         {
             _clientName = DEFAULT_CLIENT_NAME;
-            _uri = new Uri($"ws://{host}:{port}{path}");
+            
+            // Get UnityBridge port from environment variable or use default
+            string portEnv = Environment.GetEnvironmentVariable("UNITY_BRIDGE_PORT");
+            int port = string.IsNullOrEmpty(portEnv) || !int.TryParse(portEnv, out int parsedPort) ? 8090 : parsedPort;
+            
+            _uri = new Uri($"ws://{host}:{port}/McpUnity");
             _requestTimeout = TimeSpan.FromSeconds(timeoutSeconds);
             
             // Initialize the WebSocket but don't connect yet
             InitializeWebSocket();
+            
+            Console.WriteLine($"UnityBridgeClient initialized with URI: {_uri}");
         }
 
         private void InitializeWebSocket()

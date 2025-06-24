@@ -1,8 +1,9 @@
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
-# Use environment variable for port configuration
+# Use environment variables for port configuration
 ENV SERVER_PORT=3001
-EXPOSE ${SERVER_PORT}
+ENV UNITY_BRIDGE_PORT=8090
+EXPOSE ${SERVER_PORT} ${UNITY_BRIDGE_PORT}
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
