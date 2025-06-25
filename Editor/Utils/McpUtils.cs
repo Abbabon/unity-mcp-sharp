@@ -26,7 +26,7 @@ namespace Editor.Utils
                         { "mcp-unity", new Dictionary<string, object>
                             {
                                 { "command", "node" },
-                                { "args", new[] { Path.Combine(GetServerPath(), "build", "index.js") } }
+                                { "args", new[] { Path.Combine("build", "index.js") } }
                             }
                         }
                     }
@@ -57,50 +57,6 @@ namespace Editor.Utils
             }
             
             return stringWriter.ToString().Replace("\\", "/").Replace("//", "/");
-        }
-
-        /// <summary>
-        /// Gets the absolute path to the Server directory containing package.json (root server dir).
-        /// Works whether MCP Unity is installed via Package Manager or directly in the Assets folder
-        /// </summary>
-        public static string GetServerPath()
-        {
-            // First, try to find the package info via Package Manager
-            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{UnityMcpSharpSettings.PackageName}");
-                
-            if (packageInfo != null && !string.IsNullOrEmpty(packageInfo.resolvedPath))
-            {
-                return Path.Combine(packageInfo.resolvedPath, "Server~");
-            }
-            
-            var assets = AssetDatabase.FindAssets("tsconfig");
-
-            if(assets.Length == 1)
-            {
-                // Convert relative path to absolute path
-                var relativePath = AssetDatabase.GUIDToAssetPath(assets[0]);
-                return Path.GetFullPath(Path.Combine(Application.dataPath, "..", relativePath));
-            }
-            if (assets.Length > 0)
-            {
-                foreach (var assetJson in assets)
-                {
-                    string relativePath = AssetDatabase.GUIDToAssetPath(assetJson);
-                    string fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", relativePath));
-                    
-                    if(Path.GetFileName(Path.GetDirectoryName(fullPath)) == "Server~")
-                    {
-                        return Path.GetDirectoryName(fullPath);
-                    }
-                }
-            }
-            
-            // If we get here, we couldn't find the server path
-            var errorString = "[MCP Unity] Could not locate Server directory. Please check the installation of the MCP Unity package.";
-
-            Debug.LogError(errorString);
-
-            return errorString;
         }
 
         /// <summary>

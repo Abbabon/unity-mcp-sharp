@@ -140,73 +140,196 @@ namespace UnityMCPSharp.Server
             }
         }
 
-        public Task<JsonElement> SendRequestAsync(string method, object @params)
+        public async Task<JsonElement> SendRequestAsync(string method, object @params)
         {
             var id = Guid.NewGuid().ToString();
+            Console.WriteLine($"[UnityBridgeClient] SendRequestAsync called - Method: {method}, ID: {id}");
             var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pendingRequests[id] = tcs;
-
-            var request = new
+            
+            try
             {
-                jsonrpc = "2.0",
-                id,
-                method,
-                @params
-            };
-            var json = JsonSerializer.Serialize(request);
-            EnsureConnected();
-            _webSocket.Send(json);
-
-            var cts = new CancellationTokenSource(_requestTimeout);
-            cts.Token.Register(() => {
-                if (_pendingRequests.TryRemove(id, out var timedOutTcs))
+                // Add to pending requests only after we've successfully ensured connection
+                // to avoid orphaned tasks
+                
+                var request = new
                 {
-                    timedOutTcs.TrySetException(new TimeoutException($"Request {id} timed out after {_requestTimeout.TotalSeconds} seconds"));
-                }
-            });
-            return tcs.Task;
+                    jsonrpc = "2.0",
+                    id,
+                    method,
+                    @params
+                };
+                var json = JsonSerializer.Serialize(request);
+                Console.WriteLine($"[UnityBridgeClient] Request payload: {json}");
+                
+                // Wait for connection to be established
+                Console.WriteLine("[UnityBridgeClient] Ensuring WebSocket connection...");
+                await EnsureConnected();
+                Console.WriteLine("[UnityBridgeClient] WebSocket connection confirmed");
+                
+                // Only add to pending requests once we know the connection is established
+                _pendingRequests[id] = tcs;
+                Console.WriteLine($"[UnityBridgeClient] Added request {id} to pending requests");
+                
+                _webSocket.Send(json);
+                Console.WriteLine($"[UnityBridgeClient] Sent request {id} to WebSocket");
+                
+                var cts = new CancellationTokenSource(_requestTimeout);
+                cts.Token.Register(() => {
+                    if (_pendingRequests.TryRemove(id, out var timedOutTcs))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"[UnityBridgeClient] Request {id} timed out after {_requestTimeout.TotalSeconds} seconds");
+                        Console.ResetColor();
+                        timedOutTcs.TrySetException(new TimeoutException($"Request {id} timed out after {_requestTimeout.TotalSeconds} seconds"));
+                    }
+                });
+                
+                Console.WriteLine($"[UnityBridgeClient] Awaiting response for request {id}");
+                return await tcs.Task;
+            }
+            catch (Exception ex)
+            {
+                // If we encounter any exception before adding to pending requests
+                // or while trying to send, complete the task with the exception
+                _pendingRequests.TryRemove(id, out _); // Remove if it was added
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"[UnityBridgeClient] Error in SendRequestAsync: {ex.Message}");
+                Console.WriteLine($"[UnityBridgeClient] {ex.StackTrace}");
+                Console.ResetColor();
+                tcs.TrySetException(ex);
+                throw;
+            }
         }
 
         private async Task EnsureConnected()
         {
             if (_isDisposed)
+            {
+                Console.WriteLine("[UnityBridgeClient] EnsureConnected called on disposed client");
                 throw new ObjectDisposedException(nameof(UnityBridgeClient));
+            }
                 
             if (_webSocket == null || !_webSocket.IsAlive)
             {
+                Console.WriteLine("[UnityBridgeClient] WebSocket not connected, initiating connection");
                 await ConnectAsync(_clientName).ConfigureAwait(false);
+                Console.WriteLine("[UnityBridgeClient] WebSocket connection established");
+            }
+            else
+            {
+                Console.WriteLine("[UnityBridgeClient] WebSocket already connected");
             }
         }
 
         private void HandleMessage(string message)
         {
+            Console.WriteLine("[UnityBridgeClient] Received WebSocket message");
+            
             try
             {
-                using var doc = JsonDocument.Parse(message);
-                var root = doc.RootElement;
-                if (root.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.String)
+                // Debug: Print the entire message received
+                Console.WriteLine($"[UnityBridgeClient] WebSocket received message: {message}");
+                
+                // Store the message as a string to keep it alive beyond JsonDocument disposal
+                string resultJson = null;
+                string id = null;
+                bool hasError = false;
+                string errorMessage = null;
+                
+                // Process the message inside a using block to handle the JsonDocument lifecycle
+                Console.WriteLine("[UnityBridgeClient] Parsing received message");
+                using (var doc = JsonDocument.Parse(message))
                 {
-                    var id = idProp.GetString();
-                    if (_pendingRequests.TryRemove(id, out var tcs))
+                    var root = doc.RootElement;
+                    Console.WriteLine("[UnityBridgeClient] Message parsed successfully");
+                    
+                    if (root.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.String)
                     {
+                        id = idProp.GetString();
+                        Console.WriteLine($"[UnityBridgeClient] Message ID: {id}");
+                        
+                        // Check for error
                         if (root.TryGetProperty("error", out var errorProp))
                         {
-                            tcs.SetException(new Exception(errorProp.ToString()));
+                            hasError = true;
+                            errorMessage = errorProp.ToString();
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"[UnityBridgeClient] Error in response: {errorMessage}");
+                            Console.ResetColor();
                         }
+                        // Extract the result as a string
                         else if (root.TryGetProperty("result", out var resultProp))
                         {
-                            tcs.SetResult(resultProp);
+                            resultJson = resultProp.GetRawText();
+                            Console.WriteLine("[UnityBridgeClient] Result extracted successfully");
                         }
                         else
                         {
-                            tcs.SetException(new Exception("Malformed response: missing result/error"));
+                            hasError = true;
+                            errorMessage = "Malformed response: missing result/error";
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"[UnityBridgeClient] {errorMessage}");
+                            Console.ResetColor();
                         }
                     }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("[UnityBridgeClient] Message has no ID property or it's not a string");
+                        Console.ResetColor();
+                    }
+                }
+                Console.WriteLine("[UnityBridgeClient] Original JsonDocument disposed");
+                
+                // Now safely process the extracted data outside the using block
+                if (id != null && _pendingRequests.TryRemove(id, out var tcs))
+                {
+                    Console.WriteLine($"[UnityBridgeClient] Found pending request for ID: {id}");
+                    
+                    if (hasError)
+                    {
+                        Console.WriteLine($"[UnityBridgeClient] Completing request {id} with error");
+                        tcs.SetException(new Exception(errorMessage));
+                    }
+                    else if (resultJson != null)
+                    {
+                        Console.WriteLine($"[UnityBridgeClient] Creating new JsonDocument for result of request {id}");
+                        try
+                        {
+                            // Parse the result JSON into a new JsonDocument that will be owned by the caller
+                            var newDoc = JsonDocument.Parse(resultJson);
+                            Console.WriteLine($"[UnityBridgeClient] Setting result for request {id}");
+                            var clonedElement = newDoc.RootElement.Clone();
+                            tcs.SetResult(clonedElement);
+                            Console.WriteLine($"[UnityBridgeClient] Successfully set result for request {id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"[UnityBridgeClient] Error creating result JsonDocument: {ex.Message}");
+                            Console.ResetColor();
+                            tcs.SetException(ex);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[UnityBridgeClient] No result JSON for request {id}");
+                        tcs.SetException(new Exception("Malformed response: missing result/error"));
+                    }
+                }
+                else if (id != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"[UnityBridgeClient] No pending request found for ID: {id}");
+                    Console.ResetColor();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Optionally log
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"[UnityBridgeClient] Error handling message: {ex.Message}");
+                Console.WriteLine($"[UnityBridgeClient] Stack trace: {ex.StackTrace}");
+                Console.ResetColor();
             }
         }
 
