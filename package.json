@@ -1,0 +1,32 @@
+{
+  "name": "com.unitymcpsharp.unity-mcp",
+  "version": "0.2.0",
+  "displayName": "Unity MCP Server",
+  "description": "Model Context Protocol (MCP) server for Unity Editor integration with AI assistants. Dual-transport server supporting stdio for LLMs and WebSocket for Unity. Enables console logs, compilation, and scene manipulation.",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/Abbabon/unity-mcp-sharp#readme",
+  "changelogUrl": "https://github.com/Abbabon/unity-mcp-sharp/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/Abbabon/unity-mcp-sharp/blob/main/LICENSE",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
+  "keywords": [
+    "mcp",
+    "ai",
+    "llm",
+    "editor",
+    "automation",
+    "websocket",
+    "docker"
+  ],
+  "author": {
+    "name": "AmitN",
+    "email": "netanel.amit@gmail.com",
+    "url": "https://github.com/Abbabon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Abbabon/unity-mcp-sharp.git"
+  },
+  "samples": []
+}

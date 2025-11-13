@@ -1,0 +1,47 @@
+name: Build and Test Server
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Server~/**'
+      - '.github/workflows/build-server.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'Server~/**'
+      - '.github/workflows/build-server.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server~
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    - name: Publish
+      run: dotnet publish --no-build --configuration Release --output ./publish
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: server-build
+        path: Server~/publish/
+        retention-days: 7

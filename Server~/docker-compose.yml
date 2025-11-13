@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  unity-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: unity-mcp-server:latest
+    container_name: unity-mcp-server
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - unity-mcp-network
+
+networks:
+  unity-mcp-network:
+    driver: bridge

@@ -1,0 +1,19 @@
+{
+    "name": "UnityMCPSharp.Editor",
+    "rootNamespace": "UnityMCPSharp.Editor",
+    "references": [
+        "UnityMCPSharp",
+        "Unity.Nuget.Newtonsoft-Json"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
