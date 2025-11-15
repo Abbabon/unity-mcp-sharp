@@ -13,10 +13,12 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class ListSceneObjectsHandler
     {
-        public static void Handle(string requestId, object parameters, MCPClient client)
+        public static void Handle(string requestId, object parameters, MCPClient client, MCPConfiguration config)
         {
             try
             {
+                MCPOperationTracker.StartOperation("List Scene Objects", config.maxOperationLogEntries, config.verboseLogging, null);
+
                 var scene = SceneManager.GetActiveScene();
                 var rootObjects = scene.GetRootGameObjects();
 
@@ -28,10 +30,13 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
 
                 var response = new { objects = sceneObjects };
                 _ = client.SendResponseAsync(requestId, response);
+
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[ListSceneObjectsHandler] Error: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
 

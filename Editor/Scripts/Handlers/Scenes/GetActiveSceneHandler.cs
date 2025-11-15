@@ -11,10 +11,12 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
     /// </summary>
     public static class GetActiveSceneHandler
     {
-        public static void Handle(string requestId, MCPClient client)
+        public static void Handle(string requestId, MCPClient client, MCPConfiguration config)
         {
             try
             {
+                MCPOperationTracker.StartOperation("Get Active Scene", config.maxOperationLogEntries, config.verboseLogging, null);
+
                 var scene = SceneManager.GetActiveScene();
 
                 var response = new
@@ -29,10 +31,13 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
                 _ = client.SendResponseAsync(requestId, response);
 
                 Debug.Log($"[GetActiveSceneHandler] Active scene: {scene.name}");
+
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GetActiveSceneHandler] Error getting active scene: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

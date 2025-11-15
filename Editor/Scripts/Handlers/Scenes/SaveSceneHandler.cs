@@ -11,17 +11,20 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
     /// </summary>
     public static class SaveSceneHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SaveSceneData>(json);
 
+                MCPOperationTracker.StartOperation("Save Scene", config.maxOperationLogEntries, config.verboseLogging, data);
+
                 if (data.saveAll)
                 {
                     UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                     Debug.Log("[SaveSceneHandler] Saved all open scenes");
+                    MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                 }
                 else if (!string.IsNullOrEmpty(data.scenePath))
                 {
@@ -33,10 +36,12 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
                         {
                             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
                             Debug.Log($"[SaveSceneHandler] Saved scene: {data.scenePath}");
+                            MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                             return;
                         }
                     }
                     Debug.LogWarning($"[SaveSceneHandler] Scene not found: {data.scenePath}");
+                    MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
                 }
                 else
                 {
@@ -44,11 +49,13 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
                     var activeScene = SceneManager.GetActiveScene();
                     UnityEditor.SceneManagement.EditorSceneManager.SaveScene(activeScene);
                     Debug.Log($"[SaveSceneHandler] Saved active scene: {activeScene.name}");
+                    MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[SaveSceneHandler] Error saving scene: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

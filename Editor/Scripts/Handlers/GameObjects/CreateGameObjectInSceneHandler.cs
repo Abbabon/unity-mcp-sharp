@@ -11,12 +11,14 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class CreateGameObjectInSceneHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectInSceneData>(json);
+
+                MCPOperationTracker.StartOperation("Create GameObject In Scene", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 // Find or load the target scene
                 Scene targetScene = default;
@@ -77,10 +79,12 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 SceneManager.SetActiveScene(previousActiveScene);
 
                 Debug.Log($"[CreateGameObjectInSceneHandler] Created GameObject '{data.name}' in scene '{data.scenePath}'");
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[CreateGameObjectInSceneHandler] Error creating GameObject in scene: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

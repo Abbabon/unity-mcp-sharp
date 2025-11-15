@@ -12,12 +12,14 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class FindGameObjectHandler
     {
-        public static void Handle(string requestId, object parameters, MCPClient client)
+        public static void Handle(string requestId, object parameters, MCPClient client, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<FindGameObjectData>(json);
+
+                MCPOperationTracker.StartOperation("Find GameObject", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 GameObject go = null;
 
@@ -64,16 +66,19 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                     };
 
                     _ = client.SendResponseAsync(requestId, response);
+                    MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                 }
                 else
                 {
                     Debug.LogWarning($"[FindGameObjectHandler] GameObject not found: {data.name}");
                     _ = client.SendResponseAsync(requestId, null);
+                    MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[FindGameObjectHandler] Error finding GameObject: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

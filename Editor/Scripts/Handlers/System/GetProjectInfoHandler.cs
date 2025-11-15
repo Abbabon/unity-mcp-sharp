@@ -12,10 +12,12 @@ namespace UnityMCPSharp.Editor.Handlers.System
     /// </summary>
     public static class GetProjectInfoHandler
     {
-        public static void Handle(string requestId, MCPClient client)
+        public static void Handle(string requestId, MCPClient client, MCPConfiguration config)
         {
             try
             {
+                MCPOperationTracker.StartOperation("Get Project Info", config.maxOperationLogEntries, config.verboseLogging, null);
+
                 var response = new
                 {
                     projectName = Application.productName,
@@ -29,10 +31,13 @@ namespace UnityMCPSharp.Editor.Handlers.System
                 };
 
                 _ = client.SendResponseAsync(requestId, response);
+
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GetProjectInfoHandler] Error: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

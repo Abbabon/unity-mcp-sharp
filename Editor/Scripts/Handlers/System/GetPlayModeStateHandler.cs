@@ -11,10 +11,12 @@ namespace UnityMCPSharp.Editor.Handlers.System
     /// </summary>
     public static class GetPlayModeStateHandler
     {
-        public static void Handle(string requestId, MCPClient client)
+        public static void Handle(string requestId, MCPClient client, MCPConfiguration config)
         {
             try
             {
+                MCPOperationTracker.StartOperation("Get Play Mode State", config.maxOperationLogEntries, config.verboseLogging, null);
+
                 string state;
                 if (EditorApplication.isPlaying && EditorApplication.isPaused)
                 {
@@ -31,10 +33,13 @@ namespace UnityMCPSharp.Editor.Handlers.System
 
                 var response = new { state };
                 _ = client.SendResponseAsync(requestId, response);
+
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GetPlayModeStateHandler] Error: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

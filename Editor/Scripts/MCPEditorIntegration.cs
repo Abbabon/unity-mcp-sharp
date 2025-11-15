@@ -204,11 +204,11 @@ namespace UnityMCPSharp.Editor
             switch (method)
             {
                 case "unity.triggerCompilation":
-                    TriggerCompilationHandler.Handle(parameters);
+                    TriggerCompilationHandler.Handle(_config);
                     break;
 
                 case "unity.runMenuItem":
-                    RunMenuItemHandler.Handle(parameters);
+                    RunMenuItemHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.createGameObject":
@@ -216,23 +216,23 @@ namespace UnityMCPSharp.Editor
                     break;
 
                 case "unity.createScript":
-                    CreateScriptHandler.Handle(parameters);
+                    CreateScriptHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.addComponent":
-                    AddComponentHandler.Handle(parameters);
+                    AddComponentHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.enterPlayMode":
-                    EnterPlayModeHandler.Handle();
+                    EnterPlayModeHandler.Handle(_config);
                     break;
 
                 case "unity.exitPlayMode":
-                    ExitPlayModeHandler.Handle();
+                    ExitPlayModeHandler.Handle(_config);
                     break;
 
                 case "unity.refreshAssets":
-                    RefreshAssetsHandler.Handle();
+                    RefreshAssetsHandler.Handle(_config);
                     break;
 
                 case "unity.createAsset":
@@ -240,27 +240,27 @@ namespace UnityMCPSharp.Editor
                     break;
 
                 case "unity.batchCreateGameObjects":
-                    BatchCreateGameObjectsHandler.Handle(parameters);
+                    BatchCreateGameObjectsHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.openScene":
-                    OpenSceneHandler.Handle(parameters);
+                    OpenSceneHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.closeScene":
-                    CloseSceneHandler.Handle(parameters);
+                    CloseSceneHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.setActiveScene":
-                    SetActiveSceneHandler.Handle(parameters);
+                    SetActiveSceneHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.saveScene":
-                    SaveSceneHandler.Handle(parameters);
+                    SaveSceneHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.createGameObjectInScene":
-                    CreateGameObjectInSceneHandler.Handle(parameters);
+                    CreateGameObjectInSceneHandler.Handle(parameters, _config);
                     break;
 
                 default:
@@ -280,35 +280,35 @@ namespace UnityMCPSharp.Editor
             switch (method)
             {
                 case "unity.getConsoleLogs":
-                    GetConsoleLogsHandler.Handle(requestId, null, _client, _consoleLogBuffer);
+                    GetConsoleLogsHandler.Handle(requestId, null, _client, _consoleLogBuffer, _config);
                     break;
 
                 case "unity.getCompilationStatus":
-                    GetCompilationStatusHandler.Handle(requestId, _client, _isCompiling);
+                    GetCompilationStatusHandler.Handle(requestId, _client, _isCompiling, _config);
                     break;
 
                 case "unity.listSceneObjects":
-                    ListSceneObjectsHandler.Handle(requestId, null, _client);
+                    ListSceneObjectsHandler.Handle(requestId, null, _client, _config);
                     break;
 
                 case "unity.getProjectInfo":
-                    GetProjectInfoHandler.Handle(requestId, _client);
+                    GetProjectInfoHandler.Handle(requestId, _client, _config);
                     break;
 
                 case "unity.getPlayModeState":
-                    GetPlayModeStateHandler.Handle(requestId, _client);
+                    GetPlayModeStateHandler.Handle(requestId, _client, _config);
                     break;
 
                 case "unity.findGameObject":
-                    FindGameObjectHandler.Handle(requestId, parameters, _client);
+                    FindGameObjectHandler.Handle(requestId, parameters, _client, _config);
                     break;
 
                 case "unity.listScenes":
-                    ListScenesHandler.Handle(requestId, _client);
+                    ListScenesHandler.Handle(requestId, _client, _config);
                     break;
 
                 case "unity.getActiveScene":
-                    GetActiveSceneHandler.Handle(requestId, _client);
+                    GetActiveSceneHandler.Handle(requestId, _client, _config);
                     break;
 
                 default:

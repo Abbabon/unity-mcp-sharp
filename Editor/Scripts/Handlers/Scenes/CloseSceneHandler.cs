@@ -11,12 +11,14 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
     /// </summary>
     public static class CloseSceneHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CloseSceneData>(json);
+
+                MCPOperationTracker.StartOperation("Close Scene", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 // Find scene by name or path
                 for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -26,15 +28,18 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
                     {
                         UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
                         Debug.Log($"[CloseSceneHandler] Closed scene: {data.sceneIdentifier}");
+                        MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                         return;
                     }
                 }
 
                 Debug.LogWarning($"[CloseSceneHandler] Scene not found: {data.sceneIdentifier}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[CloseSceneHandler] Error closing scene: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

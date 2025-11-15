@@ -12,10 +12,12 @@ namespace UnityMCPSharp.Editor.Handlers.System
     /// </summary>
     public static class GetConsoleLogsHandler
     {
-        public static void Handle(string requestId, object parameters, MCPClient client, Queue<string> consoleLogBuffer)
+        public static void Handle(string requestId, object parameters, MCPClient client, Queue<string> consoleLogBuffer, MCPConfiguration config)
         {
             try
             {
+                MCPOperationTracker.StartOperation("Get Console Logs", config.maxOperationLogEntries, config.verboseLogging, null);
+
                 var logEntries = new List<LogEntry>();
                 foreach (var log in consoleLogBuffer)
                 {
@@ -31,10 +33,13 @@ namespace UnityMCPSharp.Editor.Handlers.System
 
                 var response = new { logs = logEntries };
                 _ = client.SendResponseAsync(requestId, response);
+
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GetConsoleLogsHandler] Error: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

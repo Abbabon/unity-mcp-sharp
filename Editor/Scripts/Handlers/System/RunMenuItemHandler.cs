@@ -17,16 +17,19 @@ namespace UnityMCPSharp.Editor.Handlers.System
             public string menuPath;
         }
 
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<RunMenuItemData>(json);
 
+                MCPOperationTracker.StartOperation("Run Menu Item", config.maxOperationLogEntries, config.verboseLogging, data);
+
                 if (string.IsNullOrEmpty(data.menuPath))
                 {
                     Debug.LogError("[RunMenuItemHandler] Menu path is required");
+                    MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
                     return;
                 }
 
@@ -36,10 +39,12 @@ namespace UnityMCPSharp.Editor.Handlers.System
                 EditorApplication.ExecuteMenuItem(data.menuPath);
 
                 Debug.Log($"[RunMenuItemHandler] Successfully executed menu item: {data.menuPath}");
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[RunMenuItemHandler] Error executing menu item: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

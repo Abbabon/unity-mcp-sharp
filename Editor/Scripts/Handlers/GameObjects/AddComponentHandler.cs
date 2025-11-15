@@ -10,17 +10,21 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class AddComponentHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<AddComponentData>(json);
 
+                // Start operation tracking
+                MCPOperationTracker.StartOperation("Add Component", config.maxOperationLogEntries, config.verboseLogging, data);
+
                 var go = GameObject.Find(data.gameObjectName);
                 if (go == null)
                 {
                     Debug.LogError($"[AddComponentHandler] GameObject not found: {data.gameObjectName}");
+                    MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
                     return;
                 }
 
@@ -49,15 +53,18 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 {
                     go.AddComponent(componentType);
                     Debug.Log($"[AddComponentHandler] Added component {data.componentType} to {data.gameObjectName}");
+                    MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                 }
                 else
                 {
                     Debug.LogError($"[AddComponentHandler] Component type not found: {data.componentType}");
+                    MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[AddComponentHandler] Error adding component: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

@@ -11,12 +11,14 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
     /// </summary>
     public static class SetActiveSceneHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SetActiveSceneData>(json);
+
+                MCPOperationTracker.StartOperation("Set Active Scene", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 // Find scene by name or path
                 for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -26,15 +28,18 @@ namespace UnityMCPSharp.Editor.Handlers.Scenes
                     {
                         SceneManager.SetActiveScene(scene);
                         Debug.Log($"[SetActiveSceneHandler] Set active scene: {data.sceneIdentifier}");
+                        MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                         return;
                     }
                 }
 
                 Debug.LogWarning($"[SetActiveSceneHandler] Scene not found: {data.sceneIdentifier}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[SetActiveSceneHandler] Error setting active scene: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

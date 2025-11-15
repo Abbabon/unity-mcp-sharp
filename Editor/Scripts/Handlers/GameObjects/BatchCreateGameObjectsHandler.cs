@@ -10,12 +10,14 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class BatchCreateGameObjectsHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<BatchCreateData>(json);
+
+                MCPOperationTracker.StartOperation("Batch Create GameObjects", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 var gameObjects = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectData[]>(data.gameObjectsJson);
 
@@ -51,10 +53,12 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 }
 
                 Debug.Log($"[BatchCreateGameObjectsHandler] Batch created {gameObjects.Length} GameObjects");
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[BatchCreateGameObjectsHandler] Error batch creating GameObjects: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }

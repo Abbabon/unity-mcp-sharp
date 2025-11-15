@@ -11,12 +11,14 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
     /// </summary>
     public static class CreateScriptHandler
     {
-        public static void Handle(object parameters)
+        public static void Handle(object parameters, MCPConfiguration config)
         {
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateScriptData>(json);
+
+                MCPOperationTracker.StartOperation("Create Script", config.maxOperationLogEntries, config.verboseLogging, data);
 
                 // Ensure folder path exists
                 var fullFolderPath = Path.Combine(Application.dataPath, data.folderPath);
@@ -35,10 +37,12 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 AssetDatabase.Refresh();
 
                 Debug.Log($"[CreateScriptHandler] Created script: {scriptPath}");
+                MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[CreateScriptHandler] Error creating script: {ex.Message}");
+                MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
             }
         }
     }
