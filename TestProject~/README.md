@@ -13,7 +13,7 @@ This is a minimal Unity project for testing the Unity MCP Server package locally
 
 The package is already configured in `Packages/manifest.json` with a local file reference:
 ```json
-"com.unitymcpsharp.unity-mcp": "file:../../"
+"com.mezookan.unity-mcp-sharp": "file:../../"
 ```
 
 This references the package root (two directories up).

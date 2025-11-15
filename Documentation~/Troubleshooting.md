@@ -35,7 +35,7 @@ This guide covers common issues you may encounter when using Unity MCP Server an
 npm install -g openupm-cli
 
 # Try again
-openupm add com.unitymcpsharp.unity-mcp
+openupm add com.mezookan.unity-mcp-sharp
 
 # If still failing, add manually to manifest.json
 ```
@@ -47,11 +47,11 @@ Add to `Packages/manifest.json`:
     {
       "name": "OpenUPM",
       "url": "https://package.openupm.com",
-      "scopes": ["com.unitymcpsharp"]
+      "scopes": ["com.mezookan"]
     }
   ],
   "dependencies": {
-    "com.unitymcpsharp.unity-mcp": "0.1.0"
+    "com.mezookan.unity-mcp-sharp": "0.3.0"
   }
 }
 ```

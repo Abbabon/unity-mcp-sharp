@@ -10,7 +10,7 @@
 ### Option 1: OpenUPM CLI (Recommended)
 
 ```bash
-openupm add com.unitymcpsharp.unity-mcp
+openupm add com.mezookan.unity-mcp-sharp
 ```
 
 ### Option 2: Unity Package Manager
@@ -28,7 +28,7 @@ openupm add com.unitymcpsharp.unity-mcp
 ```json
 {
   "dependencies": {
-    "com.unitymcpsharp.unity-mcp": "https://github.com/Abbabon/unity-mcp-sharp.git"
+    "com.mezookan.unity-mcp-sharp": "https://github.com/Abbabon/unity-mcp-sharp.git"
   }
 }
 ```

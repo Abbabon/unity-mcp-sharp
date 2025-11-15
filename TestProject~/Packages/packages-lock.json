@@ -96,7 +96,7 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
-    "com.unitymcpsharp.unity-mcp": {
+    "com.mezookan.unity-mcp-sharp": {
       "version": "file:../../",
       "depth": 0,
       "source": "local",

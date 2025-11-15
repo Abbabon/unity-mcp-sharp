@@ -80,7 +80,7 @@
 #### Option 1: OpenUPM (Recommended)
 
 ```bash
-openupm add com.unitymcpsharp.unity-mcp
+openupm add com.mezookan.unity-mcp-sharp
 ```
 
 #### Option 2: Git URL
@@ -96,7 +96,7 @@ Add to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.unitymcpsharp.unity-mcp": "https://github.com/Abbabon/unity-mcp-sharp.git"
+    "com.mezookan.unity-mcp-sharp": "https://github.com/Abbabon/unity-mcp-sharp.git"
   }
 }
 ```
