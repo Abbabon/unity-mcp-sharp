@@ -738,7 +738,7 @@ Bump version to match the release version:
 #### 3. Verify Workflow Configuration
 
 Ensure `.github/workflows/publish-openupm.yml` has the correct package name:
-- Package name should be `com.unitymcpsharp.unity-mcp`
+- Package name should be `com.mezookan.unity-mcp-sharp`
 - Workflow triggers on tags matching `v*`
 - GitHub Release is created automatically
 - OpenUPM instructions are displayed
@@ -797,7 +797,7 @@ After the GitHub Release is created, submit to OpenUPM:
 2. Add your package to `data/packages/<package-name>.yml`:
 
 ```yaml
-name: com.unitymcpsharp.unity-mcp
+name: com.mezookan.unity-mcp-sharp
 displayName: Unity MCP Server
 description: Model Context Protocol server for Unity Editor integration
 repoUrl: 'https://github.com/Abbabon/unity-mcp-sharp'
@@ -824,7 +824,7 @@ readme: 'master:README.md'
 **Option B: Via CLI (If you have access)**
 
 ```bash
-openupm publish com.unitymcpsharp.unity-mcp
+openupm publish com.mezookan.unity-mcp-sharp
 ```
 
 #### 8. Verify OpenUPM Publication
@@ -836,10 +836,10 @@ Once published, verify the package is available:
 openupm search unity-mcp
 
 # View package info
-openupm view com.unitymcpsharp.unity-mcp
+openupm view com.mezookan.unity-mcp-sharp
 
 # Test installation in a Unity project
-openupm add com.unitymcpsharp.unity-mcp
+openupm add com.mezookan.unity-mcp-sharp
 ```
 
 ### Version Numbering Guidelines
