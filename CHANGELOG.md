@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build pipeline integration
 - Scene View overlay for MCP operations
 
+## [0.3.1] - 2025-11-16
+
+### Changed
+- **Package Name:** Renamed from `com.unitymcpsharp.unity-mcp` to `com.mezookan.unity-mcp-sharp`
+- Updated all documentation references to new package name
+- Updated OpenUPM workflow and release notes
+- Updated test project package references
+
+### Fixed
+- Package name consistency across all project files
+- OpenUPM scoped registry configuration in troubleshooting guide
+
 ## [0.3.0] - 2025-11-15
 
 ### Added
