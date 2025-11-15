@@ -6,6 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityMCPSharp;
+using UnityMCPSharp.Editor.Models;
+using UnityMCPSharp.Editor.Handlers.System;
+using UnityMCPSharp.Editor.Handlers.GameObjects;
+using UnityMCPSharp.Editor.Handlers.Assets;
+using UnityMCPSharp.Editor.Handlers.Scenes;
 
 namespace UnityMCPSharp.Editor
 {
@@ -20,21 +25,6 @@ namespace UnityMCPSharp.Editor
         private static MCPConfiguration _config;
         private static Queue<string> _consoleLogBuffer;
         private static bool _isCompiling;
-
-        // Operation tracking for visual feedback
-        public class OperationInfo
-        {
-            public string Operation { get; set; }
-            public System.DateTime Timestamp { get; set; }
-            public string Status { get; set; } // "in_progress", "completed", "failed"
-        }
-
-        private static List<OperationInfo> _recentOperations = new List<OperationInfo>();
-        private static string _currentOperation = null;
-
-        public static List<OperationInfo> RecentOperations => _recentOperations;
-        public static string CurrentOperation => _currentOperation;
-        public static bool IsOperationInProgress => !string.IsNullOrEmpty(_currentOperation);
 
         static MCPEditorIntegration()
         {
@@ -58,6 +48,9 @@ namespace UnityMCPSharp.Editor
         {
             _config = MCPConfiguration.Instance;
             _consoleLogBuffer = new Queue<string>();
+
+            // Initialize operation tracker
+            MCPOperationTracker.Initialize();
 
             // Get singleton instance (shared with Dashboard and survives recompilation)
             _serverManager = MCPServerManager.GetInstance(_config);
@@ -211,56 +204,59 @@ namespace UnityMCPSharp.Editor
             switch (method)
             {
                 case "unity.triggerCompilation":
-                    HandleTriggerCompilation(parameters);
+                    TriggerCompilationHandler.Handle(parameters);
                     break;
 
                 case "unity.createGameObject":
-                    Debug.Log("[MCPEditorIntegration] Routing to HandleCreateGameObject");
-                    HandleCreateGameObject(parameters);
+                    CreateGameObjectHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.createScript":
-                    HandleCreateScript(parameters);
+                    CreateScriptHandler.Handle(parameters);
                     break;
 
                 case "unity.addComponent":
-                    HandleAddComponent(parameters);
+                    AddComponentHandler.Handle(parameters);
                     break;
 
                 case "unity.enterPlayMode":
-                    HandleEnterPlayMode();
+                    EnterPlayModeHandler.Handle();
                     break;
 
                 case "unity.exitPlayMode":
-                    HandleExitPlayMode();
+                    ExitPlayModeHandler.Handle();
                     break;
 
                 case "unity.refreshAssets":
-                    HandleRefreshAssets();
+                    RefreshAssetsHandler.Handle();
+                    break;
+
+                case "unity.createAsset":
+                    CreateAssetHandler.Handle(parameters, _config);
                     break;
 
                 case "unity.batchCreateGameObjects":
-                    HandleBatchCreateGameObjects(parameters);
+                    BatchCreateGameObjectsHandler.Handle(parameters);
                     break;
 
                 case "unity.openScene":
-                    HandleOpenScene(parameters);
+                    OpenSceneHandler.Handle(parameters);
                     break;
 
                 case "unity.closeScene":
-                    HandleCloseScene(parameters);
+                    CloseSceneHandler.Handle(parameters);
                     break;
 
                 case "unity.setActiveScene":
-                    HandleSetActiveScene(parameters);
+                    SetActiveSceneHandler.Handle(parameters);
                     break;
 
                 case "unity.saveScene":
-                    HandleSaveScene(parameters);
+                    SaveSceneHandler.Handle(parameters);
                     break;
 
                 case "unity.createGameObjectInScene":
-                    HandleCreateGameObjectInScene(parameters);
+                    CreateGameObjectInSceneHandler.Handle(parameters);
                     break;
 
                 default:
@@ -280,240 +276,40 @@ namespace UnityMCPSharp.Editor
             switch (method)
             {
                 case "unity.getConsoleLogs":
-                    HandleGetConsoleLogs(requestId, parameters);
+                    GetConsoleLogsHandler.Handle(requestId, null, _client, _consoleLogBuffer);
                     break;
 
                 case "unity.getCompilationStatus":
-                    HandleGetCompilationStatus(requestId);
+                    GetCompilationStatusHandler.Handle(requestId, _client, _isCompiling);
                     break;
 
                 case "unity.listSceneObjects":
-                    HandleListSceneObjects(requestId, parameters);
+                    ListSceneObjectsHandler.Handle(requestId, null, _client);
                     break;
 
                 case "unity.getProjectInfo":
-                    HandleGetProjectInfo(requestId);
+                    GetProjectInfoHandler.Handle(requestId, _client);
                     break;
 
                 case "unity.getPlayModeState":
-                    HandleGetPlayModeState(requestId);
+                    GetPlayModeStateHandler.Handle(requestId, _client);
                     break;
 
                 case "unity.findGameObject":
-                    HandleFindGameObject(requestId, parameters);
+                    FindGameObjectHandler.Handle(requestId, parameters, _client);
                     break;
 
                 case "unity.listScenes":
-                    HandleListScenes(requestId);
+                    ListScenesHandler.Handle(requestId, _client);
                     break;
 
                 case "unity.getActiveScene":
-                    HandleGetActiveScene(requestId);
+                    GetActiveSceneHandler.Handle(requestId, _client);
                     break;
 
                 default:
                     Debug.LogWarning($"[MCPEditorIntegration] Unknown request method: {method}");
                     break;
-            }
-        }
-
-        // Handlers for each MCP tool request
-
-        private static void HandleGetConsoleLogs(string requestId, object parameters)
-        {
-            try
-            {
-                var logEntries = new List<LogEntry>();
-                foreach (var log in _consoleLogBuffer)
-                {
-                    // Parse the log entry format: [Type] Message
-                    var parts = log.Split(new[] { "] " }, 2, System.StringSplitOptions.None);
-                    if (parts.Length == 2)
-                    {
-                        var type = parts[0].TrimStart('[');
-                        var message = parts[1];
-                        logEntries.Add(new LogEntry { type = type, message = message });
-                    }
-                }
-
-                var response = new { logs = logEntries };
-                _ = _client.SendResponseAsync(requestId, response);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error in HandleGetConsoleLogs: {ex.Message}");
-            }
-        }
-
-        [System.Serializable]
-        private class LogEntry
-        {
-            [Newtonsoft.Json.JsonProperty("type")]
-            public string type;
-            [Newtonsoft.Json.JsonProperty("message")]
-            public string message;
-            [Newtonsoft.Json.JsonProperty("stackTrace")]
-            public string stackTrace;
-        }
-
-        private static void HandleTriggerCompilation(object parameters)
-        {
-            try
-            {
-                Debug.Log("[MCPEditorIntegration] Triggering script compilation...");
-                CompilationPipeline.RequestScriptCompilation();
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error triggering compilation: {ex.Message}");
-            }
-        }
-
-        private static void HandleGetCompilationStatus(string requestId)
-        {
-            try
-            {
-                var response = new
-                {
-                    isCompiling = _isCompiling,
-                    lastCompilationSucceeded = !EditorUtility.scriptCompilationFailed
-                };
-
-                _ = _client.SendResponseAsync(requestId, response);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error in HandleGetCompilationStatus: {ex.Message}");
-            }
-        }
-
-        private static void HandleCreateGameObject(object parameters)
-        {
-            StartOperation($"Create GameObject");
-            try
-            {
-                // Parse parameters using Newtonsoft.Json for proper deserialization
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                Debug.Log($"[MCPEditorIntegration] HandleCreateGameObject received JSON: {json}");
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectData>(json);
-                Debug.Log($"[MCPEditorIntegration] Parsed name: '{data.name}', components: {data.components?.Length ?? 0}");
-
-                var go = new GameObject(data.name);
-
-                if (data.position != null)
-                {
-                    go.transform.position = new Vector3(data.position.x, data.position.y, data.position.z);
-                }
-
-                // Add components if specified
-                if (data.components != null)
-                {
-                    foreach (var componentName in data.components)
-                    {
-                        var componentType = System.Type.GetType($"UnityEngine.{componentName}, UnityEngine");
-                        if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
-                        {
-                            go.AddComponent(componentType);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[MCPEditorIntegration] Unknown component type: {componentName}");
-                        }
-                    }
-                }
-
-                // Set parent if specified
-                if (!string.IsNullOrEmpty(data.parent))
-                {
-                    var parentObj = GameObject.Find(data.parent);
-                    if (parentObj != null)
-                    {
-                        go.transform.SetParent(parentObj.transform);
-                    }
-                }
-
-                Selection.activeGameObject = go;
-                EditorGUIUtility.PingObject(go);
-
-                Debug.Log($"[MCPEditorIntegration] Created GameObject: {data.name}");
-                CompleteOperation(true);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error creating GameObject: {ex.Message}");
-                CompleteOperation(false);
-            }
-        }
-
-        private static void HandleListSceneObjects(string requestId, object parameters)
-        {
-            try
-            {
-                var scene = SceneManager.GetActiveScene();
-                var rootObjects = scene.GetRootGameObjects();
-
-                var sceneObjects = new List<SceneObject>();
-                foreach (var root in rootObjects)
-                {
-                    BuildHierarchy(root.transform, sceneObjects, 0);
-                }
-
-                var response = new { objects = sceneObjects };
-                _ = _client.SendResponseAsync(requestId, response);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error in HandleListSceneObjects: {ex.Message}");
-            }
-        }
-
-        private static void BuildHierarchy(Transform transform, List<SceneObject> sceneObjects, int depth)
-        {
-            sceneObjects.Add(new SceneObject
-            {
-                name = transform.name,
-                isActive = transform.gameObject.activeInHierarchy,
-                depth = depth
-            });
-
-            foreach (Transform child in transform)
-            {
-                BuildHierarchy(child, sceneObjects, depth + 1);
-            }
-        }
-
-        [System.Serializable]
-        private class SceneObject
-        {
-            [Newtonsoft.Json.JsonProperty("name")]
-            public string name;
-            [Newtonsoft.Json.JsonProperty("isActive")]
-            public bool isActive;
-            [Newtonsoft.Json.JsonProperty("depth")]
-            public int depth;
-        }
-
-        private static void HandleGetProjectInfo(string requestId)
-        {
-            try
-            {
-                var response = new
-                {
-                    projectName = Application.productName,
-                    unityVersion = Application.unityVersion,
-                    platform = Application.platform.ToString(),
-                    activeScene = SceneManager.GetActiveScene().name,
-                    scenePath = SceneManager.GetActiveScene().path,
-                    dataPath = Application.dataPath,
-                    isPlaying = EditorApplication.isPlaying,
-                    isPaused = EditorApplication.isPaused
-                };
-
-                _ = _client.SendResponseAsync(requestId, response);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error in HandleGetProjectInfo: {ex.Message}");
             }
         }
 
@@ -606,666 +402,20 @@ namespace UnityMCPSharp.Editor
             }
         }
 
-        private static void HandleCreateScript(object parameters)
+        // Helper method used by ListSceneObjectsHandler
+        public static void BuildHierarchy(Transform transform, List<SceneObject> sceneObjects, int depth)
         {
-            try
+            sceneObjects.Add(new SceneObject
             {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateScriptData>(json);
+                name = transform.name,
+                isActive = transform.gameObject.activeInHierarchy,
+                depth = depth
+            });
 
-                // Ensure folder path exists
-                var fullFolderPath = System.IO.Path.Combine(Application.dataPath, data.folderPath);
-                if (!System.IO.Directory.Exists(fullFolderPath))
-                {
-                    System.IO.Directory.CreateDirectory(fullFolderPath);
-                }
-
-                // Create script file
-                var scriptFileName = $"{data.scriptName}.cs";
-                var scriptPath = System.IO.Path.Combine(fullFolderPath, scriptFileName);
-
-                System.IO.File.WriteAllText(scriptPath, data.scriptContent);
-
-                // Refresh asset database to trigger compilation
-                AssetDatabase.Refresh();
-
-                Debug.Log($"[MCPEditorIntegration] Created script: {scriptPath}");
+            foreach (Transform child in transform)
+            {
+                BuildHierarchy(child, sceneObjects, depth + 1);
             }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error creating script: {ex.Message}");
-            }
-        }
-
-        private static void HandleAddComponent(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<AddComponentData>(json);
-
-                var go = GameObject.Find(data.gameObjectName);
-                if (go == null)
-                {
-                    Debug.LogError($"[MCPEditorIntegration] GameObject not found: {data.gameObjectName}");
-                    return;
-                }
-
-                // Try to find the component type
-                // First try UnityEngine namespace
-                var componentType = System.Type.GetType($"UnityEngine.{data.componentType}, UnityEngine");
-
-                // If not found, try without namespace (for custom scripts)
-                if (componentType == null)
-                {
-                    componentType = System.Type.GetType(data.componentType);
-                }
-
-                // If still not found, search all assemblies
-                if (componentType == null)
-                {
-                    foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        componentType = assembly.GetType(data.componentType);
-                        if (componentType != null)
-                            break;
-                    }
-                }
-
-                if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
-                {
-                    go.AddComponent(componentType);
-                    Debug.Log($"[MCPEditorIntegration] Added component {data.componentType} to {data.gameObjectName}");
-                }
-                else
-                {
-                    Debug.LogError($"[MCPEditorIntegration] Component type not found: {data.componentType}");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error adding component: {ex.Message}");
-            }
-        }
-
-        private static void HandleEnterPlayMode()
-        {
-            try
-            {
-                if (!EditorApplication.isPlaying)
-                {
-                    EditorApplication.isPlaying = true;
-                    Debug.Log("[MCPEditorIntegration] Entering play mode");
-                }
-                else
-                {
-                    Debug.LogWarning("[MCPEditorIntegration] Already in play mode");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error entering play mode: {ex.Message}");
-            }
-        }
-
-        private static void HandleExitPlayMode()
-        {
-            try
-            {
-                if (EditorApplication.isPlaying)
-                {
-                    EditorApplication.isPlaying = false;
-                    Debug.Log("[MCPEditorIntegration] Exiting play mode");
-                }
-                else
-                {
-                    Debug.LogWarning("[MCPEditorIntegration] Already stopped");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error exiting play mode: {ex.Message}");
-            }
-        }
-
-        private static void HandleGetPlayModeState(string requestId)
-        {
-            try
-            {
-                string state;
-                if (EditorApplication.isPlaying && EditorApplication.isPaused)
-                {
-                    state = "Paused";
-                }
-                else if (EditorApplication.isPlaying)
-                {
-                    state = "Playing";
-                }
-                else
-                {
-                    state = "Stopped";
-                }
-
-                var response = new { state };
-                _ = _client.SendResponseAsync(requestId, response);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error in HandleGetPlayModeState: {ex.Message}");
-            }
-        }
-
-        // ========== NEW UTILITY HANDLERS ==========
-
-        private static void HandleRefreshAssets()
-        {
-            try
-            {
-                Debug.Log("[MCPEditorIntegration] Refreshing Asset Database");
-                AssetDatabase.Refresh();
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error refreshing assets: {ex.Message}");
-            }
-        }
-
-        private static void HandleBatchCreateGameObjects(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<BatchCreateData>(json);
-
-                var gameObjects = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectData[]>(data.gameObjectsJson);
-
-                foreach (var goData in gameObjects)
-                {
-                    var go = new GameObject(goData.name);
-
-                    if (goData.position != null)
-                    {
-                        go.transform.position = new Vector3(goData.position.x, goData.position.y, goData.position.z);
-                    }
-
-                    if (goData.components != null)
-                    {
-                        foreach (var componentName in goData.components)
-                        {
-                            var componentType = System.Type.GetType($"UnityEngine.{componentName}, UnityEngine");
-                            if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
-                            {
-                                go.AddComponent(componentType);
-                            }
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(goData.parent))
-                    {
-                        var parentObj = GameObject.Find(goData.parent);
-                        if (parentObj != null)
-                        {
-                            go.transform.SetParent(parentObj.transform);
-                        }
-                    }
-                }
-
-                Debug.Log($"[MCPEditorIntegration] Batch created {gameObjects.Length} GameObjects");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error batch creating GameObjects: {ex.Message}");
-            }
-        }
-
-        private static void HandleFindGameObject(string requestId, object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<FindGameObjectData>(json);
-
-                GameObject go = null;
-
-                switch (data.searchBy.ToLower())
-                {
-                    case "tag":
-                        go = GameObject.FindWithTag(data.name);
-                        break;
-                    case "path":
-                        go = GameObject.Find(data.name);
-                        break;
-                    case "name":
-                    default:
-                        go = GameObject.Find(data.name);
-                        break;
-                }
-
-                if (go != null)
-                {
-                    var components = new List<string>();
-                    foreach (var comp in go.GetComponents<Component>())
-                    {
-                        components.Add(comp.GetType().Name);
-                    }
-
-                    // Get full path in hierarchy
-                    var path = go.name;
-                    var parent = go.transform.parent;
-                    while (parent != null)
-                    {
-                        path = parent.name + "/" + path;
-                        parent = parent.parent;
-                    }
-
-                    var response = new
-                    {
-                        name = go.name,
-                        path = path,
-                        isActive = go.activeInHierarchy,
-                        position = new { x = go.transform.position.x, y = go.transform.position.y, z = go.transform.position.z },
-                        rotation = new { x = go.transform.eulerAngles.x, y = go.transform.eulerAngles.y, z = go.transform.eulerAngles.z },
-                        scale = new { x = go.transform.localScale.x, y = go.transform.localScale.y, z = go.transform.localScale.z },
-                        components = components
-                    };
-
-                    _ = _client.SendResponseAsync(requestId, response);
-                }
-                else
-                {
-                    Debug.LogWarning($"[MCPEditorIntegration] GameObject not found: {data.name}");
-                    _ = _client.SendResponseAsync(requestId, null);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error finding GameObject: {ex.Message}");
-            }
-        }
-
-        // ========== SCENE MANAGEMENT HANDLERS ==========
-
-        private static void HandleListScenes(string requestId)
-        {
-            try
-            {
-                var sceneGuids = AssetDatabase.FindAssets("t:Scene");
-                var scenes = new List<string>();
-
-                foreach (var guid in sceneGuids)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(guid);
-                    scenes.Add(path);
-                }
-
-                var response = new { scenes };
-                _ = _client.SendResponseAsync(requestId, response);
-
-                Debug.Log($"[MCPEditorIntegration] Found {scenes.Count} scenes");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error listing scenes: {ex.Message}");
-            }
-        }
-
-        private static void HandleOpenScene(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenSceneData>(json);
-
-                var mode = data.additive ? UnityEditor.SceneManagement.OpenSceneMode.Additive : UnityEditor.SceneManagement.OpenSceneMode.Single;
-
-                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(data.scenePath, mode);
-
-                Debug.Log($"[MCPEditorIntegration] Opened scene: {data.scenePath} (additive: {data.additive})");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error opening scene: {ex.Message}");
-            }
-        }
-
-        private static void HandleCloseScene(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CloseSceneData>(json);
-
-                // Find scene by name or path
-                for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
-                {
-                    var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
-                    if (scene.name == data.sceneIdentifier || scene.path == data.sceneIdentifier)
-                    {
-                        UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
-                        Debug.Log($"[MCPEditorIntegration] Closed scene: {data.sceneIdentifier}");
-                        return;
-                    }
-                }
-
-                Debug.LogWarning($"[MCPEditorIntegration] Scene not found: {data.sceneIdentifier}");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error closing scene: {ex.Message}");
-            }
-        }
-
-        private static void HandleGetActiveScene(string requestId)
-        {
-            try
-            {
-                var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-
-                var response = new
-                {
-                    name = scene.name,
-                    path = scene.path,
-                    isDirty = scene.isDirty,
-                    rootCount = scene.rootCount,
-                    isLoaded = scene.isLoaded
-                };
-
-                _ = _client.SendResponseAsync(requestId, response);
-
-                Debug.Log($"[MCPEditorIntegration] Active scene: {scene.name}");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error getting active scene: {ex.Message}");
-            }
-        }
-
-        private static void HandleSetActiveScene(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SetActiveSceneData>(json);
-
-                // Find scene by name or path
-                for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
-                {
-                    var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
-                    if (scene.name == data.sceneIdentifier || scene.path == data.sceneIdentifier)
-                    {
-                        UnityEngine.SceneManagement.SceneManager.SetActiveScene(scene);
-                        Debug.Log($"[MCPEditorIntegration] Set active scene: {data.sceneIdentifier}");
-                        return;
-                    }
-                }
-
-                Debug.LogWarning($"[MCPEditorIntegration] Scene not found: {data.sceneIdentifier}");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error setting active scene: {ex.Message}");
-            }
-        }
-
-        private static void HandleSaveScene(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SaveSceneData>(json);
-
-                if (data.saveAll)
-                {
-                    UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
-                    Debug.Log("[MCPEditorIntegration] Saved all open scenes");
-                }
-                else if (!string.IsNullOrEmpty(data.scenePath))
-                {
-                    // Find and save specific scene
-                    for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
-                    {
-                        var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
-                        if (scene.path == data.scenePath)
-                        {
-                            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-                            Debug.Log($"[MCPEditorIntegration] Saved scene: {data.scenePath}");
-                            return;
-                        }
-                    }
-                    Debug.LogWarning($"[MCPEditorIntegration] Scene not found: {data.scenePath}");
-                }
-                else
-                {
-                    // Save active scene
-                    var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-                    UnityEditor.SceneManagement.EditorSceneManager.SaveScene(activeScene);
-                    Debug.Log($"[MCPEditorIntegration] Saved active scene: {activeScene.name}");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error saving scene: {ex.Message}");
-            }
-        }
-
-        private static void HandleCreateGameObjectInScene(object parameters)
-        {
-            try
-            {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectInSceneData>(json);
-
-                // Find or load the target scene
-                Scene targetScene = default;
-                bool sceneFound = false;
-
-                for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
-                {
-                    var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
-                    if (scene.path == data.scenePath)
-                    {
-                        targetScene = scene;
-                        sceneFound = true;
-                        break;
-                    }
-                }
-
-                // If scene not loaded, open it additively
-                if (!sceneFound)
-                {
-                    targetScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(data.scenePath, UnityEditor.SceneManagement.OpenSceneMode.Additive);
-                    Debug.Log($"[MCPEditorIntegration] Loaded scene additively: {data.scenePath}");
-                }
-
-                // Temporarily set as active scene to create GameObject in it
-                var previousActiveScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-                UnityEngine.SceneManagement.SceneManager.SetActiveScene(targetScene);
-
-                // Create GameObject
-                var go = new GameObject(data.name);
-
-                if (data.position != null)
-                {
-                    go.transform.position = new Vector3(data.position.x, data.position.y, data.position.z);
-                }
-
-                if (data.components != null)
-                {
-                    foreach (var componentName in data.components)
-                    {
-                        var componentType = System.Type.GetType($"UnityEngine.{componentName}, UnityEngine");
-                        if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
-                        {
-                            go.AddComponent(componentType);
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(data.parent))
-                {
-                    var parentObj = GameObject.Find(data.parent);
-                    if (parentObj != null)
-                    {
-                        go.transform.SetParent(parentObj.transform);
-                    }
-                }
-
-                // Restore previous active scene
-                UnityEngine.SceneManagement.SceneManager.SetActiveScene(previousActiveScene);
-
-                Debug.Log($"[MCPEditorIntegration] Created GameObject '{data.name}' in scene '{data.scenePath}'");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[MCPEditorIntegration] Error creating GameObject in scene: {ex.Message}");
-            }
-        }
-
-        // ========== DATA CLASSES ==========
-
-        [System.Serializable]
-        private class CreateGameObjectData
-        {
-            [Newtonsoft.Json.JsonProperty("name")]
-            public string name;
-            [Newtonsoft.Json.JsonProperty("position")]
-            public PositionData position;
-            [Newtonsoft.Json.JsonProperty("components")]
-            public string[] components;
-            [Newtonsoft.Json.JsonProperty("parent")]
-            public string parent;
-        }
-
-        [System.Serializable]
-        private class CreateScriptData
-        {
-            [Newtonsoft.Json.JsonProperty("scriptName")]
-            public string scriptName;
-            [Newtonsoft.Json.JsonProperty("folderPath")]
-            public string folderPath;
-            [Newtonsoft.Json.JsonProperty("scriptContent")]
-            public string scriptContent;
-        }
-
-        [System.Serializable]
-        private class AddComponentData
-        {
-            [Newtonsoft.Json.JsonProperty("gameObjectName")]
-            public string gameObjectName;
-            [Newtonsoft.Json.JsonProperty("componentType")]
-            public string componentType;
-        }
-
-        [System.Serializable]
-        private class PositionData
-        {
-            [Newtonsoft.Json.JsonProperty("x")]
-            public float x;
-            [Newtonsoft.Json.JsonProperty("y")]
-            public float y;
-            [Newtonsoft.Json.JsonProperty("z")]
-            public float z;
-        }
-
-        [System.Serializable]
-        private class BatchCreateData
-        {
-            [Newtonsoft.Json.JsonProperty("gameObjectsJson")]
-            public string gameObjectsJson;
-        }
-
-        [System.Serializable]
-        private class FindGameObjectData
-        {
-            [Newtonsoft.Json.JsonProperty("name")]
-            public string name;
-            [Newtonsoft.Json.JsonProperty("searchBy")]
-            public string searchBy;
-        }
-
-        [System.Serializable]
-        private class OpenSceneData
-        {
-            [Newtonsoft.Json.JsonProperty("scenePath")]
-            public string scenePath;
-            [Newtonsoft.Json.JsonProperty("additive")]
-            public bool additive;
-        }
-
-        [System.Serializable]
-        private class CloseSceneData
-        {
-            [Newtonsoft.Json.JsonProperty("sceneIdentifier")]
-            public string sceneIdentifier;
-        }
-
-        [System.Serializable]
-        private class SetActiveSceneData
-        {
-            [Newtonsoft.Json.JsonProperty("sceneIdentifier")]
-            public string sceneIdentifier;
-        }
-
-        [System.Serializable]
-        private class SaveSceneData
-        {
-            [Newtonsoft.Json.JsonProperty("scenePath")]
-            public string scenePath;
-            [Newtonsoft.Json.JsonProperty("saveAll")]
-            public bool saveAll;
-        }
-
-        [System.Serializable]
-        private class CreateGameObjectInSceneData
-        {
-            [Newtonsoft.Json.JsonProperty("scenePath")]
-            public string scenePath;
-            [Newtonsoft.Json.JsonProperty("name")]
-            public string name;
-            [Newtonsoft.Json.JsonProperty("position")]
-            public PositionData position;
-            [Newtonsoft.Json.JsonProperty("components")]
-            public string[] components;
-            [Newtonsoft.Json.JsonProperty("parent")]
-            public string parent;
-        }
-
-        // ========== OPERATION TRACKING HELPERS ==========
-
-        private static void StartOperation(string operationName)
-        {
-            _currentOperation = operationName;
-            var op = new OperationInfo
-            {
-                Operation = operationName,
-                Timestamp = System.DateTime.Now,
-                Status = "in_progress"
-            };
-            _recentOperations.Insert(0, op);
-
-            // Trim to max entries
-            if (_recentOperations.Count > _config.maxOperationLogEntries)
-            {
-                _recentOperations.RemoveAt(_recentOperations.Count - 1);
-            }
-
-            if (_config.verboseLogging)
-            {
-                Debug.Log($"[MCP Operation] Started: {operationName}");
-            }
-        }
-
-        private static void CompleteOperation(bool success = true)
-        {
-            if (!string.IsNullOrEmpty(_currentOperation) && _recentOperations.Count > 0)
-            {
-                _recentOperations[0].Status = success ? "completed" : "failed";
-                if (_config.verboseLogging)
-                {
-                    Debug.Log($"[MCP Operation] {(success ? "Completed" : "Failed")}: {_currentOperation}");
-                }
-            }
-            _currentOperation = null;
         }
     }
 }

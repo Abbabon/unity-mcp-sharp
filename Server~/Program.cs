@@ -28,8 +28,8 @@ builder.Services.AddCors(options =>
 // Add WebSocket service for Unity Editor communication
 builder.Services.AddSingleton<UnityWebSocketService>();
 
-// Register Unity tools for dependency injection
-builder.Services.AddSingleton<UnityMcpServer.Tools.UnityTools>();
+// Note: Tool classes are automatically discovered via WithToolsFromAssembly below
+// All classes with [McpServerToolType] attribute will be registered
 
 // Add MCP server (creates HTTP endpoints via MapMcp)
 builder.Services

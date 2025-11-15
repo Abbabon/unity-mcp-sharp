@@ -144,9 +144,9 @@ namespace UnityMCPSharp.Editor
             // Update current operation label
             if (_currentOperationLabel != null)
             {
-                if (MCPEditorIntegration.IsOperationInProgress)
+                if (MCPOperationTracker.IsOperationInProgress)
                 {
-                    _currentOperationLabel.text = $"⚡ {MCPEditorIntegration.CurrentOperation}";
+                    _currentOperationLabel.text = $"⚡ {MCPOperationTracker.CurrentOperation}";
                     _currentOperationLabel.style.color = new Color(0.3f, 0.7f, 1f);
                     _currentOperationLabel.style.display = DisplayStyle.Flex;
                 }
@@ -156,15 +156,15 @@ namespace UnityMCPSharp.Editor
                 }
             }
 
-            // Update operations log
+            // Update operations log (show all operations, not just recent)
             if (_operationsScrollView != null && _config.showOperationLog)
             {
                 _operationsScrollView.Clear();
 
-                foreach (var op in MCPEditorIntegration.RecentOperations)
+                foreach (var op in MCPOperationTracker.AllOperations)
                 {
                     var opLabel = new Label();
-                    var timeStr = op.Timestamp.ToString("HH:mm:ss");
+                    var timeStr = op.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
                     var statusIcon = op.Status == "completed" ? "✓" : op.Status == "failed" ? "✗" : "⋯";
                     var statusColor = op.Status == "completed" ? new Color(0.3f, 0.8f, 0.3f) :
                                     op.Status == "failed" ? new Color(0.9f, 0.3f, 0.3f) :
@@ -182,7 +182,7 @@ namespace UnityMCPSharp.Editor
             }
 
             // Update background color tint
-            if (MCPEditorIntegration.IsOperationInProgress && _config.showVisualFeedback)
+            if (MCPOperationTracker.IsOperationInProgress && _config.showVisualFeedback)
             {
                 rootVisualElement.style.backgroundColor = _config.feedbackColor;
             }
@@ -414,15 +414,35 @@ namespace UnityMCPSharp.Editor
 
                 if (_config.showOperationLog)
                 {
-                    var recentOpsLabel = new Label("Recent Operations:");
+                    // Header row with label and clear button
+                    var headerRow = new VisualElement();
+                    headerRow.style.flexDirection = FlexDirection.Row;
+                    headerRow.style.justifyContent = Justify.SpaceBetween;
+                    headerRow.style.marginBottom = 5;
+
+                    var recentOpsLabel = new Label("Operation History (Persistent):");
                     recentOpsLabel.style.fontSize = 12;
-                    recentOpsLabel.style.marginBottom = 5;
                     recentOpsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    operationsSection.Add(recentOpsLabel);
+                    headerRow.Add(recentOpsLabel);
+
+                    var clearButton = new Button(() =>
+                    {
+                        MCPOperationTracker.ClearOperationsLog();
+                        UpdateOperationUI();
+                    });
+                    clearButton.text = "Clear Log";
+                    clearButton.style.fontSize = 10;
+                    clearButton.style.paddingLeft = 8;
+                    clearButton.style.paddingRight = 8;
+                    clearButton.style.paddingTop = 2;
+                    clearButton.style.paddingBottom = 2;
+                    headerRow.Add(clearButton);
+
+                    operationsSection.Add(headerRow);
 
                     // Operations log scroll view
                     _operationsScrollView = new ScrollView(ScrollViewMode.Vertical);
-                    _operationsScrollView.style.maxHeight = 200;
+                    _operationsScrollView.style.maxHeight = 300;
                     _operationsScrollView.style.borderTopWidth = 1;
                     _operationsScrollView.style.borderBottomWidth = 1;
                     _operationsScrollView.style.borderLeftWidth = 1;
