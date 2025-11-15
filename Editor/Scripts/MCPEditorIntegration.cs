@@ -207,6 +207,10 @@ namespace UnityMCPSharp.Editor
                     TriggerCompilationHandler.Handle(parameters);
                     break;
 
+                case "unity.runMenuItem":
+                    RunMenuItemHandler.Handle(parameters);
+                    break;
+
                 case "unity.createGameObject":
                     CreateGameObjectHandler.Handle(parameters, _config);
                     break;

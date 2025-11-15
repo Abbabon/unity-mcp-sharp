@@ -13,13 +13,15 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     {
         public static void Handle(object parameters, MCPConfiguration config)
         {
-            MCPOperationTracker.StartOperation("Create GameObject", config.maxOperationLogEntries, config.verboseLogging);
             try
             {
                 // Parse parameters using Newtonsoft.Json for proper deserialization
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
                 Debug.Log($"[CreateGameObjectHandler] Received JSON: {json}");
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateGameObjectData>(json);
+
+                // Start operation tracking with parameters
+                MCPOperationTracker.StartOperation("Create GameObject", config.maxOperationLogEntries, config.verboseLogging, data);
                 Debug.Log($"[CreateGameObjectHandler] Parsed name: '{data.name}', components: {data.components?.Length ?? 0}");
 
                 var go = new GameObject(data.name);

@@ -32,6 +32,7 @@ namespace UnityMCPSharp.Editor
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
         private Toggle _verboseLoggingToggle;
+        private Toggle _showParametersToggle;
 
         // Tab buttons
         private Button _statusTab;
@@ -50,6 +51,7 @@ namespace UnityMCPSharp.Editor
         private bool _lastKnownConnectionState;
 
         private bool _isInitialized;
+        private bool _showParameters = false; // Track whether to show parameters in operations log
 
         [MenuItem("Tools/Unity MCP Server/Dashboard")]
         public static void ShowWindow()
@@ -170,12 +172,22 @@ namespace UnityMCPSharp.Editor
                                     op.Status == "failed" ? new Color(0.9f, 0.3f, 0.3f) :
                                     new Color(0.7f, 0.7f, 0.7f);
 
-                    opLabel.text = $"{statusIcon} [{timeStr}] {op.Operation}";
+                    // Build operation text
+                    var opText = $"{statusIcon} [{timeStr}] {op.Operation}";
+
+                    // Add parameters if toggle is on and parameters exist
+                    if (_showParameters && !string.IsNullOrEmpty(op.Parameters))
+                    {
+                        opText += $"\n    Parameters: {op.Parameters}";
+                    }
+
+                    opLabel.text = opText;
                     opLabel.style.color = statusColor;
                     opLabel.style.fontSize = 11;
                     opLabel.style.paddingLeft = 4;
                     opLabel.style.paddingTop = 2;
                     opLabel.style.paddingBottom = 2;
+                    opLabel.style.whiteSpace = WhiteSpace.Normal; // Allow text wrapping for parameters
 
                     _operationsScrollView.Add(opLabel);
                 }
@@ -439,6 +451,17 @@ namespace UnityMCPSharp.Editor
                     headerRow.Add(clearButton);
 
                     operationsSection.Add(headerRow);
+
+                    // Show parameters toggle
+                    _showParametersToggle = new Toggle("Show input parameters");
+                    _showParametersToggle.value = _showParameters;
+                    _showParametersToggle.style.marginBottom = 5;
+                    _showParametersToggle.RegisterValueChangedCallback(evt =>
+                    {
+                        _showParameters = evt.newValue;
+                        UpdateOperationUI(); // Refresh the operations display
+                    });
+                    operationsSection.Add(_showParametersToggle);
 
                     // Operations log scroll view
                     _operationsScrollView = new ScrollView(ScrollViewMode.Vertical);
