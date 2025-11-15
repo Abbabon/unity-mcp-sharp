@@ -44,6 +44,23 @@ namespace UnityMCPSharp
         [Range(50, 1000)]
         public int maxLogBuffer = 500;
 
+        [Header("Visual Feedback")]
+        [Tooltip("Show visual feedback when MCP operations are in progress")]
+        public bool showVisualFeedback = true;
+
+        [Tooltip("Background color tint when MCP is active")]
+        public Color feedbackColor = new Color(0.3f, 0.5f, 0.7f, 0.1f);
+
+        [Tooltip("Show recent operations log in Dashboard")]
+        public bool showOperationLog = true;
+
+        [Tooltip("Maximum number of operations to display in log")]
+        [Range(5, 50)]
+        public int maxOperationLogEntries = 20;
+
+        [Tooltip("Show MCP status overlay in Scene View")]
+        public bool showSceneViewOverlay = true;
+
         private static MCPConfiguration _instance;
 
         public static MCPConfiguration Instance
@@ -139,6 +156,11 @@ namespace UnityMCPSharp
             retryDelay = 5;
             verboseLogging = false;
             maxLogBuffer = 500;
+            showVisualFeedback = true;
+            feedbackColor = new Color(0.3f, 0.5f, 0.7f, 0.1f);
+            showOperationLog = true;
+            maxOperationLogEntries = 20;
+            showSceneViewOverlay = true;
 
 #if UNITY_EDITOR
             if (!IsInMemory())

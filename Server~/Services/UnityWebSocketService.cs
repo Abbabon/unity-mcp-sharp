@@ -188,6 +188,8 @@ public class UnityWebSocketService
     /// </summary>
     public async Task BroadcastNotificationAsync(string method, object? parameters)
     {
+        _logger.LogInformation("Broadcasting notification to Unity: {Method}, Connections: {Count}", method, _connections.Count);
+
         var notification = new JsonRpcNotification
         {
             Method = method,
@@ -204,11 +206,16 @@ public class UnityWebSocketService
                 try
                 {
                     await connection.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+                    _logger.LogInformation("Broadcast sent successfully to Unity");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error broadcasting notification");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Skipping broadcast - WebSocket connection not open (State: {State})", connection.State);
             }
         }
     }

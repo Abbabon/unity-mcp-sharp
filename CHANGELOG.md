@@ -7,13 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **10 New MCP Tools:**
+  - `unity_refresh_assets` - Refresh Unity Asset Database
+  - `unity_batch_create_game_objects` - Create multiple GameObjects in one operation
+  - `unity_find_game_object` - Find GameObject by name/tag/path with detailed info
+  - `unity_save_scene` - Save active scene, specific scene, or all scenes
+  - `unity_list_scenes` - List all .unity scene files in project
+  - `unity_open_scene` - Open scene in single or additive mode
+  - `unity_close_scene` - Close a specific scene
+  - `unity_get_active_scene` - Get active scene information
+  - `unity_set_active_scene` - Set which scene is active
+  - `unity_create_game_object_in_scene` - Create GameObject in specific scene
+- **Visual Feedback System:**
+  - Operation tracking in MCPEditorIntegration
+  - Dashboard current operation indicator
+  - Recent operations log with timestamps and status
+  - Customizable background color tint during operations
+  - MCPConfiguration settings for visual feedback customization
+- **Documentation Updates:**
+  - CLAUDE.md: Asset Database refresh best practices
+  - CLAUDE.md: JSON serialization guidelines
+  - CLAUDE.md: Main thread queue pattern documentation
+
+### Changed
+- Improved HandleCreateGameObject and other handlers to use Newtonsoft.Json for reliable parameter deserialization
+- All handlers now execute directly on main thread (removed EditorApplication.delayCall)
+
 ### Planned Features
-- Additional MCP tools for asset manipulation
 - Support for multiple Unity instances
 - Performance monitoring and metrics
 - Advanced scene query capabilities
 - Prefab instantiation support
 - Build pipeline integration
+- Scene View overlay for MCP operations
 
 ## [0.1.0] - 2025-01-12
 

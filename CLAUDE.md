@@ -208,7 +208,42 @@ private static void HandleYourMethod(object parameters)
 
 **Note:** Handlers are automatically called on the main thread via `MCPClient.ProcessMainThreadQueue()`, so no `EditorApplication.delayCall` is needed.
 
-#### Step 3: Update Documentation
+**Important - JSON Serialization:** Always use `Newtonsoft.Json` for deserializing parameters from WebSocket messages, NOT Unity's `JsonUtility`:
+
+```csharp
+// Correct - use Newtonsoft.Json
+var json = Newtonsoft.Json.JsonConvert.SerializeObject(parameters);
+var data = Newtonsoft.Json.JsonConvert.DeserializeObject<YourDataClass>(json);
+
+// Incorrect - Unity JsonUtility doesn't handle WebSocket objects properly
+var json = JsonUtility.ToJson(parameters);  // DON'T USE THIS
+var data = JsonUtility.FromJson<YourDataClass>(json);  // DON'T USE THIS
+```
+
+#### Step 3: Asset Database Management
+
+After making changes to files in the Assets folder, Unity's Asset Database must be refreshed to detect the changes.
+
+**When automatic refresh happens:**
+- After `unity_create_script` - calls `AssetDatabase.Refresh()` automatically
+- After file writes in handlers - should call `AssetDatabase.Refresh()`
+- Unity Editor detects file changes after a short delay (when focus returns to Unity)
+
+**When to use unity_refresh_assets tool:**
+- After batch file operations via external tools
+- When changes aren't detected automatically
+- When you need immediate recompilation
+
+**Best practices:**
+```csharp
+// In handlers that create/modify files in Assets/
+System.IO.File.WriteAllText(assetPath, content);
+AssetDatabase.Refresh();  // Trigger immediate refresh
+```
+
+**Important:** Always call `AssetDatabase.Refresh()` after any file I/O operations in the Assets folder to ensure Unity detects changes immediately.
+
+#### Step 4: Update Documentation
 
 - Add tool description to README.md
 - Add usage examples

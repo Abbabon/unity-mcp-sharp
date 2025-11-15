@@ -4,8 +4,8 @@ set -e
 
 echo "🔨 Rebuilding Unity MCP Server..."
 
-# Navigate to server directory
-cd "$(dirname "$0")/Server~"
+# Navigate to server directory (go up one level from Scripts~ to repo root, then into Server~)
+cd "$(dirname "$0")/../Server~"
 
 echo ""
 echo "📦 Building .NET server..."

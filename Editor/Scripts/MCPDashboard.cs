@@ -19,6 +19,7 @@ namespace UnityMCPSharp.Editor
         // UI Elements
         private Label _statusLabel;
         private Label _connectionLabel;
+        private Label _currentOperationLabel;
         private Button _startButton;
         private Button _stopButton;
         private Button _connectButton;
@@ -27,6 +28,7 @@ namespace UnityMCPSharp.Editor
         private TextField _serverUrlField;
         private TextField _dockerImageField;
         private ScrollView _logsScrollView;
+        private ScrollView _operationsScrollView;
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
         private Toggle _verboseLoggingToggle;
@@ -119,6 +121,7 @@ namespace UnityMCPSharp.Editor
             if (currentTime - _lastConnectionCheckTime >= CONNECTION_CHECK_INTERVAL)
             {
                 UpdateConnectionUI();
+                UpdateOperationUI();
                 _lastConnectionCheckTime = currentTime;
             }
 
@@ -130,6 +133,62 @@ namespace UnityMCPSharp.Editor
                     _ = RefreshLogsAsync();
                     _lastLogRefreshTime = currentTime;
                 }
+            }
+        }
+
+        private void UpdateOperationUI()
+        {
+            if (!_config.showVisualFeedback)
+                return;
+
+            // Update current operation label
+            if (_currentOperationLabel != null)
+            {
+                if (MCPEditorIntegration.IsOperationInProgress)
+                {
+                    _currentOperationLabel.text = $"⚡ {MCPEditorIntegration.CurrentOperation}";
+                    _currentOperationLabel.style.color = new Color(0.3f, 0.7f, 1f);
+                    _currentOperationLabel.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _currentOperationLabel.style.display = DisplayStyle.None;
+                }
+            }
+
+            // Update operations log
+            if (_operationsScrollView != null && _config.showOperationLog)
+            {
+                _operationsScrollView.Clear();
+
+                foreach (var op in MCPEditorIntegration.RecentOperations)
+                {
+                    var opLabel = new Label();
+                    var timeStr = op.Timestamp.ToString("HH:mm:ss");
+                    var statusIcon = op.Status == "completed" ? "✓" : op.Status == "failed" ? "✗" : "⋯";
+                    var statusColor = op.Status == "completed" ? new Color(0.3f, 0.8f, 0.3f) :
+                                    op.Status == "failed" ? new Color(0.9f, 0.3f, 0.3f) :
+                                    new Color(0.7f, 0.7f, 0.7f);
+
+                    opLabel.text = $"{statusIcon} [{timeStr}] {op.Operation}";
+                    opLabel.style.color = statusColor;
+                    opLabel.style.fontSize = 11;
+                    opLabel.style.paddingLeft = 4;
+                    opLabel.style.paddingTop = 2;
+                    opLabel.style.paddingBottom = 2;
+
+                    _operationsScrollView.Add(opLabel);
+                }
+            }
+
+            // Update background color tint
+            if (MCPEditorIntegration.IsOperationInProgress && _config.showVisualFeedback)
+            {
+                rootVisualElement.style.backgroundColor = _config.feedbackColor;
+            }
+            else
+            {
+                rootVisualElement.style.backgroundColor = new StyleColor(StyleKeyword.None);
             }
         }
 
@@ -333,6 +392,52 @@ namespace UnityMCPSharp.Editor
 
             connectionSection.Add(connectionButtons);
             container.Add(connectionSection);
+
+            // MCP Operations Section
+            if (_config.showVisualFeedback)
+            {
+                var operationsSection = new VisualElement();
+                operationsSection.style.marginBottom = 15;
+
+                var operationsHeader = new Label("MCP Operations");
+                operationsHeader.style.fontSize = 16;
+                operationsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+                operationsHeader.style.marginBottom = 5;
+                operationsSection.Add(operationsHeader);
+
+                // Current operation indicator
+                _currentOperationLabel = new Label();
+                _currentOperationLabel.style.fontSize = 13;
+                _currentOperationLabel.style.marginBottom = 10;
+                _currentOperationLabel.style.display = DisplayStyle.None;
+                operationsSection.Add(_currentOperationLabel);
+
+                if (_config.showOperationLog)
+                {
+                    var recentOpsLabel = new Label("Recent Operations:");
+                    recentOpsLabel.style.fontSize = 12;
+                    recentOpsLabel.style.marginBottom = 5;
+                    recentOpsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    operationsSection.Add(recentOpsLabel);
+
+                    // Operations log scroll view
+                    _operationsScrollView = new ScrollView(ScrollViewMode.Vertical);
+                    _operationsScrollView.style.maxHeight = 200;
+                    _operationsScrollView.style.borderTopWidth = 1;
+                    _operationsScrollView.style.borderBottomWidth = 1;
+                    _operationsScrollView.style.borderLeftWidth = 1;
+                    _operationsScrollView.style.borderRightWidth = 1;
+                    _operationsScrollView.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f);
+                    _operationsScrollView.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f);
+                    _operationsScrollView.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f);
+                    _operationsScrollView.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f);
+                    _operationsScrollView.style.paddingTop = 4;
+                    _operationsScrollView.style.paddingBottom = 4;
+                    operationsSection.Add(_operationsScrollView);
+                }
+
+                container.Add(operationsSection);
+            }
 
             return container;
         }

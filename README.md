@@ -15,15 +15,18 @@
   - Extensible command/response pattern
   - Support for Unity operations and queries
 
-- **Planned Tools** (Coming Soon)
-  - Read Unity console logs in real-time
-  - Trigger and monitor script compilation
-  - Create and manipulate GameObjects in scenes
-  - List scene hierarchy
-  - Get project information
+- **21 MCP Tools Available**
+  - **Console & Compilation:** Get console logs, trigger/check compilation status
+  - **GameObjects:** Create, find, batch create, add components
+  - **Scenes:** List, open, close, save, get/set active scene
+  - **Scripting:** Create C# MonoBehaviour scripts
+  - **Play Mode:** Enter, exit, get play mode state
+  - **Project Info:** Get Unity version, project name, paths
+  - **Utilities:** Refresh asset database
 
 - **Unity Package** (OpenUPM compatible)
   - UIToolkit-based dashboard with status monitoring
+  - Visual feedback system with operation tracking
   - Docker container lifecycle management
   - Auto-connect and auto-start capabilities
   - Configuration via ScriptableObject
