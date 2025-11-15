@@ -6,8 +6,6 @@
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Note:** v0.1.0 focuses on WebSocket communication with Unity. Full MCP protocol integration with IDEs will be added in a future release when the C# MCP SDK is more mature.
-
 ## Features
 
 - **WebSocket Communication (JSON-RPC 2.0)**
