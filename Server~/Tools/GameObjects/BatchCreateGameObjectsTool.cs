@@ -12,8 +12,9 @@ public class BatchCreateGameObjectsTool(ILogger<BatchCreateGameObjectsTool> logg
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create multiple GameObjects in a single operation. More efficient than creating them one by one. Each GameObject can have its own position, components, and parent.")]
-    public async Task UnityBatchCreateGameObjectsAsync(
+    [Description("Create multiple GameObjects in a single operation. More efficient than creating them one by one. Each GameObject can have its own position, components, and parent. Use unity_list_scene_objects after to verify all objects were created successfully.")]
+    [return: Description("Confirmation message indicating batch creation was initiated")]
+    public async Task<string> UnityBatchCreateGameObjectsAsync(
         [Description("JSON array of GameObject specifications. Each should have: name, position {x,y,z}, components (comma-separated), parent")] string gameObjectsJson)
     {
         _logger.LogInformation("Batch creating GameObjects");
@@ -24,5 +25,7 @@ public class BatchCreateGameObjectsTool(ILogger<BatchCreateGameObjectsTool> logg
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.batchCreateGameObjects", parameters);
+
+        return $"Batch GameObject creation initiated. Use unity_list_scene_objects to verify.";
     }
 }

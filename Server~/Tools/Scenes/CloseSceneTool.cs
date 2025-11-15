@@ -12,8 +12,9 @@ public class CloseSceneTool(ILogger<CloseSceneTool> logger, UnityWebSocketServic
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Close a specific Unity scene. Only works when multiple scenes are open. Cannot close the last open scene. Scene must be identified by its path or name.")]
-    public async Task UnityCloseSceneAsync(
+    [Description("Close a specific Unity scene. Only works when multiple scenes are open. Cannot close the last open scene. Scene must be identified by its path or name. Use unity_get_active_scene first to see which scenes are currently loaded.")]
+    [return: Description("Confirmation message with the scene identifier that was closed")]
+    public async Task<string> UnityCloseSceneAsync(
         [Description("Name or path of the scene to close")] string sceneIdentifier)
     {
         _logger.LogInformation("Closing scene: {SceneIdentifier}", sceneIdentifier);
@@ -24,5 +25,7 @@ public class CloseSceneTool(ILogger<CloseSceneTool> logger, UnityWebSocketServic
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.closeScene", parameters);
+
+        return $"Scene '{sceneIdentifier}' closed";
     }
 }

@@ -13,7 +13,7 @@ public class FindGameObjectTool(ILogger<FindGameObjectTool> logger, UnityWebSock
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Find a GameObject by name, tag, or path and return detailed information about it including position, rotation, scale, active state, and all attached components.")]
+    [Description("Find a GameObject by name, tag, or path and return detailed information about it including position, rotation, scale, active state, and all attached components. Use unity_list_scene_objects first to see all available GameObjects if you don't know the exact name. Use unity_add_component_to_object to add components to the found GameObject.")]
     [return: Description("GameObject information including transform, active state, and components")]
     public async Task<string> UnityFindGameObjectAsync(
         [Description("Name of the GameObject to find")] string name,

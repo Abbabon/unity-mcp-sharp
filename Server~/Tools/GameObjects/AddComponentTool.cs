@@ -12,8 +12,9 @@ public class AddComponentTool(ILogger<AddComponentTool> logger, UnityWebSocketSe
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Add a component to an existing GameObject in the scene. Can add Unity built-in components or custom MonoBehaviour scripts.")]
-    public async Task UnityAddComponentToObjectAsync(
+    [Description("Add a component to an existing GameObject in the scene. Can add Unity built-in components or custom MonoBehaviour scripts. Use unity_find_game_object first to verify the GameObject exists and see its current components.")]
+    [return: Description("Confirmation message with GameObject name and component added")]
+    public async Task<string> UnityAddComponentToObjectAsync(
         [Description("Name of the GameObject to add the component to")] string gameObjectName,
         [Description("Component type name (e.g., 'Rigidbody', 'BoxCollider', or your custom script name)")] string componentType)
     {
@@ -26,5 +27,7 @@ public class AddComponentTool(ILogger<AddComponentTool> logger, UnityWebSocketSe
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.addComponent", parameters);
+
+        return $"Component '{componentType}' added to GameObject '{gameObjectName}'";
     }
 }

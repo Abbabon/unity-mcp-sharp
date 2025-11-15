@@ -13,7 +13,7 @@ public class ListScenesTool(ILogger<ListScenesTool> logger, UnityWebSocketServic
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("List all Unity scene files (.unity) in the project. Returns scene paths relative to the project root. Useful for discovering available scenes before opening them.")]
+    [Description("List all Unity scene files (.unity) in the project. Returns scene paths relative to the project root. Useful for discovering available scenes before opening them. Use unity_open_scene to open a specific scene, or unity_get_active_scene to see which scene is currently active.")]
     [return: Description("List of all scene file paths in the project")]
     public async Task<string> UnityListScenesAsync()
     {

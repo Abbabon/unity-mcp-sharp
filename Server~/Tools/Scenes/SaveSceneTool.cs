@@ -12,8 +12,9 @@ public class SaveSceneTool(ILogger<SaveSceneTool> logger, UnityWebSocketService 
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Save the currently active scene or a specific scene by path. Can save just the specified scene or all open scenes. Returns success/failure status.")]
-    public async Task UnitySaveSceneAsync(
+    [Description("Save the currently active scene or a specific scene by path. Can save just the specified scene or all open scenes. Important: Always save scenes after making changes to GameObjects, otherwise changes will be lost when Unity restarts or switches scenes.")]
+    [return: Description("Confirmation message indicating which scene(s) were saved")]
+    public async Task<string> UnitySaveSceneAsync(
         [Description("Path to specific scene to save, or null/empty to save active scene")] string? scenePath = null,
         [Description("If true, saves all currently open scenes. If false (default), saves only the specified/active scene.")] bool saveAll = false)
     {
@@ -26,5 +27,12 @@ public class SaveSceneTool(ILogger<SaveSceneTool> logger, UnityWebSocketService 
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.saveScene", parameters);
+
+        if (saveAll)
+            return "All open scenes saved";
+        else if (scenePath != null)
+            return $"Scene '{scenePath}' saved";
+        else
+            return "Active scene saved";
     }
 }

@@ -12,8 +12,9 @@ public class CreateGameObjectTool(ILogger<CreateGameObjectTool> logger, UnityWeb
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create a new GameObject in the currently active Unity scene. You can specify its name, 3D position, components to add (e.g., 'Rigidbody,BoxCollider'), and parent object. The GameObject will be selected in the Hierarchy after creation.")]
-    public async Task UnityCreateGameObjectAsync(
+    [Description("Create a new GameObject in the currently active Unity scene. You can specify its name, 3D position, components to add (e.g., 'Rigidbody,BoxCollider'), and parent object. The GameObject will be selected in the Hierarchy after creation. Use unity_find_game_object to verify creation or unity_add_component_to_object to add more components later.")]
+    [return: Description("Confirmation message with GameObject name and position")]
+    public async Task<string> UnityCreateGameObjectAsync(
         [Description("Name of the GameObject to create")] string name,
         [Description("X position in world space (default: 0)")] float x = 0,
         [Description("Y position in world space (default: 0)")] float y = 0,
@@ -32,5 +33,9 @@ public class CreateGameObjectTool(ILogger<CreateGameObjectTool> logger, UnityWeb
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.createGameObject", parameters);
+
+        var componentInfo = components != null ? $" with components [{components}]" : "";
+        var parentInfo = parent != null ? $" as child of '{parent}'" : " at root level";
+        return $"GameObject '{name}' created at position ({x}, {y}, {z}){componentInfo}{parentInfo}";
     }
 }

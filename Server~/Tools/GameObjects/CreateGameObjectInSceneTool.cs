@@ -12,8 +12,9 @@ public class CreateGameObjectInSceneTool(ILogger<CreateGameObjectInSceneTool> lo
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create a GameObject in a specific scene (not necessarily the active one). Requires the scene to be loaded. If scene is not loaded, it will be opened additively first.")]
-    public async Task UnityCreateGameObjectInSceneAsync(
+    [Description("Create a GameObject in a specific scene (not necessarily the active one). Requires the scene to be loaded. If scene is not loaded, it will be opened additively first. Use unity_list_scenes to find available scenes, then unity_set_active_scene if you want to make that scene active.")]
+    [return: Description("Confirmation message with GameObject name, scene path, and position")]
+    public async Task<string> UnityCreateGameObjectInSceneAsync(
         [Description("Path to the scene where the GameObject should be created (e.g., 'Scenes/Level1.unity')")] string scenePath,
         [Description("Name of the GameObject to create")] string name,
         [Description("X position in world space (default: 0)")] float x = 0,
@@ -34,5 +35,8 @@ public class CreateGameObjectInSceneTool(ILogger<CreateGameObjectInSceneTool> lo
         };
 
         await _webSocketService.BroadcastNotificationAsync("unity.createGameObjectInScene", parameters);
+
+        var componentInfo = components != null ? $" with components [{components}]" : "";
+        return $"GameObject '{name}' created in scene '{scenePath}' at position ({x}, {y}, {z}){componentInfo}";
     }
 }
