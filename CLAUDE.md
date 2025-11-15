@@ -151,26 +151,43 @@ dotnet run
 
 ### Adding New MCP Tools
 
-#### Step 1: Define the Tool (Server~/Tools/UnityTools.cs)
+**IMPORTANT:** All MCP tools must follow best practices for LLM interaction. See "MCP Tool Best Practices" section below before implementing new tools.
+
+#### Step 1: Define the Tool (Server~/Tools/Category/YourTool.cs)
+
+Create a new file in the appropriate category folder (GameObjects/, Scenes/, Assets/, System/).
 
 ```csharp
-[McpTool(
-    Name = "unity_your_tool_name",
-    Description = "Clear description of what this tool does"
-)]
-public async Task<string> YourToolName(
-    [Description("Parameter description")] string param1,
-    CancellationToken cancellationToken = default)
+using System.ComponentModel;
+using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
+using UnityMcpServer.Services;
+
+namespace UnityMcpServer.Tools.Category;
+
+[McpServerToolType]
+public class YourTool(ILogger<YourTool> logger, UnityWebSocketService webSocketService)
 {
-    _logger.LogInformation("Executing your tool");
+    private readonly ILogger<YourTool> _logger = logger;
+    private readonly UnityWebSocketService _webSocketService = webSocketService;
 
-    // Broadcast JSON-RPC request to Unity
-    await _webSocketService.BroadcastNotificationAsync("unity.yourMethod", new
+    [McpServerTool]
+    [Description("Clear description of what this tool does. Mention side effects. Suggest related tools to use next: unity_related_tool_1, unity_related_tool_2.")]
+    [return: Description("What the tool returns - be specific")]
+    public async Task<string> UnityYourToolNameAsync(
+        [Description("Parameter description with examples (e.g., 'value1', 'value2')")] string param1,
+        CancellationToken cancellationToken = default)
     {
-        param1
-    });
+        _logger.LogInformation("Executing your tool with param: {Param1}", param1);
 
-    return "Request sent to Unity Editor";
+        await _webSocketService.BroadcastNotificationAsync("unity.yourMethod", new
+        {
+            param1
+        });
+
+        // ALWAYS return a confirmation message - never return void!
+        return $"Operation '{param1}' completed successfully";
+    }
 }
 ```
 
@@ -245,9 +262,165 @@ AssetDatabase.Refresh();  // Trigger immediate refresh
 
 #### Step 4: Update Documentation
 
-- Add tool description to README.md
+- Add tool description to README.md with parameters, returns, and related tools
 - Add usage examples
 - Update CHANGELOG.md
+
+---
+
+## MCP Tool Best Practices
+
+All MCP tools in this project follow strict best practices to ensure optimal LLM interaction. **These are REQUIRED for all tools:**
+
+### 1. Always Return Confirmations (Never void)
+
+**Bad ❌:**
+```csharp
+public async Task UnityCreateGameObjectAsync(...)
+{
+    await _webSocketService.BroadcastNotificationAsync(...);
+    // Returns nothing - LLM has no feedback!
+}
+```
+
+**Good ✅:**
+```csharp
+[return: Description("Confirmation message with GameObject name and position")]
+public async Task<string> UnityCreateGameObjectAsync(...)
+{
+    await _webSocketService.BroadcastNotificationAsync(...);
+    return $"GameObject '{name}' created at position ({x}, {y}, {z})";
+}
+```
+
+**Why:** LLMs need confirmation that operations succeeded so they can chain operations confidently.
+
+### 2. Rich Tool Descriptions with Tool Chaining Hints
+
+**Bad ❌:**
+```csharp
+[Description("Create a GameObject")]
+```
+
+**Good ✅:**
+```csharp
+[Description("Create a new GameObject in the currently active Unity scene. You can specify its name, 3D position, components to add (e.g., 'Rigidbody,BoxCollider'), and parent object. The GameObject will be selected in the Hierarchy after creation. Use unity_find_game_object to verify creation or unity_add_component_to_object to add more components later.")]
+```
+
+**Why:**
+- LLMs learn what the tool does and when to use it
+- Cross-references help LLMs discover tool chains
+- Examples show correct parameter formats
+
+### 3. Parameter Descriptions with Examples
+
+**Bad ❌:**
+```csharp
+[Description("The name")] string name
+```
+
+**Good ✅:**
+```csharp
+[Description("Comma-separated list of Unity components to add (e.g., 'Rigidbody,BoxCollider,AudioSource')")] string? components = null
+```
+
+**Why:** Examples teach LLMs the expected format, reducing errors.
+
+### 4. Return Descriptions
+
+**Always include `[return: Description]`:**
+
+```csharp
+[return: Description("Confirmation message with GameObject name and position")]
+public async Task<string> UnityCreateGameObjectAsync(...)
+```
+
+**Why:** Helps LLMs understand what to expect back and how to use the response.
+
+### 5. Document Side Effects and Warnings
+
+**Important behaviors must be documented:**
+
+```csharp
+[Description("Enter Unity play mode (start running the game/scene). Equivalent to pressing the Play button in Unity Editor. IMPORTANT: Changes made to GameObjects in play mode are NOT saved unless explicitly copied. Any GameObjects created in play mode will be destroyed when exiting. Use unity_get_play_mode_state to check current state, and unity_exit_play_mode when done testing.")]
+```
+
+**Common warnings to include:**
+- Play mode changes are NOT saved
+- Compilation causes temporary disconnect
+- Asset refresh takes time
+- Scene changes must be saved
+
+### 6. Consistent Naming Convention
+
+- Tool class: `YourToolName + Tool` (e.g., `CreateGameObjectTool`)
+- Method name: `Unity + Action + Target + Async` (e.g., `UnityCreateGameObjectAsync`)
+- Tool name (auto-generated): `unity_action_target` (e.g., `unity_create_game_object`)
+
+### 7. Proper File Organization
+
+- Place tools in category folders: `Server~/Tools/GameObjects/`, `Server~/Tools/Scenes/`, etc.
+- One tool per file
+- File name matches class name
+
+### 8. Example Tool Following All Best Practices
+
+```csharp
+using System.ComponentModel;
+using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
+using UnityMcpServer.Services;
+
+namespace UnityMcpServer.Tools.GameObjects;
+
+[McpServerToolType]
+public class CreateGameObjectTool(ILogger<CreateGameObjectTool> logger, UnityWebSocketService webSocketService)
+{
+    private readonly ILogger<CreateGameObjectTool> _logger = logger;
+    private readonly UnityWebSocketService _webSocketService = webSocketService;
+
+    [McpServerTool]
+    [Description("Create a new GameObject in the currently active Unity scene. You can specify its name, 3D position, components to add (e.g., 'Rigidbody,BoxCollider'), and parent object. The GameObject will be selected in the Hierarchy after creation. Use unity_find_game_object to verify creation or unity_add_component_to_object to add more components later.")]
+    [return: Description("Confirmation message with GameObject name and position")]
+    public async Task<string> UnityCreateGameObjectAsync(
+        [Description("Name of the GameObject to create")] string name,
+        [Description("X position in world space (default: 0)")] float x = 0,
+        [Description("Y position in world space (default: 0)")] float y = 0,
+        [Description("Z position in world space (default: 0)")] float z = 0,
+        [Description("Comma-separated list of Unity components to add (e.g., 'Rigidbody,BoxCollider,AudioSource')")] string? components = null,
+        [Description("Name of parent GameObject in hierarchy (optional, leave empty for root level)")] string? parent = null)
+    {
+        _logger.LogInformation("Creating GameObject: {Name}", name);
+
+        var parameters = new
+        {
+            name,
+            position = new { x, y, z },
+            components = components?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            parent
+        };
+
+        await _webSocketService.BroadcastNotificationAsync("unity.createGameObject", parameters);
+
+        var componentInfo = components != null ? $" with components [{components}]" : "";
+        var parentInfo = parent != null ? $" as child of '{parent}'" : " at root level";
+        return $"GameObject '{name}' created at position ({x}, {y}, {z}){componentInfo}{parentInfo}";
+    }
+}
+```
+
+### Summary Checklist
+
+When creating a new MCP tool, verify:
+
+- ✅ Returns `Task<string>` with confirmation message (never `Task` void)
+- ✅ Has `[return: Description]` attribute
+- ✅ Tool description includes what it does, side effects, and related tools
+- ✅ All parameters have `[Description]` with examples where helpful
+- ✅ Follows naming convention: `Unity{Action}{Target}Async`
+- ✅ Placed in correct category folder
+- ✅ Documentation added to README.md
+- ✅ Tested with actual LLM interaction
 
 ### Testing Locally
 

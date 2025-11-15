@@ -15,14 +15,20 @@
   - Extensible command/response pattern
   - Support for Unity operations and queries
 
-- **21 MCP Tools Available**
+- **23 MCP Tools Available**
   - **Console & Compilation:** Get console logs, trigger/check compilation status
-  - **GameObjects:** Create, find, batch create, add components
+  - **GameObjects:** Create, find, batch create, add components, list scene objects
   - **Scenes:** List, open, close, save, get/set active scene
-  - **Scripting:** Create C# MonoBehaviour scripts
+  - **Assets:** Create scripts, create assets (Materials, Textures, etc.), refresh database
   - **Play Mode:** Enter, exit, get play mode state
   - **Project Info:** Get Unity version, project name, paths
-  - **Utilities:** Refresh asset database
+  - **System:** Run any Unity menu item programmatically
+
+- **Optimized for LLM Interaction**
+  - All tools return confirmation messages for reliable feedback
+  - Tool descriptions include cross-references for chaining operations
+  - Side effects and warnings clearly documented
+  - Rich return descriptions help LLMs understand responses
 
 - **Unity Package** (OpenUPM compatible)
   - UIToolkit-based dashboard with status monitoring
@@ -150,62 +156,243 @@ Add to `~/.cursor/config.json`:
 
 ## Available MCP Tools
 
-### `unity_read_console_log`
+All tools are designed for optimal LLM interaction with:
+- **Confirmation messages** - Every operation returns success feedback
+- **Tool chaining hints** - Descriptions suggest related tools to use next
+- **Side effect warnings** - Important behaviors clearly documented
 
-Read recent Unity console log entries.
+### System & Project Information
 
-**Parameters:**
-- `count` (int, default: 50): Number of recent log entries (max: 500)
-- `logType` (string, default: "all"): Filter by type: "all", "error", "warning", "info"
+#### `unity_get_project_info`
+Get Unity project metadata including name, version, active scene, paths, and editor state.
 
-**Example:**
-```
-Read the last 100 Unity console logs
-```
+**Returns:** Project information with name, Unity version, active scene, data path, play/pause state
 
-### `unity_trigger_compilation`
+**Use this first** when starting work on a project to understand the environment.
 
-Trigger Unity script compilation.
+#### `unity_get_console_logs`
+Get recent console logs from Unity Editor (errors, warnings, debug logs).
 
-**Parameters:**
-- `waitForCompletion` (bool, default: false): Wait for compilation to finish
+**Returns:** Recent console logs with type, message, and stack traces
 
-**Example:**
-```
-Trigger Unity compilation and wait for it to complete
-```
+**Tip:** Call this after creating scripts, entering play mode, or when compilation fails.
 
-### `unity_get_compilation_status`
+#### `unity_get_compilation_status`
+Check if Unity is currently compiling and if last compilation succeeded.
 
-Get current compilation status.
+**Returns:** Compilation status (idle/compiling) and last compilation result
 
-**Returns:** Whether Unity is currently compiling and if last compilation succeeded.
+**Related tools:** `unity_trigger_script_compilation`, `unity_get_console_logs`
 
-### `unity_create_gameobject`
+#### `unity_trigger_script_compilation`
+Force Unity to recompile all C# scripts.
 
-Create a new GameObject in the active scene.
+**Returns:** Confirmation that compilation was triggered
+
+**Note:** Unity temporarily disconnects during compilation. Use `unity_get_compilation_status` after to verify success.
+
+### GameObjects
+
+#### `unity_create_game_object`
+Create a new GameObject in the currently active scene.
 
 **Parameters:**
 - `name` (string, required): GameObject name
-- `position` (string, default: "0,0,0"): Position as "x,y,z"
-- `components` (string, optional): Comma-separated component types (e.g., "Rigidbody,BoxCollider")
+- `x`, `y`, `z` (float, default: 0): World position
+- `components` (string, optional): Comma-separated components (e.g., "Rigidbody,BoxCollider")
 - `parent` (string, optional): Parent GameObject name
 
-**Example:**
-```
-Create a GameObject named "Player" at position 0,1,0 with Rigidbody and CapsuleCollider components
-```
+**Returns:** Confirmation with name, position, components, and hierarchy location
 
-### `unity_list_scene_objects`
+**Example:** Create a "Player" at position (0, 1, 0) with Rigidbody and CapsuleCollider
 
-List all GameObjects in the active scene hierarchy.
+**Related tools:** `unity_find_game_object`, `unity_add_component_to_object`
+
+#### `unity_find_game_object`
+Find a GameObject by name, tag, or path with detailed information.
 
 **Parameters:**
-- `includeInactive` (bool, default: true): Include inactive objects
+- `name` (string, required): GameObject name
+- `searchBy` (string, default: "name"): Search mode: "name", "tag", or "path"
 
-### `unity_get_project_info`
+**Returns:** Position, rotation, scale, active state, and all attached components
 
-Get Unity project information (name, version, active scene, platform, etc.).
+**Related tools:** `unity_list_scene_objects`, `unity_add_component_to_object`
+
+#### `unity_add_component_to_object`
+Add a component to an existing GameObject.
+
+**Parameters:**
+- `gameObjectName` (string, required): Target GameObject
+- `componentType` (string, required): Component type (e.g., "Rigidbody", "BoxCollider", custom scripts)
+
+**Returns:** Confirmation that component was added
+
+**Tip:** Use `unity_find_game_object` first to verify the GameObject exists.
+
+#### `unity_list_scene_objects`
+Get the complete GameObject hierarchy of the active scene.
+
+**Returns:** Hierarchical list with active/inactive state indicators
+
+**Related tools:** `unity_find_game_object`, `unity_create_game_object`
+
+#### `unity_batch_create_game_objects`
+Create multiple GameObjects in a single operation (more efficient than one-by-one).
+
+**Parameters:**
+- `gameObjectsJson` (string, required): JSON array of GameObject specs
+
+**Returns:** Confirmation that batch creation was initiated
+
+#### `unity_create_game_object_in_scene`
+Create a GameObject in a specific scene (not necessarily the active one).
+
+**Parameters:**
+- `scenePath` (string, required): Scene path (e.g., "Scenes/Level1.unity")
+- `name`, `x`, `y`, `z`, `components`, `parent`: Same as `unity_create_game_object`
+
+**Returns:** Confirmation with scene path, name, and position
+
+**Note:** If scene is not loaded, it will be opened additively first.
+
+### Scenes
+
+#### `unity_list_scenes`
+List all .unity scene files in the project.
+
+**Returns:** List of scene paths relative to project root
+
+**Related tools:** `unity_open_scene`, `unity_get_active_scene`
+
+#### `unity_get_active_scene`
+Get information about the currently active scene.
+
+**Returns:** Scene name, path, isDirty status, root GameObject count, loaded state
+
+**Tip:** Use `unity_save_scene` if isDirty is true to save changes.
+
+#### `unity_open_scene`
+Open a Unity scene by path.
+
+**Parameters:**
+- `scenePath` (string, required): Path relative to Assets folder
+- `additive` (bool, default: false): Keep other scenes open if true
+
+**Returns:** Confirmation with scene path and mode (single/additive)
+
+**Related tools:** `unity_list_scenes`, `unity_get_active_scene`
+
+#### `unity_close_scene`
+Close a specific scene (only works with multiple scenes open).
+
+**Parameters:**
+- `sceneIdentifier` (string, required): Scene name or path
+
+**Returns:** Confirmation that scene was closed
+
+**Note:** Cannot close the last open scene.
+
+#### `unity_save_scene`
+Save the active scene or a specific scene.
+
+**Parameters:**
+- `scenePath` (string, optional): Specific scene to save (null = active)
+- `saveAll` (bool, default: false): Save all open scenes
+
+**Returns:** Confirmation of which scene(s) were saved
+
+**Important:** Always save after making changes, otherwise they'll be lost!
+
+#### `unity_set_active_scene`
+Set which scene is active (where new GameObjects are created).
+
+**Parameters:**
+- `sceneIdentifier` (string, required): Scene name or path
+
+**Returns:** Confirmation that scene is now active
+
+**Note:** Only works when multiple scenes are open.
+
+### Assets & Scripts
+
+#### `unity_create_script`
+Create a new C# MonoBehaviour script file.
+
+**Parameters:**
+- `scriptName` (string, required): Script name (without .cs)
+- `folderPath` (string, required): Path within Assets (e.g., "Scripts/Player")
+- `scriptContent` (string, required): Full C# class code
+
+**Returns:** Confirmation with file path and recompilation notice
+
+**Related tools:** `unity_get_compilation_status`, `unity_get_console_logs`
+
+#### `unity_create_asset`
+Create any type of Unity asset (Material, Texture2D, ScriptableObject, etc.) using reflection.
+
+**Parameters:**
+- `assetName` (string, required): Asset name (without extension)
+- `folderPath` (string, required): Path within Assets
+- `assetTypeName` (string, required): Full type name (e.g., "UnityEngine.Material")
+- `propertiesJson` (string, optional): JSON properties to set
+
+**Returns:** Confirmation with asset name, type, and path
+
+**Example properties:**
+- Material: `{"shader":"Standard","color":"#FF0000"}`
+- Texture2D: `{"width":256,"height":256}`
+
+#### `unity_refresh_assets`
+Refresh Unity Asset Database to detect file changes.
+
+**Returns:** Confirmation that refresh was initiated
+
+**Use after:** Batch file operations or when changes aren't detected automatically
+
+**Note:** Can take a few seconds for large projects. Use `unity_get_compilation_status` to check if recompilation is complete.
+
+### Play Mode
+
+#### `unity_enter_play_mode`
+Enter Unity play mode (start running the game).
+
+**Returns:** Confirmation message with important warning
+
+**IMPORTANT:** Changes made in play mode are NOT saved! GameObjects created will be destroyed when exiting.
+
+**Related tools:** `unity_get_play_mode_state`, `unity_exit_play_mode`
+
+#### `unity_exit_play_mode`
+Exit Unity play mode (stop running the game).
+
+**Returns:** Confirmation that play mode was exited
+
+**Note:** All changes made during play mode will be reverted.
+
+#### `unity_get_play_mode_state`
+Get current play mode state.
+
+**Returns:** Current state (Playing, Paused, or Stopped)
+
+**Related tools:** `unity_enter_play_mode`, `unity_exit_play_mode`
+
+### System Utilities
+
+#### `unity_run_menu_item`
+Execute any Unity Editor menu item by its path.
+
+**Parameters:**
+- `menuPath` (string, required): Full menu path (e.g., "GameObject/Create Empty", "Edit/Undo")
+
+**Returns:** Confirmation that menu item was executed
+
+**Use as:** Fallback for operations not covered by dedicated tools
+
+**Examples:**
+- `"GameObject/Create Empty"`
+- `"Edit/Undo"`
+- `"Assets/Refresh"`
 
 ## Docker Image
 
