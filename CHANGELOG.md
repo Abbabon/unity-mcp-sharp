@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned Features
+- Support for multiple Unity instances
+- Performance monitoring and metrics
+- Advanced scene query capabilities
+- Prefab instantiation support
+- Build pipeline integration
+- Scene View overlay for MCP operations
+
+## [0.3.0] - 2025-11-15
+
 ### Added
 - **10 New MCP Tools:**
   - `unity_refresh_assets` - Refresh Unity Asset Database
@@ -19,28 +29,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `unity_get_active_scene` - Get active scene information
   - `unity_set_active_scene` - Set which scene is active
   - `unity_create_game_object_in_scene` - Create GameObject in specific scene
+  - `unity_run_menu_item` - Execute any Unity Editor menu item
+  - `unity_create_asset` - Create any type of Unity asset (Materials, Textures, ScriptableObjects)
+- **Comprehensive Operation Tracking:**
+  - All 19 MCP operation handlers now log to MCPOperationTracker
+  - Persistent operation log at `Temp/MCPOperations.log`
+  - Operations visible in Unity MCP Dashboard
+  - Configurable verbose logging and max log entries
+  - Success/failure status tracking for all operations
 - **Visual Feedback System:**
   - Operation tracking in MCPEditorIntegration
   - Dashboard current operation indicator
   - Recent operations log with timestamps and status
   - Customizable background color tint during operations
   - MCPConfiguration settings for visual feedback customization
+- **Enhanced MCP Tool Descriptions:**
+  - Rich tool descriptions with usage examples
+  - Tool chaining hints (suggests related tools to use)
+  - Parameter examples for better LLM understanding
+  - Return value descriptions
+  - Side effect warnings (e.g., play mode changes not saved)
 - **Documentation Updates:**
+  - CLAUDE.md: MCP Tool Best Practices section
   - CLAUDE.md: Asset Database refresh best practices
   - CLAUDE.md: JSON serialization guidelines
   - CLAUDE.md: Main thread queue pattern documentation
+  - CLAUDE.md: Release process documentation
 
 ### Changed
-- Improved HandleCreateGameObject and other handlers to use Newtonsoft.Json for reliable parameter deserialization
+- Improved all handlers to use Newtonsoft.Json for reliable parameter deserialization
 - All handlers now execute directly on main thread (removed EditorApplication.delayCall)
+- MCPConfiguration now passed to all handlers for consistent logging and tracking
+- Docker workflow improved with proper attestation signing
 
-### Planned Features
-- Support for multiple Unity instances
-- Performance monitoring and metrics
-- Advanced scene query capabilities
-- Prefab instantiation support
-- Build pipeline integration
-- Scene View overlay for MCP operations
+### Fixed
+- Docker workflow attestation error (missing step ID and permissions)
+- Operation tracking completeness (all operations now logged)
 
 ## [0.1.0] - 2025-01-12
 

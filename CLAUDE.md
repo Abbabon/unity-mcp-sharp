@@ -689,6 +689,225 @@ git diff                        # View changes
 npx @modelcontextprotocol/inspector http://localhost:8080/mcp
 ```
 
+## Release Process
+
+This section documents the complete process for publishing a new version to OpenUPM.
+
+### Prerequisites
+
+- All changes committed and pushed to `main`
+- Docker image published to ghcr.io (automatic on push to main)
+- All tests passing
+- Version number decided (follow [Semantic Versioning](https://semver.org/))
+
+### Release Checklist
+
+#### 1. Update CHANGELOG.md
+
+Move unreleased changes to a new versioned section:
+
+```markdown
+## [Unreleased]
+
+### Planned Features
+- Future features...
+
+## [X.Y.Z] - YYYY-MM-DD
+
+### Added
+- New features from unreleased section
+
+### Changed
+- Changes from unreleased section
+
+### Fixed
+- Bug fixes from unreleased section
+```
+
+#### 2. Update package.json
+
+Bump version to match the release version:
+
+```json
+{
+  "version": "X.Y.Z",
+  ...
+}
+```
+
+#### 3. Verify Workflow Configuration
+
+Ensure `.github/workflows/publish-openupm.yml` has the correct package name:
+- Package name should be `com.unitymcpsharp.unity-mcp`
+- Workflow triggers on tags matching `v*`
+- GitHub Release is created automatically
+- OpenUPM instructions are displayed
+
+#### 4. Commit Release Preparation
+
+```bash
+git add CHANGELOG.md package.json .github/workflows/publish-openupm.yml
+git commit -m "chore: prepare release vX.Y.Z"
+git push origin main
+```
+
+#### 5. Create and Push Git Tag
+
+The tag triggers the OpenUPM workflow:
+
+```bash
+# Create annotated tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+
+# Push tag to GitHub
+git push origin vX.Y.Z
+```
+
+#### 6. Verify GitHub Actions
+
+Monitor the workflow execution:
+
+```bash
+# Watch the workflow
+gh run list
+
+# View specific run
+gh run view <run-id>
+
+# View on GitHub
+# https://github.com/Abbabon/unity-mcp-sharp/actions
+```
+
+The workflow will:
+- Extract version from tag
+- Verify `package.json` version matches tag
+- Create GitHub Release with:
+  - Release notes from CHANGELOG
+  - Docker pull command
+  - OpenUPM installation command
+- Display manual steps for OpenUPM submission
+
+#### 7. Submit to OpenUPM
+
+After the GitHub Release is created, submit to OpenUPM:
+
+**Option A: Via Pull Request (First-time submission)**
+
+1. Fork the [openupm/openupm](https://github.com/openupm/openupm) repository
+2. Add your package to `data/packages/<package-name>.yml`:
+
+```yaml
+name: com.unitymcpsharp.unity-mcp
+displayName: Unity MCP Server
+description: Model Context Protocol server for Unity Editor integration
+repoUrl: 'https://github.com/Abbabon/unity-mcp-sharp'
+parentRepoUrl: null
+licenseSpdxId: MIT
+licenseName: MIT License
+topics:
+  - mcp
+  - ai
+  - llm
+  - editor
+  - automation
+hunter: YourGitHubUsername
+gitTagPrefix: v
+gitTagIgnore: ''
+minVersion: '0.1.0'
+image: null
+readme: 'master:README.md'
+```
+
+3. Create PR to openupm/openupm
+4. Wait for review and merge
+
+**Option B: Via CLI (If you have access)**
+
+```bash
+openupm publish com.unitymcpsharp.unity-mcp
+```
+
+#### 8. Verify OpenUPM Publication
+
+Once published, verify the package is available:
+
+```bash
+# Search for package
+openupm search unity-mcp
+
+# View package info
+openupm view com.unitymcpsharp.unity-mcp
+
+# Test installation in a Unity project
+openupm add com.unitymcpsharp.unity-mcp
+```
+
+### Version Numbering Guidelines
+
+Follow [Semantic Versioning](https://semver.org/):
+
+- **Major (X.0.0)**: Breaking changes, incompatible API changes
+- **Minor (0.X.0)**: New features, backwards-compatible
+- **Patch (0.0.X)**: Bug fixes, backwards-compatible
+
+Examples:
+- `0.3.0`: Added comprehensive operation tracking (new features)
+- `0.3.1`: Fixed operation tracking bug (bug fix)
+- `1.0.0`: Stable public API, breaking changes from 0.x
+
+### Common Issues
+
+**Tag already exists:**
+```bash
+# Delete local tag
+git tag -d vX.Y.Z
+
+# Delete remote tag
+git push origin :refs/tags/vX.Y.Z
+
+# Create new tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+**Workflow failed - version mismatch:**
+- Ensure `package.json` version matches tag (without 'v' prefix)
+- Tag: `v0.3.0` should match package.json: `"version": "0.3.0"`
+
+**Docker image not published:**
+- Check `.github/workflows/publish-docker.yml` workflow
+- Verify Server~/ changes were pushed
+- Manual trigger: `gh workflow run publish-docker.yml`
+
+### Post-Release Tasks
+
+1. **Update documentation** if needed
+2. **Announce release** in community channels
+3. **Monitor issues** for bug reports
+4. **Plan next release** based on feedback
+
+### Quick Release Command Summary
+
+```bash
+# 1. Update files
+# Edit CHANGELOG.md and package.json manually
+
+# 2. Commit
+git add CHANGELOG.md package.json
+git commit -m "chore: prepare release vX.Y.Z"
+git push origin main
+
+# 3. Tag and push
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+
+# 4. Monitor
+gh run list
+gh run watch <run-id>
+
+# 5. Submit to OpenUPM (manual PR or CLI)
+```
+
 ## Resources
 
 - [Model Context Protocol Docs](https://modelcontextprotocol.io)

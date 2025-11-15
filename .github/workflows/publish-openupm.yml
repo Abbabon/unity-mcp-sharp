@@ -44,7 +44,7 @@ jobs:
 
           ### Installation via OpenUPM
           ```bash
-          openupm add com.glaivegames.unity-mcp
+          openupm add com.unitymcpsharp.unity-mcp
           ```
 
           ### What's Changed
@@ -70,6 +70,6 @@ jobs:
         echo "2. Create a PR to add your package to OpenUPM"
         echo "3. Or use the OpenUPM CLI if you have access:"
         echo ""
-        echo "   openupm publish com.glaivegames.unity-mcp"
+        echo "   openupm publish com.unitymcpsharp.unity-mcp"
         echo ""
         echo "=========================================="
