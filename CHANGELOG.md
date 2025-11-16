@@ -7,9 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **macOS Docker Detection:** MCPServerManager now checks common Docker installation paths (`/usr/local/bin/docker`, `/opt/homebrew/bin/docker`, `/usr/bin/docker`) to resolve "Docker command not found" errors on macOS when Unity's restricted PATH doesn't include Docker binaries
-
 ### Planned Features
 - Support for multiple Unity instances
 - Performance monitoring and metrics
@@ -17,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefab instantiation support
 - Build pipeline integration
 - Scene View overlay for MCP operations
+
+## [0.3.2] - 2025-11-16
+
+### Fixed
+- **macOS Docker Detection:** MCPServerManager now checks common Docker installation paths (`/usr/local/bin/docker`, `/opt/homebrew/bin/docker`, `/usr/bin/docker`) to resolve "Docker command not found" errors on macOS when Unity's restricted PATH doesn't include Docker binaries (fixes #1)
 
 ## [0.3.1] - 2025-11-16
 
