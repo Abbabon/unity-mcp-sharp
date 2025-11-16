@@ -333,9 +333,30 @@ namespace UnityMCPSharp
             {
                 try
                 {
+                    // On macOS/Linux, try to find docker in common locations
+                    string executablePath = command;
+                    if (command == "docker" && !System.IO.File.Exists(command))
+                    {
+                        string[] commonPaths = {
+                            "/usr/local/bin/docker",           // Docker Desktop
+                            "/opt/homebrew/bin/docker",        // Homebrew on Apple Silicon
+                            "/usr/bin/docker"                  // Linux standard
+                        };
+
+                        foreach (var path in commonPaths)
+                        {
+                            if (System.IO.File.Exists(path))
+                            {
+                                executablePath = path;
+                                UnityEngine.Debug.Log($"[MCPServerManager] Found docker at: {path}");
+                                break;
+                            }
+                        }
+                    }
+
                     var processInfo = new ProcessStartInfo
                     {
-                        FileName = command,
+                        FileName = executablePath,
                         Arguments = arguments,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
