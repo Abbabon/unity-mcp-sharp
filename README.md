@@ -1,49 +1,94 @@
-# Unity MCP Server
+<div align="center">
 
-**Model Context Protocol (MCP) integration for Unity Editor** - Enable AI assistants to interact with Unity through console logs, compilation, and scene manipulation.
+# 🎮 Unity MCP Server
+
+**Model Context Protocol (MCP) integration for Unity Editor**
+Enable AI assistants to interact with Unity through console logs, compilation, and scene manipulation.
 
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![openupm](https://img.shields.io/npm/v/com.mezookan.unity-mcp-sharp?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
-[![openupm](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.mezookan.unity-mcp-sharp)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
+[![Downloads](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.mezookan.unity-mcp-sharp)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
 
-## Features
+[🚀 Quick Start](#-quick-start) • [📦 Installation](#-installation) • [🛠️ MCP Tools](#-available-mcp-tools) • [📖 Docs](Documentation~/Installation.md) • [❓ Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
 
-- **WebSocket Communication (JSON-RPC 2.0)**
-  - Real-time bidirectional communication with Unity Editor
-  - Extensible command/response pattern
-  - Support for Unity operations and queries
+</div>
 
-- **23 MCP Tools Available**
-  - **Console & Compilation:** Get console logs, trigger/check compilation status
-  - **GameObjects:** Create, find, batch create, add components, list scene objects
-  - **Scenes:** List, open, close, save, get/set active scene
-  - **Assets:** Create scripts, create assets (Materials, Textures, etc.), refresh database
-  - **Play Mode:** Enter, exit, get play mode state
-  - **Project Info:** Get Unity version, project name, paths
-  - **System:** Run any Unity menu item programmatically
+---
 
-- **Optimized for LLM Interaction**
-  - All tools return confirmation messages for reliable feedback
-  - Tool descriptions include cross-references for chaining operations
-  - Side effects and warnings clearly documented
-  - Rich return descriptions help LLMs understand responses
+## 📋 Table of Contents
 
-- **Unity Package** (OpenUPM compatible)
-  - UIToolkit-based dashboard with status monitoring
-  - Visual feedback system with operation tracking
-  - Docker container lifecycle management
-  - Auto-connect and auto-start capabilities
-  - Configuration via ScriptableObject
+- [✨ Features](#-features)
+- [🏗️ Architecture](#-architecture)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [🤖 Using with AI Assistants](#-using-with-ai-assistants)
+- [🛠️ Available MCP Tools](#-available-mcp-tools)
+- [🐳 Docker Image](#-docker-image)
+- [💻 Development](#-development)
+- [⚙️ Configuration](#-configuration)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
-- **Dockerized Server**
-  - Built with .NET 9.0 and ASP.NET Core
-  - Published to GitHub Container Registry (ghcr.io)
-  - Multi-platform support (linux/amd64, linux/arm64)
-  - Full CI/CD pipeline with GitHub Actions
+---
 
-## Architecture
+## ✨ Features
+
+<details open>
+<summary><b>🔌 WebSocket Communication (JSON-RPC 2.0)</b></summary>
+
+- Real-time bidirectional communication with Unity Editor
+- Extensible command/response pattern
+- Support for Unity operations and queries
+</details>
+
+<details open>
+<summary><b>🛠️ 23 MCP Tools Available</b></summary>
+
+| Category | Tools |
+|----------|-------|
+| **Console & Compilation** | Get console logs, trigger/check compilation status |
+| **GameObjects** | Create, find, batch create, add components, list scene objects |
+| **Scenes** | List, open, close, save, get/set active scene |
+| **Assets** | Create scripts, create assets (Materials, Textures, etc.), refresh database |
+| **Play Mode** | Enter, exit, get play mode state |
+| **Project Info** | Get Unity version, project name, paths |
+| **System** | Run any Unity menu item programmatically |
+</details>
+
+<details open>
+<summary><b>🤖 Optimized for LLM Interaction</b></summary>
+
+- ✅ All tools return confirmation messages for reliable feedback
+- 🔗 Tool descriptions include cross-references for chaining operations
+- ⚠️ Side effects and warnings clearly documented
+- 📝 Rich return descriptions help LLMs understand responses
+</details>
+
+<details open>
+<summary><b>📦 Unity Package (OpenUPM compatible)</b></summary>
+
+- 🎨 UIToolkit-based dashboard with status monitoring
+- 👁️ Visual feedback system with operation tracking
+- 🐳 Docker container lifecycle management
+- 🔄 Auto-connect and auto-start capabilities
+- ⚙️ Configuration via ScriptableObject
+</details>
+
+<details open>
+<summary><b>🐳 Dockerized Server</b></summary>
+
+- Built with .NET 9.0 and ASP.NET Core
+- Published to GitHub Container Registry (ghcr.io)
+- Multi-platform support (linux/amd64, linux/arm64)
+- Full CI/CD pipeline with GitHub Actions
+</details>
+
+---
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐
@@ -69,7 +114,9 @@
                     └──────────────────────────────┘
 ```
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -77,21 +124,36 @@
 - **Docker Desktop** installed and running
 - **.NET 9.0 SDK** (for server development only)
 
-### Installation
+### 3-Step Setup
 
-#### Option 1: OpenUPM (Recommended)
+1. **Install the package** (see [Installation](#-installation) below)
+2. **Open Setup Wizard** in Unity: `Tools → Unity MCP Server → Setup Wizard`
+3. **Start & Connect** via Dashboard: `Tools → Unity MCP Server → Dashboard`
+
+✅ Done! You're ready to use AI assistants with Unity.
+
+---
+
+## 📦 Installation
+
+<details open>
+<summary><b>Option 1: OpenUPM (Recommended) ⭐</b></summary>
 
 ```bash
 openupm add com.mezookan.unity-mcp-sharp
 ```
+</details>
 
-#### Option 2: Git URL
+<details>
+<summary><b>Option 2: Git URL</b></summary>
 
 1. Open Unity Package Manager
 2. Click `+` → "Add package from git URL..."
 3. Enter: `https://github.com/Abbabon/unity-mcp-sharp.git`
+</details>
 
-#### Option 3: Manual
+<details>
+<summary><b>Option 3: Manual Installation</b></summary>
 
 Add to `Packages/manifest.json`:
 
@@ -102,8 +164,12 @@ Add to `Packages/manifest.json`:
   }
 }
 ```
+</details>
 
 ### First-Time Setup
+
+<details open>
+<summary><b>Click to expand setup steps</b></summary>
 
 1. **Install Docker Desktop** (if not already installed)
    - Download from [docker.com](https://www.docker.com/products/docker-desktop/)
@@ -121,10 +187,14 @@ Add to `Packages/manifest.json`:
 4. **Verify Connection**
    - Dashboard shows "Connected ✓" in green
    - Console logs: "Unity MCP Server connected successfully"
+</details>
 
-### Using with AI Assistants
+---
 
-#### VS Code / GitHub Copilot
+## 🤖 Using with AI Assistants
+
+<details>
+<summary><b>VS Code / GitHub Copilot</b></summary>
 
 Add to `.vscode/settings.json`:
 
@@ -138,8 +208,10 @@ Add to `.vscode/settings.json`:
   }
 }
 ```
+</details>
 
-#### Cursor IDE
+<details>
+<summary><b>Cursor IDE</b></summary>
 
 Add to `~/.cursor/config.json`:
 
@@ -153,47 +225,74 @@ Add to `~/.cursor/config.json`:
   }
 }
 ```
+</details>
 
-## Available MCP Tools
+<details>
+<summary><b>Claude Desktop</b></summary>
 
-All tools are designed for optimal LLM interaction with:
-- **Confirmation messages** - Every operation returns success feedback
-- **Tool chaining hints** - Descriptions suggest related tools to use next
-- **Side effect warnings** - Important behaviors clearly documented
+Add to your Claude Desktop MCP configuration:
 
-### System & Project Information
+```json
+{
+  "mcpServers": {
+    "unity": {
+      "url": "http://localhost:8080/mcp",
+      "transport": "sse"
+    }
+  }
+}
+```
+</details>
 
-#### `unity_get_project_info`
+---
+
+## 🛠️ Available MCP Tools
+
+> **All tools are designed for optimal LLM interaction** with confirmation messages, tool chaining hints, and side effect warnings.
+
+<details>
+<summary><b>🔍 System & Project Information (4 tools)</b></summary>
+
+### `unity_get_project_info`
 Get Unity project metadata including name, version, active scene, paths, and editor state.
 
 **Returns:** Project information with name, Unity version, active scene, data path, play/pause state
 
-**Use this first** when starting work on a project to understand the environment.
+**💡 Tip:** Use this first when starting work on a project to understand the environment.
 
-#### `unity_get_console_logs`
+---
+
+### `unity_get_console_logs`
 Get recent console logs from Unity Editor (errors, warnings, debug logs).
 
 **Returns:** Recent console logs with type, message, and stack traces
 
-**Tip:** Call this after creating scripts, entering play mode, or when compilation fails.
+**💡 Tip:** Call this after creating scripts, entering play mode, or when compilation fails.
 
-#### `unity_get_compilation_status`
+---
+
+### `unity_get_compilation_status`
 Check if Unity is currently compiling and if last compilation succeeded.
 
 **Returns:** Compilation status (idle/compiling) and last compilation result
 
-**Related tools:** `unity_trigger_script_compilation`, `unity_get_console_logs`
+**🔗 Related:** `unity_trigger_script_compilation`, `unity_get_console_logs`
 
-#### `unity_trigger_script_compilation`
+---
+
+### `unity_trigger_script_compilation`
 Force Unity to recompile all C# scripts.
 
 **Returns:** Confirmation that compilation was triggered
 
-**Note:** Unity temporarily disconnects during compilation. Use `unity_get_compilation_status` after to verify success.
+**⚠️ Note:** Unity temporarily disconnects during compilation. Use `unity_get_compilation_status` after to verify success.
 
-### GameObjects
+</details>
 
-#### `unity_create_game_object`
+<details>
+<summary><b>🎮 GameObjects (6 tools)</b></summary>
+
+### `unity_create_game_object`
 Create a new GameObject in the currently active scene.
 
 **Parameters:**
@@ -204,11 +303,13 @@ Create a new GameObject in the currently active scene.
 
 **Returns:** Confirmation with name, position, components, and hierarchy location
 
-**Example:** Create a "Player" at position (0, 1, 0) with Rigidbody and CapsuleCollider
+**📌 Example:** Create a "Player" at position (0, 1, 0) with Rigidbody and CapsuleCollider
 
-**Related tools:** `unity_find_game_object`, `unity_add_component_to_object`
+**🔗 Related:** `unity_find_game_object`, `unity_add_component_to_object`
 
-#### `unity_find_game_object`
+---
+
+### `unity_find_game_object`
 Find a GameObject by name, tag, or path with detailed information.
 
 **Parameters:**
@@ -217,9 +318,11 @@ Find a GameObject by name, tag, or path with detailed information.
 
 **Returns:** Position, rotation, scale, active state, and all attached components
 
-**Related tools:** `unity_list_scene_objects`, `unity_add_component_to_object`
+**🔗 Related:** `unity_list_scene_objects`, `unity_add_component_to_object`
 
-#### `unity_add_component_to_object`
+---
+
+### `unity_add_component_to_object`
 Add a component to an existing GameObject.
 
 **Parameters:**
@@ -228,16 +331,20 @@ Add a component to an existing GameObject.
 
 **Returns:** Confirmation that component was added
 
-**Tip:** Use `unity_find_game_object` first to verify the GameObject exists.
+**💡 Tip:** Use `unity_find_game_object` first to verify the GameObject exists.
 
-#### `unity_list_scene_objects`
+---
+
+### `unity_list_scene_objects`
 Get the complete GameObject hierarchy of the active scene.
 
 **Returns:** Hierarchical list with active/inactive state indicators
 
-**Related tools:** `unity_find_game_object`, `unity_create_game_object`
+**🔗 Related:** `unity_find_game_object`, `unity_create_game_object`
 
-#### `unity_batch_create_game_objects`
+---
+
+### `unity_batch_create_game_objects`
 Create multiple GameObjects in a single operation (more efficient than one-by-one).
 
 **Parameters:**
@@ -245,7 +352,9 @@ Create multiple GameObjects in a single operation (more efficient than one-by-on
 
 **Returns:** Confirmation that batch creation was initiated
 
-#### `unity_create_game_object_in_scene`
+---
+
+### `unity_create_game_object_in_scene`
 Create a GameObject in a specific scene (not necessarily the active one).
 
 **Parameters:**
@@ -254,25 +363,32 @@ Create a GameObject in a specific scene (not necessarily the active one).
 
 **Returns:** Confirmation with scene path, name, and position
 
-**Note:** If scene is not loaded, it will be opened additively first.
+**⚠️ Note:** If scene is not loaded, it will be opened additively first.
 
-### Scenes
+</details>
 
-#### `unity_list_scenes`
+<details>
+<summary><b>🎬 Scenes (6 tools)</b></summary>
+
+### `unity_list_scenes`
 List all .unity scene files in the project.
 
 **Returns:** List of scene paths relative to project root
 
-**Related tools:** `unity_open_scene`, `unity_get_active_scene`
+**🔗 Related:** `unity_open_scene`, `unity_get_active_scene`
 
-#### `unity_get_active_scene`
+---
+
+### `unity_get_active_scene`
 Get information about the currently active scene.
 
 **Returns:** Scene name, path, isDirty status, root GameObject count, loaded state
 
-**Tip:** Use `unity_save_scene` if isDirty is true to save changes.
+**💡 Tip:** Use `unity_save_scene` if isDirty is true to save changes.
 
-#### `unity_open_scene`
+---
+
+### `unity_open_scene`
 Open a Unity scene by path.
 
 **Parameters:**
@@ -281,9 +397,11 @@ Open a Unity scene by path.
 
 **Returns:** Confirmation with scene path and mode (single/additive)
 
-**Related tools:** `unity_list_scenes`, `unity_get_active_scene`
+**🔗 Related:** `unity_list_scenes`, `unity_get_active_scene`
 
-#### `unity_close_scene`
+---
+
+### `unity_close_scene`
 Close a specific scene (only works with multiple scenes open).
 
 **Parameters:**
@@ -291,9 +409,11 @@ Close a specific scene (only works with multiple scenes open).
 
 **Returns:** Confirmation that scene was closed
 
-**Note:** Cannot close the last open scene.
+**⚠️ Note:** Cannot close the last open scene.
 
-#### `unity_save_scene`
+---
+
+### `unity_save_scene`
 Save the active scene or a specific scene.
 
 **Parameters:**
@@ -302,9 +422,11 @@ Save the active scene or a specific scene.
 
 **Returns:** Confirmation of which scene(s) were saved
 
-**Important:** Always save after making changes, otherwise they'll be lost!
+**⚠️ Important:** Always save after making changes, otherwise they'll be lost!
 
-#### `unity_set_active_scene`
+---
+
+### `unity_set_active_scene`
 Set which scene is active (where new GameObjects are created).
 
 **Parameters:**
@@ -312,11 +434,14 @@ Set which scene is active (where new GameObjects are created).
 
 **Returns:** Confirmation that scene is now active
 
-**Note:** Only works when multiple scenes are open.
+**⚠️ Note:** Only works when multiple scenes are open.
 
-### Assets & Scripts
+</details>
 
-#### `unity_create_script`
+<details>
+<summary><b>📁 Assets & Scripts (3 tools)</b></summary>
+
+### `unity_create_script`
 Create a new C# MonoBehaviour script file.
 
 **Parameters:**
@@ -326,9 +451,11 @@ Create a new C# MonoBehaviour script file.
 
 **Returns:** Confirmation with file path and recompilation notice
 
-**Related tools:** `unity_get_compilation_status`, `unity_get_console_logs`
+**🔗 Related:** `unity_get_compilation_status`, `unity_get_console_logs`
 
-#### `unity_create_asset`
+---
+
+### `unity_create_asset`
 Create any type of Unity asset (Material, Texture2D, ScriptableObject, etc.) using reflection.
 
 **Parameters:**
@@ -339,47 +466,59 @@ Create any type of Unity asset (Material, Texture2D, ScriptableObject, etc.) usi
 
 **Returns:** Confirmation with asset name, type, and path
 
-**Example properties:**
+**📌 Example properties:**
 - Material: `{"shader":"Standard","color":"#FF0000"}`
 - Texture2D: `{"width":256,"height":256}`
 
-#### `unity_refresh_assets`
+---
+
+### `unity_refresh_assets`
 Refresh Unity Asset Database to detect file changes.
 
 **Returns:** Confirmation that refresh was initiated
 
-**Use after:** Batch file operations or when changes aren't detected automatically
+**💡 Use after:** Batch file operations or when changes aren't detected automatically
 
-**Note:** Can take a few seconds for large projects. Use `unity_get_compilation_status` to check if recompilation is complete.
+**⚠️ Note:** Can take a few seconds for large projects. Use `unity_get_compilation_status` to check if recompilation is complete.
 
-### Play Mode
+</details>
 
-#### `unity_enter_play_mode`
+<details>
+<summary><b>▶️ Play Mode (3 tools)</b></summary>
+
+### `unity_enter_play_mode`
 Enter Unity play mode (start running the game).
 
 **Returns:** Confirmation message with important warning
 
-**IMPORTANT:** Changes made in play mode are NOT saved! GameObjects created will be destroyed when exiting.
+**⚠️ IMPORTANT:** Changes made in play mode are NOT saved! GameObjects created will be destroyed when exiting.
 
-**Related tools:** `unity_get_play_mode_state`, `unity_exit_play_mode`
+**🔗 Related:** `unity_get_play_mode_state`, `unity_exit_play_mode`
 
-#### `unity_exit_play_mode`
+---
+
+### `unity_exit_play_mode`
 Exit Unity play mode (stop running the game).
 
 **Returns:** Confirmation that play mode was exited
 
-**Note:** All changes made during play mode will be reverted.
+**⚠️ Note:** All changes made during play mode will be reverted.
 
-#### `unity_get_play_mode_state`
+---
+
+### `unity_get_play_mode_state`
 Get current play mode state.
 
 **Returns:** Current state (Playing, Paused, or Stopped)
 
-**Related tools:** `unity_enter_play_mode`, `unity_exit_play_mode`
+**🔗 Related:** `unity_enter_play_mode`, `unity_exit_play_mode`
 
-### System Utilities
+</details>
 
-#### `unity_run_menu_item`
+<details>
+<summary><b>⚙️ System Utilities (1 tool)</b></summary>
+
+### `unity_run_menu_item`
 Execute any Unity Editor menu item by its path.
 
 **Parameters:**
@@ -387,22 +526,29 @@ Execute any Unity Editor menu item by its path.
 
 **Returns:** Confirmation that menu item was executed
 
-**Use as:** Fallback for operations not covered by dedicated tools
+**💡 Use as:** Fallback for operations not covered by dedicated tools
 
-**Examples:**
+**📌 Examples:**
 - `"GameObject/Create Empty"`
 - `"Edit/Undo"`
 - `"Assets/Refresh"`
 
-## Docker Image
+</details>
 
-### Pull from GitHub Container Registry
+---
+
+## 🐳 Docker Image
+
+<details>
+<summary><b>Pull from GitHub Container Registry</b></summary>
 
 ```bash
 docker pull ghcr.io/abbabon/unity-mcp-server:latest
 ```
+</details>
 
-### Run Manually
+<details>
+<summary><b>Run Manually</b></summary>
 
 ```bash
 docker run -d \
@@ -411,16 +557,24 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/abbabon/unity-mcp-server:latest
 ```
+</details>
 
-### Available Tags
+<details>
+<summary><b>Available Tags</b></summary>
 
-- `latest` - Latest stable version from main branch
-- `v*.*.*` - Specific version tags (e.g., `v0.1.0`)
-- `main` - Latest build from main branch
+| Tag | Description |
+|-----|-------------|
+| `latest` | Latest stable version from main branch |
+| `v*.*.*` | Specific version tags (e.g., `v0.3.2`) |
+| `main` | Latest build from main branch |
+</details>
 
-## Development
+---
 
-### Development Scripts
+## 💻 Development
+
+<details>
+<summary><b>Development Scripts</b></summary>
 
 The project includes convenience scripts in `Scripts~/`:
 
@@ -434,8 +588,10 @@ The project includes convenience scripts in `Scripts~/`:
 # Run smoke tests
 ./Scripts~/test.sh
 ```
+</details>
 
-### Server Development
+<details>
+<summary><b>Server Development</b></summary>
 
 ```bash
 cd Server~
@@ -455,8 +611,10 @@ docker build -t unity-mcp-server:test .
 # Run with docker-compose
 docker-compose up
 ```
+</details>
 
-### Unity Package Development
+<details>
+<summary><b>Unity Package Development</b></summary>
 
 The package is structured as a Unity UPM package:
 
@@ -472,43 +630,65 @@ The package is structured as a Unity UPM package:
 ```
 
 **Note:** Directories with `~/` suffix are excluded from Unity package imports.
+</details>
 
-## Configuration
+---
+
+## ⚙️ Configuration
 
 Access configuration via `Tools → Unity MCP Server → Create MCP Configuration` or through the Dashboard.
 
-**Settings:**
-- Server URL (default: `ws://localhost:8080/ws`)
-- Docker image name
-- Auto-connect on startup
-- Auto-start container
-- Retry attempts and delays
-- Verbose logging
-- Max log buffer size
+<details>
+<summary><b>Available Settings</b></summary>
 
-## Troubleshooting
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Server URL | `ws://localhost:8080/ws` | WebSocket connection URL |
+| Docker Image | `ghcr.io/abbabon/unity-mcp-server:latest` | Docker image to use |
+| Auto-connect | `true` | Connect automatically on startup |
+| Auto-start | `false` | Start container automatically |
+| Retry Attempts | `3` | Connection retry attempts |
+| Retry Delay | `2000ms` | Delay between retries |
+| Verbose Logging | `false` | Enable detailed logs |
+| Max Log Buffer | `1000` | Maximum log entries to keep |
+</details>
 
-### Docker not found
+---
+
+## 🔧 Troubleshooting
+
+<details>
+<summary><b>❌ Docker not found</b></summary>
 
 **Solution:** Install Docker Desktop and ensure it's running.
 
-### Connection refused
+Download from [docker.com](https://www.docker.com/products/docker-desktop/)
+</details>
+
+<details>
+<summary><b>❌ Connection refused</b></summary>
 
 **Possible causes:**
-1. Docker container not running → Start it from Dashboard
-2. Port 8080 already in use → Change port in configuration
-3. Firewall blocking connection → Allow Docker in firewall settings
 
-### Container fails to start
+1. **Docker container not running** → Start it from Dashboard
+2. **Port 8080 already in use** → Change port in configuration
+3. **Firewall blocking connection** → Allow Docker in firewall settings
+</details>
+
+<details>
+<summary><b>❌ Container fails to start</b></summary>
 
 **Check logs:**
+
 ```bash
 docker logs unity-mcp-server
 ```
 
 **Or** use the **Logs** tab in the Unity MCP Dashboard.
+</details>
 
-### "Image not found" error
+<details>
+<summary><b>❌ "Image not found" error</b></summary>
 
 The package will automatically pull the image on first start. If this fails:
 
@@ -516,8 +696,24 @@ The package will automatically pull the image on first start. If this fails:
 # Manually pull the image
 docker pull ghcr.io/abbabon/unity-mcp-server:latest
 ```
+</details>
 
-## Contributing
+<details>
+<summary><b>❌ macOS: "Docker command not found"</b></summary>
+
+**Solution:** The package automatically checks common Docker paths on macOS:
+- `/usr/local/bin/docker` (Docker Desktop)
+- `/opt/homebrew/bin/docker` (Homebrew on Apple Silicon)
+- `/usr/bin/docker` (Standard location)
+
+If still not found, ensure Docker Desktop is installed and running.
+</details>
+
+For more troubleshooting help, see the [Troubleshooting Guide](Documentation~/Troubleshooting.md).
+
+---
+
+## 🤝 Contributing
 
 Contributions are welcome! Please:
 
@@ -527,7 +723,8 @@ Contributions are welcome! Please:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## CI/CD Pipeline
+<details>
+<summary><b>CI/CD Pipeline</b></summary>
 
 The project includes comprehensive GitHub Actions workflows:
 
@@ -549,23 +746,32 @@ git push origin main --tags
 ```
 
 This triggers the full CI/CD pipeline.
+</details>
 
-## License
+---
+
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Links
+---
 
-- **Documentation:**
-  - [Installation Guide](Documentation~/Installation.md)
-  - [Configuration Guide](Documentation~/Configuration.md)
-  - [Troubleshooting](Documentation~/Troubleshooting.md)
-  - [Testing Guide](Documentation~/Testing.md)
+## 🔗 Links
+
+### 📚 Documentation
+- [Installation Guide](Documentation~/Installation.md)
+- [Configuration Guide](Documentation~/Configuration.md)
+- [Troubleshooting Guide](Documentation~/Troubleshooting.md)
+- [Testing Guide](Documentation~/Testing.md)
+
+### 🌐 Resources
 - **Issues:** [GitHub Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
 - **Model Context Protocol:** [modelcontextprotocol.io](https://modelcontextprotocol.io)
-- **Docker Hub:** [ghcr.io/abbabon/unity-mcp-server](https://ghcr.io/abbabon/unity-mcp-server)
+- **Docker Registry:** [ghcr.io/abbabon/unity-mcp-server](https://ghcr.io/abbabon/unity-mcp-server)
 
-## Credits
+---
+
+## 🙏 Credits
 
 Created by [AmitN](https://github.com/Abbabon)
 
@@ -577,8 +783,12 @@ Built with:
 
 ---
 
+<div align="center">
+
 **Made with ❤️ for the Unity and AI communities**
 
-## Star History
+## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Abbabon/unity-mcp-sharp&type=date&legend=top-left)](https://www.star-history.com/#Abbabon/unity-mcp-sharp&type=date&legend=top-left)
+
+</div>
