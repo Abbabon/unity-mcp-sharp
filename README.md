@@ -7,9 +7,16 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
+[![CodeQL](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Release](https://img.shields.io/github/v/release/Abbabon/unity-mcp-sharp?include_prereleases&style=flat-square)](https://github.com/Abbabon/unity-mcp-sharp/releases)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Abbabon/unity-mcp-sharp/graphs/commit-activity)
+
 [![openupm](https://img.shields.io/npm/v/com.mezookan.unity-mcp-sharp?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
 [![Downloads](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.mezookan.unity-mcp-sharp)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
+[![All Contributors](https://img.shields.io/github/all-contributors/Abbabon/unity-mcp-sharp?color=ee8449&style=flat-square)](#contributors)
+![GitHub language count](https://img.shields.io/github/languages/count/Abbabon/unity-mcp-sharp)
+![Top Language](https://img.shields.io/github/languages/top/Abbabon/unity-mcp-sharp)
 
 [🚀 Quick Start](#-quick-start) • [📦 Installation](#-installation) • [🛠️ MCP Tools](#-available-mcp-tools) • [📖 Docs](Documentation~/Installation.md) • [❓ Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
 
@@ -768,6 +775,28 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **Issues:** [GitHub Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
 - **Model Context Protocol:** [modelcontextprotocol.io](https://modelcontextprotocol.io)
 - **Docker Registry:** [ghcr.io/abbabon/unity-mcp-server](https://ghcr.io/abbabon/unity-mcp-server)
+
+---
+
+## 📊 Project Stats
+
+### Language Breakdown
+
+<div align="center">
+
+![Language Stats](https://github-readme-stats.vercel.app/api/top-langs/?username=Abbabon&repo=unity-mcp-sharp&layout=compact&theme=github_dark&hide_border=true&langs_count=8)
+
+</div>
+
+### Contributors
+
+<div align="center">
+
+Thanks to these wonderful people who have contributed to this project!
+
+[![Contributors](https://contrib.rocks/image?repo=Abbabon/unity-mcp-sharp)](https://github.com/Abbabon/unity-mcp-sharp/graphs/contributors)
+
+</div>
 
 ---
 
