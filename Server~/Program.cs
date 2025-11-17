@@ -28,8 +28,11 @@ builder.Services.AddCors(options =>
 // Add WebSocket service for Unity Editor communication
 builder.Services.AddSingleton<UnityWebSocketService>();
 
-// Note: Tool classes are automatically discovered via WithToolsFromAssembly below
-// All classes with [McpServerToolType] attribute will be registered
+// Add Resource Subscription service for managing MCP resource subscriptions
+builder.Services.AddSingleton<ResourceSubscriptionService>();
+
+// Note: Tool and Resource classes are automatically discovered via WithToolsFromAssembly and WithResourcesFromAssembly
+// All classes with [McpServerToolType] and [McpServerResourceType] attributes will be registered
 
 // Add MCP server (creates HTTP endpoints via MapMcp)
 builder.Services
@@ -41,7 +44,8 @@ builder.Services
         // Allow more idle sessions
         options.MaxIdleSessionCount = 1000;
     })
-    .WithToolsFromAssembly(typeof(Program).Assembly);
+    .WithToolsFromAssembly(typeof(Program).Assembly)
+    .WithResourcesFromAssembly(typeof(Program).Assembly);
 
 // Add health checks
 builder.Services.AddHealthChecks();

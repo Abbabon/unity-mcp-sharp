@@ -64,6 +64,21 @@ namespace UnityMCPSharp.Editor.Models
     }
 
     [Serializable]
+    public class SetComponentFieldData
+    {
+        [JsonProperty("gameObjectName")]
+        public string gameObjectName;
+        [JsonProperty("componentType")]
+        public string componentType;
+        [JsonProperty("fieldName")]
+        public string fieldName;
+        [JsonProperty("value")]
+        public string value;
+        [JsonProperty("valueType")]
+        public string valueType;
+    }
+
+    [Serializable]
     public class CreateAssetData
     {
         [JsonProperty("assetName")]
