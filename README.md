@@ -11,12 +11,9 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Release](https://img.shields.io/github/v/release/Abbabon/unity-mcp-sharp?include_prereleases&style=flat-square)](https://github.com/Abbabon/unity-mcp-sharp/releases)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Abbabon/unity-mcp-sharp/graphs/commit-activity)
-
 [![openupm](https://img.shields.io/npm/v/com.mezookan.unity-mcp-sharp?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
 [![Downloads](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.mezookan.unity-mcp-sharp)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![Top Language](https://img.shields.io/github/languages/top/Abbabon/unity-mcp-sharp)
 
 [🚀 Quick Start](#-quick-start) • [📦 Installation](#-installation) • [🛠️ MCP Tools](#-available-mcp-tools) • [📖 Docs](Documentation~/Installation.md) • [❓ Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
