@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityMcpServer.Services;
+using UnityMcpServer.Models;
 
 namespace UnityMcpServer.Tools.GameObjects;
 
@@ -13,7 +14,7 @@ public class SetComponentFieldTool(ILogger<SetComponentFieldTool> logger, UnityW
 
     [McpServerTool]
     [Description("Set a field or property value on a component attached to a GameObject. Can set primitive values (int, float, bool, string) or references to other GameObjects/assets by path. Use unity_find_game_object to see available components and fields first.")]
-    [return: Description("Confirmation that the field was set successfully")]
+    [return: Description("Confirmation that the field was set successfully, or error message if it failed")]
     public async Task<string> UnitySetComponentFieldAsync(
         [Description("Name of the GameObject that has the component")] string gameObjectName,
         [Description("Type name of the component (e.g., 'Transform', 'Rigidbody', 'PrimitiveSpawner')")] string componentType,
@@ -24,15 +25,35 @@ public class SetComponentFieldTool(ILogger<SetComponentFieldTool> logger, UnityW
         _logger.LogInformation("Setting field {FieldName} on component {ComponentType} of GameObject {GameObjectName} to {Value}",
             fieldName, componentType, gameObjectName, value);
 
-        await _webSocketService.BroadcastNotificationAsync("unity.setComponentField", new
+        try
         {
-            gameObjectName,
-            componentType,
-            fieldName,
-            value,
-            valueType
-        });
+            var parameters = new
+            {
+                gameObjectName,
+                componentType,
+                fieldName,
+                value,
+                valueType
+            };
 
-        return $"Set {componentType}.{fieldName} = {value} on GameObject '{gameObjectName}'";
+            var response = await _webSocketService.SendRequestAsync<OperationResponse>("unity.setComponentField", parameters);
+            if (response != null)
+            {
+                if (response.Success)
+                {
+                    return $"Successfully set {componentType}.{fieldName} = {value} on GameObject '{gameObjectName}'";
+                }
+                return $"Failed to set field: {response.Message}";
+            }
+            return "No response from Unity Editor.";
+        }
+        catch (TimeoutException)
+        {
+            return "Request timed out. Make sure Unity Editor is running and connected.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"Error: {ex.Message}";
+        }
     }
 }

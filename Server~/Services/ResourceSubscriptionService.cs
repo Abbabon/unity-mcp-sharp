@@ -102,16 +102,27 @@ var toRemove = new List<string>();
 
 foreach (var (resourceUri, subscribers) in _subscriptions)
 {
+bool shouldRemove;
 lock (subscribers)
 {
 subscribers.Remove(clientId);
-if (subscribers.Count == 0)
+shouldRemove = subscribers.Count == 0;
+}
+
+// Check again outside lock to avoid removing if new subscribers added
+if (shouldRemove && _subscriptions.TryGetValue(resourceUri, out var checkSet))
+{
+lock (checkSet)
+{
+if (checkSet.Count == 0)
 {
 toRemove.Add(resourceUri);
 }
 }
 }
+}
 
+// Remove empty subscription sets
 foreach (var uri in toRemove)
 {
 _subscriptions.TryRemove(uri, out _);

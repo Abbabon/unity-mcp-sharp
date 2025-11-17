@@ -230,10 +230,6 @@ namespace UnityMCPSharp.Editor
                     AddComponentHandler.Handle(parameters, _config);
                     break;
 
-                case "unity.setComponentField":
-                    SetComponentFieldHandler.Handle(parameters, _config);
-                    break;
-
                 case "unity.enterPlayMode":
                     EnterPlayModeHandler.Handle(_config);
                     break;
@@ -320,6 +316,10 @@ namespace UnityMCPSharp.Editor
 
                 case "unity.getActiveScene":
                     GetActiveSceneHandler.Handle(requestId, _client, _config);
+                    break;
+
+                case "unity.setComponentField":
+                    SetComponentFieldHandler.Handle(requestId, parameters, _client, _config);
                     break;
 
                 default:

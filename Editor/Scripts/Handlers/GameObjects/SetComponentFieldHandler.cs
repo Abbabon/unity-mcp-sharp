@@ -11,7 +11,7 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class SetComponentFieldHandler
     {
-        public static void Handle(object parameters, MCPConfiguration config)
+        public static void Handle(string requestId, object parameters, MCPClient client, MCPConfiguration config)
         {
             try
             {
@@ -24,8 +24,10 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 var go = GameObject.Find(data.gameObjectName);
                 if (go == null)
                 {
-                    Debug.LogError($"[SetComponentFieldHandler] GameObject not found: {data.gameObjectName}");
+                    var errorMsg = $"GameObject not found: {data.gameObjectName}";
+                    Debug.LogError($"[SetComponentFieldHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                     return;
                 }
 
@@ -47,16 +49,20 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
 
                 if (componentType == null)
                 {
-                    Debug.LogError($"[SetComponentFieldHandler] Component type not found: {data.componentType}");
+                    var errorMsg = $"Component type not found: {data.componentType}";
+                    Debug.LogError($"[SetComponentFieldHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                     return;
                 }
 
                 var component = go.GetComponent(componentType);
                 if (component == null)
                 {
-                    Debug.LogError($"[SetComponentFieldHandler] Component {data.componentType} not found on {data.gameObjectName}");
+                    var errorMsg = $"Component {data.componentType} not found on {data.gameObjectName}";
+                    Debug.LogError($"[SetComponentFieldHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                     return;
                 }
 
@@ -68,26 +74,34 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 {
                     object convertedValue = ConvertValue(data.value, data.valueType, field.FieldType);
                     field.SetValue(component, convertedValue);
-                    Debug.Log($"[SetComponentFieldHandler] Set field {data.componentType}.{data.fieldName} = {data.value}");
+                    var successMsg = $"Set field {data.componentType}.{data.fieldName} = {data.value}";
+                    Debug.Log($"[SetComponentFieldHandler] {successMsg}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = true, message = successMsg });
                 }
                 else if (property != null && property.CanWrite)
                 {
                     object convertedValue = ConvertValue(data.value, data.valueType, property.PropertyType);
                     property.SetValue(component, convertedValue);
-                    Debug.Log($"[SetComponentFieldHandler] Set property {data.componentType}.{data.fieldName} = {data.value}");
+                    var successMsg = $"Set property {data.componentType}.{data.fieldName} = {data.value}";
+                    Debug.Log($"[SetComponentFieldHandler] {successMsg}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = true, message = successMsg });
                 }
                 else
                 {
-                    Debug.LogError($"[SetComponentFieldHandler] Field or property {data.fieldName} not found or not writable on {data.componentType}");
+                    var errorMsg = $"Field or property {data.fieldName} not found or not writable on {data.componentType}";
+                    Debug.LogError($"[SetComponentFieldHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SetComponentFieldHandler] Error setting component field: {ex.Message}");
+                var errorMsg = $"Error setting component field: {ex.Message}";
+                Debug.LogError($"[SetComponentFieldHandler] {errorMsg}");
                 MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
             }
         }
 
