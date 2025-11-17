@@ -5,10 +5,6 @@
 **Model Context Protocol (MCP) integration for Unity Editor**
 Enable AI assistants to interact with Unity through console logs, compilation, and scene manipulation.
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
 [![CodeQL](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml)
@@ -18,6 +14,9 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 
 [![openupm](https://img.shields.io/npm/v/com.mezookan.unity-mcp-sharp?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
 [![Downloads](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.mezookan.unity-mcp-sharp)](https://openupm.com/packages/com.mezookan.unity-mcp-sharp/)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![Top Language](https://img.shields.io/github/languages/top/Abbabon/unity-mcp-sharp)
 
 [🚀 Quick Start](#-quick-start) • [📦 Installation](#-installation) • [🛠️ MCP Tools](#-available-mcp-tools) • [📖 Docs](Documentation~/Installation.md) • [❓ Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
@@ -800,7 +799,7 @@ Thanks to these wonderful people who have contributed to this project!
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abbabon"><img src="https://avatars.githubusercontent.com/u/5870498?v=4?s=100" width="100px;" alt="AmitN"/><br /><sub><b>AmitN</b></sub></a><br /><a href="https://github.com/Abbabon/unity-mcp-sharp/commits?author=Abbabon" title="Code">💻</a> <a href="https://github.com/Abbabon/unity-mcp-sharp/commits?author=Abbabon" title="Documentation">📖</a> <a href="#infra-Abbabon" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Abbabon" title="Maintenance">🚧</a> <a href="#projectManagement-Abbabon" title="Project Management">📆</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abbabon"><img src="https://avatars.githubusercontent.com/u/5870498?s=100" width="100px;" alt="AmitN"/><br /><sub><b>AmitN</b></sub></a></td>
     </tr>
   </tbody>
 </table>
