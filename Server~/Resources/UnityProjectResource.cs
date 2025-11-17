@@ -23,11 +23,11 @@ try
 var response = await _webSocketService.SendRequestAsync<ProjectInfoResponse>("unity.getProjectInfo", null);
 if (response != null)
 {
-return $"Project Name: {response.ProjectName}\n" +
-$"Unity Version: {response.UnityVersion}\n" +
-$"Active Scene: {response.ActiveScene}\n" +
-$"Scene Path: {response.ScenePath}\n" +
-$"Data Path: {response.DataPath}\n" +
+return $"Project Name: {response.ProjectName ?? "Unknown"}\n" +
+$"Unity Version: {response.UnityVersion ?? "Unknown"}\n" +
+$"Active Scene: {response.ActiveScene ?? "None"}\n" +
+$"Scene Path: {response.ScenePath ?? "N/A"}\n" +
+$"Data Path: {response.DataPath ?? "N/A"}\n" +
 $"Is Playing: {response.IsPlaying}\n" +
 $"Is Paused: {response.IsPaused}";
 }

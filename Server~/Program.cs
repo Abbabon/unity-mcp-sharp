@@ -85,7 +85,7 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => new
 {
     name = "Unity MCP Server",
-    version = "0.3.0",
+    version = "0.4.0",
     transports = "http + websocket",
     endpoints = new
     {

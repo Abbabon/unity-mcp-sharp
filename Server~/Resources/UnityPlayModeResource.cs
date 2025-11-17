@@ -23,7 +23,7 @@ try
 var response = await _webSocketService.SendRequestAsync<PlayModeStateResponse>("unity.getPlayModeState", null);
 if (response != null)
 {
-return $"Play Mode State: {response.State}";
+return $"Play Mode State: {response.State ?? "Unknown"}";
 }
 return "Unable to retrieve play mode state.";
 }

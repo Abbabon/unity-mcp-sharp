@@ -337,8 +337,15 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
         /// <summary>
         /// Set a SerializedProperty value from a JToken.
         /// </summary>
-        private static void SetSerializedProperty(SerializedProperty prop, JToken value)
+        private static void SetSerializedProperty(SerializedProperty prop, JToken value, int depth = 0)
         {
+            const int MAX_DEPTH = 50;
+            if (depth > MAX_DEPTH)
+            {
+                Debug.LogWarning($"[AssetHelper] Max recursion depth ({MAX_DEPTH}) reached for property {prop.name}");
+                return;
+            }
+
             if (value == null || value.Type == JTokenType.Null)
                 return;
 
@@ -485,7 +492,7 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                     {
                         if (value is JArray jArray)
                         {
-                            SetArrayProperty(prop, jArray);
+                            SetArrayProperty(prop, jArray, depth + 1);
                         }
                     }
                     else
@@ -493,7 +500,7 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                         // Handle nested objects recursively
                         if (value is JObject nestedObj)
                         {
-                            SetNestedObject(prop, nestedObj);
+                            SetNestedObject(prop, nestedObj, depth + 1);
                         }
                     }
                     break;
@@ -507,28 +514,28 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
         /// <summary>
         /// Set an array or list property from a JArray.
         /// </summary>
-        private static void SetArrayProperty(SerializedProperty arrayProp, JArray jArray)
+        private static void SetArrayProperty(SerializedProperty arrayProp, JArray jArray, int depth = 0)
         {
             arrayProp.arraySize = jArray.Count;
 
             for (int i = 0; i < jArray.Count; i++)
             {
                 var elementProp = arrayProp.GetArrayElementAtIndex(i);
-                SetSerializedProperty(elementProp, jArray[i]);
+                SetSerializedProperty(elementProp, jArray[i], depth);
             }
         }
 
         /// <summary>
         /// Set nested object properties from a JObject.
         /// </summary>
-        private static void SetNestedObject(SerializedProperty parentProp, JObject jObject)
+        private static void SetNestedObject(SerializedProperty parentProp, JObject jObject, int depth = 0)
         {
             foreach (var kvp in jObject)
             {
                 var childProp = parentProp.FindPropertyRelative(kvp.Key);
                 if (childProp != null)
                 {
-                    SetSerializedProperty(childProp, kvp.Value);
+                    SetSerializedProperty(childProp, kvp.Value, depth);
                 }
             }
         }

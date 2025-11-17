@@ -41,22 +41,23 @@ public bool Unsubscribe(string resourceUri, string clientId = "default")
 {
 if (_subscriptions.TryGetValue(resourceUri, out var subscribers))
 {
+bool removed;
 lock (subscribers)
 {
-var removed = subscribers.Remove(clientId);
+removed = subscribers.Remove(clientId);
 if (removed)
 {
 _logger.LogInformation("Client '{ClientId}' unsubscribed from resource '{ResourceUri}'", clientId, resourceUri);
 }
+}
 
-// Remove empty subscription set
+// Check outside lock to avoid holding lock during TryRemove
 if (subscribers.Count == 0)
 {
 _subscriptions.TryRemove(resourceUri, out _);
 }
 
 return removed;
-}
 }
 return false;
 }

@@ -23,8 +23,8 @@ try
 var response = await _webSocketService.SendRequestAsync<ActiveSceneResponse>("unity.getActiveScene", null);
 if (response != null)
 {
-return $"Scene Name: {response.Name}\n" +
-$"Scene Path: {response.Path}\n" +
+return $"Scene Name: {response.Name ?? "Unknown"}\n" +
+$"Scene Path: {response.Path ?? "N/A"}\n" +
 $"Is Dirty: {response.IsDirty}\n" +
 $"GameObject Count: {response.RootCount}";
 }

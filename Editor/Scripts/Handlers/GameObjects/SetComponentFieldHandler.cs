@@ -64,16 +64,16 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 var field = componentType.GetField(data.fieldName, BindingFlags.Public | BindingFlags.Instance);
                 var property = componentType.GetProperty(data.fieldName, BindingFlags.Public | BindingFlags.Instance);
 
-                object convertedValue = ConvertValue(data.value, data.valueType);
-
                 if (field != null)
                 {
+                    object convertedValue = ConvertValue(data.value, data.valueType, field.FieldType);
                     field.SetValue(component, convertedValue);
                     Debug.Log($"[SetComponentFieldHandler] Set field {data.componentType}.{data.fieldName} = {data.value}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
                 }
                 else if (property != null && property.CanWrite)
                 {
+                    object convertedValue = ConvertValue(data.value, data.valueType, property.PropertyType);
                     property.SetValue(component, convertedValue);
                     Debug.Log($"[SetComponentFieldHandler] Set property {data.componentType}.{data.fieldName} = {data.value}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
@@ -91,17 +91,25 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
             }
         }
 
-        private static object ConvertValue(string value, string valueType)
+        private static object ConvertValue(string value, string valueType, Type targetType)
         {
-            return valueType.ToLower() switch
+            object converted = valueType.ToLower() switch
             {
                 "int" => int.Parse(value),
                 "float" => float.Parse(value),
                 "bool" => bool.Parse(value),
-                "asset" => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(value),
+                "asset" => AssetDatabase.LoadAssetAtPath(value, targetType),
                 "gameobject" => GameObject.Find(value),
                 _ => value // string by default
             };
+
+            // Validate type compatibility
+            if (converted != null && !targetType.IsInstanceOfType(converted))
+            {
+                throw new InvalidCastException($"[SetComponentFieldHandler] Cannot assign {converted.GetType().Name} to {targetType.Name}. Value: '{value}', ValueType: '{valueType}'");
+            }
+
+            return converted;
         }
     }
 }

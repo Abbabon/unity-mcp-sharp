@@ -900,9 +900,7 @@ Thanks to these wonderful people who have contributed to this project!
 
 ---
 
-## 🙏 Credits
-
-Created by [AmitN](https://github.com/Abbabon)
+## 🙏 Thanks
 
 Built with:
 - [Model Context Protocol SDK](https://github.com/modelcontextprotocol/csharp-sdk)
