@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -58,9 +59,9 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 {
                     var parts = str.Split(',');
                     if (parts.Length == 3 &&
-                        float.TryParse(parts[0].Trim(), out float x) &&
-                        float.TryParse(parts[1].Trim(), out float y) &&
-                        float.TryParse(parts[2].Trim(), out float z))
+                        float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
+                        float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
+                        float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float z))
                     {
                         return new Vector3(x, y, z);
                     }
@@ -71,8 +72,8 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 {
                     var parts = str.Split(',');
                     if (parts.Length == 2 &&
-                        float.TryParse(parts[0].Trim(), out float x) &&
-                        float.TryParse(parts[1].Trim(), out float y))
+                        float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
+                        float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y))
                     {
                         return new Vector2(x, y);
                     }
@@ -90,13 +91,13 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                     {
                         var parts = str.Split(',');
                         if (parts.Length >= 3 &&
-                            float.TryParse(parts[0].Trim(), out float r) &&
-                            float.TryParse(parts[1].Trim(), out float g) &&
-                            float.TryParse(parts[2].Trim(), out float b))
+                            float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float r) &&
+                            float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float g) &&
+                            float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float b))
                         {
                             float a = 1f;
                             if (parts.Length == 4)
-                                float.TryParse(parts[3].Trim(), out a);
+                                float.TryParse(parts[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out a);
                             return new Color(r, g, b, a);
                         }
                     }
@@ -107,10 +108,10 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 {
                     var parts = str.Split(',');
                     if (parts.Length == 4 &&
-                        float.TryParse(parts[0].Trim(), out float x) &&
-                        float.TryParse(parts[1].Trim(), out float y) &&
-                        float.TryParse(parts[2].Trim(), out float z) &&
-                        float.TryParse(parts[3].Trim(), out float w))
+                        float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
+                        float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
+                        float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float z) &&
+                        float.TryParse(parts[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float w))
                     {
                         return new Quaternion(x, y, z, w);
                     }
@@ -129,12 +130,12 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                         var sizeParts = sizeStr.Split(',');
 
                         if (centerParts.Length == 3 && sizeParts.Length == 3 &&
-                            float.TryParse(centerParts[0].Trim(), out float cx) &&
-                            float.TryParse(centerParts[1].Trim(), out float cy) &&
-                            float.TryParse(centerParts[2].Trim(), out float cz) &&
-                            float.TryParse(sizeParts[0].Trim(), out float sx) &&
-                            float.TryParse(sizeParts[1].Trim(), out float sy) &&
-                            float.TryParse(sizeParts[2].Trim(), out float sz))
+                            float.TryParse(centerParts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float cx) &&
+                            float.TryParse(centerParts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float cy) &&
+                            float.TryParse(centerParts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float cz) &&
+                            float.TryParse(sizeParts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float sx) &&
+                            float.TryParse(sizeParts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float sy) &&
+                            float.TryParse(sizeParts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float sz))
                         {
                             return new Bounds(new Vector3(cx, cy, cz), new Vector3(sx, sy, sz));
                         }
@@ -146,10 +147,10 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 {
                     var parts = str.Split(',');
                     if (parts.Length == 4 &&
-                        float.TryParse(parts[0].Trim(), out float x) &&
-                        float.TryParse(parts[1].Trim(), out float y) &&
-                        float.TryParse(parts[2].Trim(), out float w) &&
-                        float.TryParse(parts[3].Trim(), out float h))
+                        float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
+                        float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
+                        float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float w) &&
+                        float.TryParse(parts[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float h))
                     {
                         return new Rect(x, y, w, h);
                     }
@@ -218,9 +219,9 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
             {
                 return Convert.ChangeType(value, targetType);
             }
-            catch
+            catch (Exception ex)
             {
-                Debug.LogWarning($"[AssetHelper] Could not convert value '{value}' to type {targetType.Name}");
+                Debug.LogWarning($"[AssetHelper] Could not convert value '{value}' to type {targetType.Name}: {ex.Message}");
                 return null;
             }
         }

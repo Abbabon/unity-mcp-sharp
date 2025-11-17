@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityMCPSharp.Editor.Models;
 
@@ -11,6 +12,8 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
     /// </summary>
     public static class SetComponentFieldHandler
     {
+        private static readonly Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
+
         public static void Handle(string requestId, object parameters, MCPClient client, MCPConfiguration config)
         {
             try
@@ -31,20 +34,27 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                     return;
                 }
 
-                // Find the component type
-                var componentType = Type.GetType($"UnityEngine.{data.componentType}, UnityEngine");
-                if (componentType == null)
+                // Find the component type (with caching for performance)
+                Type componentType;
+                if (!_typeCache.TryGetValue(data.componentType, out componentType))
                 {
-                    componentType = Type.GetType(data.componentType);
-                }
-                if (componentType == null)
-                {
-                    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    componentType = Type.GetType($"UnityEngine.{data.componentType}, UnityEngine");
+                    if (componentType == null)
                     {
-                        componentType = assembly.GetType(data.componentType);
-                        if (componentType != null)
-                            break;
+                        componentType = Type.GetType(data.componentType);
                     }
+                    if (componentType == null)
+                    {
+                        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                        {
+                            componentType = assembly.GetType(data.componentType);
+                            if (componentType != null)
+                                break;
+                        }
+                    }
+
+                    // Cache the result (even if null) to avoid repeated searches
+                    _typeCache[data.componentType] = componentType;
                 }
 
                 if (componentType == null)
@@ -74,6 +84,7 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 {
                     object convertedValue = ConvertValue(data.value, data.valueType, field.FieldType);
                     field.SetValue(component, convertedValue);
+                    EditorUtility.SetDirty(component);
                     var successMsg = $"Set field {data.componentType}.{data.fieldName} = {data.value}";
                     Debug.Log($"[SetComponentFieldHandler] {successMsg}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
@@ -83,6 +94,7 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
                 {
                     object convertedValue = ConvertValue(data.value, data.valueType, property.PropertyType);
                     property.SetValue(component, convertedValue);
+                    EditorUtility.SetDirty(component);
                     var successMsg = $"Set property {data.componentType}.{data.fieldName} = {data.value}";
                     Debug.Log($"[SetComponentFieldHandler] {successMsg}");
                     MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
