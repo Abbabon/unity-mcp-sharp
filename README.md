@@ -796,7 +796,7 @@ Thanks to these wonderful people who have contributed to this project!
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abbabon"><img src="https://avatars.githubusercontent.com/u/5870498?s=100" width="100px;" alt="AmitN"/><br /><sub><b>AmitN</b></sub></a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abbabon"><img src="https://avatars.githubusercontent.com/u/1280330?v=4&s=100" width="100px;" alt="AmitN"/><br /><sub><b>AmitN</b></sub></a></td>
     </tr>
   </tbody>
 </table>
