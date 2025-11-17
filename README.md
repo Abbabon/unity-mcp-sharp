@@ -50,16 +50,16 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 </details>
 
 <details open>
-<summary><b>🛠️ 23 MCP Tools Available</b></summary>
+<summary><b>🛠️ 24 MCP Tools + 7 MCP Resources</b></summary>
 
-| Category | Tools |
+| Category | Tools & Resources |
 |----------|-------|
-| **Console & Compilation** | Get console logs, trigger/check compilation status |
-| **GameObjects** | Create, find, batch create, add components, list scene objects |
+| **Resources (Read-Only)** | Project info, console logs, compilation status, play mode, active scene, scene objects, all scenes |
+| **Console & Compilation** | Trigger compilation, refresh assets |
+| **GameObjects** | Create, find, batch create, add components, set component fields, list scene objects |
 | **Scenes** | List, open, close, save, get/set active scene |
-| **Assets** | Create scripts, create assets (Materials, Textures, etc.), refresh database |
+| **Assets** | Create scripts, create assets with complex structures (ScriptableObjects, Materials, etc.) |
 | **Play Mode** | Enter, exit, get play mode state |
-| **Project Info** | Get Unity version, project name, paths |
 | **System** | Run any Unity menu item programmatically |
 </details>
 
@@ -251,51 +251,106 @@ Add to your Claude Desktop MCP configuration:
 
 ---
 
-## 🛠️ Available MCP Tools
+## 🛠️ Available MCP Tools & Resources
 
 > **All tools are designed for optimal LLM interaction** with confirmation messages, tool chaining hints, and side effect warnings.
 
 <details>
-<summary><b>🔍 System & Project Information (4 tools)</b></summary>
+<summary><b>📚 MCP Resources (7 resources)</b></summary>
 
-### `unity_get_project_info`
-Get Unity project metadata including name, version, active scene, paths, and editor state.
+> **New in v0.4:** Resources are read-only, application-controlled data sources that provide fresh data on each access. They reduce LLM cognitive load by separating read operations from action-based tools.
+
+### `unity://project/info`
+Unity project metadata including name, version, active scene, paths, and editor state.
 
 **Returns:** Project information with name, Unity version, active scene, data path, play/pause state
 
 **💡 Tip:** Use this first when starting work on a project to understand the environment.
 
----
-
-### `unity_get_console_logs`
-Get recent console logs from Unity Editor (errors, warnings, debug logs).
-
-**Returns:** Recent console logs with type, message, and stack traces
-
-**💡 Tip:** Call this after creating scripts, entering play mode, or when compilation fails.
+**🔄 Updates:** Automatically when scenes change or play mode changes
 
 ---
 
-### `unity_get_compilation_status`
-Check if Unity is currently compiling and if last compilation succeeded.
+### `unity://console/logs`
+Recent console logs from Unity Editor (errors, warnings, debug logs).
 
-**Returns:** Compilation status (idle/compiling) and last compilation result
+**Returns:** Console logs with type, message, and stack traces
 
-**🔗 Related:** `unity_trigger_script_compilation`, `unity_get_console_logs`
+**💡 Tip:** Check this after creating scripts, entering play mode, or when compilation fails.
+
+**🔄 Updates:** Automatically when new log messages appear
 
 ---
+
+### `unity://compilation/status`
+Current compilation status and last compilation result.
+
+**Returns:** Compilation status (idle/compiling) and success/failure state
+
+**🔗 Related:** `unity_trigger_script_compilation`
+
+**🔄 Updates:** Automatically when compilation starts or finishes
+
+---
+
+### `unity://editor/playmode`
+Current play mode state of Unity Editor.
+
+**Returns:** Play mode state (Playing, Paused, or Stopped)
+
+**🔗 Related:** `unity_enter_play_mode`, `unity_exit_play_mode`
+
+**🔄 Updates:** Automatically when play mode changes
+
+---
+
+### `unity://scenes/active`
+Information about the currently active Unity scene.
+
+**Returns:** Scene name, path, isDirty status, root GameObject count, loaded state
+
+**💡 Tip:** If isDirty is true, use `unity_save_scene` to save changes.
+
+**🔄 Updates:** Automatically when active scene changes or scenes are loaded
+
+---
+
+### `unity://scenes/active/objects`
+Complete GameObject hierarchy of the active scene.
+
+**Returns:** Hierarchical list with active/inactive state indicators
+
+**🔗 Related:** `unity_find_game_object`, `unity_create_game_object`
+
+**🔄 Updates:** Automatically when scenes change
+
+---
+
+### `unity://scenes/all`
+List of all .unity scene files in the project.
+
+**Returns:** List of scene paths relative to project root
+
+**🔗 Related:** `unity_open_scene`, `unity_get_active_scene`
+
+**🔄 Updates:** When asset database refreshes
+
+</details>
+
+<details>
+<summary><b>🔍 System & Compilation (1 tool)</b></summary>
 
 ### `unity_trigger_script_compilation`
 Force Unity to recompile all C# scripts.
 
 **Returns:** Confirmation that compilation was triggered
 
-**⚠️ Note:** Unity temporarily disconnects during compilation. Use `unity_get_compilation_status` after to verify success.
+**⚠️ Note:** Unity temporarily disconnects during compilation. Use `unity://compilation/status` resource after to verify success.
 
 </details>
 
 <details>
-<summary><b>🎮 GameObjects (6 tools)</b></summary>
+<summary><b>🎮 GameObjects (7 tools)</b></summary>
 
 ### `unity_create_game_object`
 Create a new GameObject in the currently active scene.
@@ -337,6 +392,24 @@ Add a component to an existing GameObject.
 **Returns:** Confirmation that component was added
 
 **💡 Tip:** Use `unity_find_game_object` first to verify the GameObject exists.
+
+---
+
+### `unity_set_component_field`
+Set a field or property value on a component attached to a GameObject.
+
+**Parameters:**
+- `gameObjectName` (string, required): Name of the GameObject with the component
+- `componentType` (string, required): Type of the component (e.g., "Transform", "Rigidbody", custom scripts)
+- `fieldName` (string, required): Field or property name to set (e.g., "enabled", "mass", "config")
+- `value` (string, required): Value to set (primitive, asset path, or GameObject name)
+- `valueType` (string, default: "string"): Type of value: "string", "int", "float", "bool", "asset", "gameObject"
+
+**Returns:** Confirmation that field was set
+
+**📌 Example:** Set ScriptableObject reference: `valueType: "asset"`, `value: "Assets/Config/MyConfig.asset"`
+
+**🔗 Related:** `unity_find_game_object`, `unity_add_component_to_object`
 
 ---
 
@@ -461,19 +534,38 @@ Create a new C# MonoBehaviour script file.
 ---
 
 ### `unity_create_asset`
-Create any type of Unity asset (Material, Texture2D, ScriptableObject, etc.) using reflection.
+Create any type of Unity asset with support for complex nested structures using SerializedObject API.
 
 **Parameters:**
 - `assetName` (string, required): Asset name (without extension)
 - `folderPath` (string, required): Path within Assets
-- `assetTypeName` (string, required): Full type name (e.g., "UnityEngine.Material")
-- `propertiesJson` (string, optional): JSON properties to set
+- `assetTypeName` (string, required): Full type name (e.g., "UnityEngine.Material", custom ScriptableObject)
+- `propertiesJson` (string, optional): JSON properties to set (supports nested objects, arrays, Lists)
 
 **Returns:** Confirmation with asset name, type, and path
 
+**✨ New in v0.4:** Enhanced with SerializedObject support for complex nested structures!
+
 **📌 Example properties:**
-- Material: `{"shader":"Standard","color":"#FF0000"}`
-- Texture2D: `{"width":256,"height":256}`
+- **Material:** `{"shader":"Standard","color":"#FF0000"}`
+- **Texture2D:** `{"width":256,"height":256}`
+- **ScriptableObject with nested List:**
+```json
+{
+  "primitives": [
+    {
+      "primitiveType": 0,
+      "position": {"x": 0, "y": 0, "z": 0},
+      "color": {"r": 1, "g": 0, "b": 0, "a": 1},
+      "scale": {"x": 1, "y": 1, "z": 1}
+    }
+  ]
+}
+```
+
+**🎯 Supported Unity types:** Vector3, Vector2, Color, Quaternion, Bounds, Rect, asset references, and more!
+
+**🔗 Related:** `unity_refresh_assets`
 
 ---
 
