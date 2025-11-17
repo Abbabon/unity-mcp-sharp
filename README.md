@@ -5,8 +5,13 @@
 **Model Context Protocol (MCP) integration for Unity Editor**
 Enable AI assistants to interact with Unity through console logs, compilation, and scene manipulation.
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
+[![CodeQL](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Release](https://img.shields.io/github/v/release/Abbabon/unity-mcp-sharp?include_prereleases&style=flat-square)](https://github.com/Abbabon/unity-mcp-sharp/releases)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Abbabon/unity-mcp-sharp/graphs/commit-activity)
@@ -787,13 +792,23 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ### Contributors
 
-<div align="center">
-
 Thanks to these wonderful people who have contributed to this project!
 
-[![Contributors](https://contrib.rocks/image?repo=Abbabon/unity-mcp-sharp)](https://github.com/Abbabon/unity-mcp-sharp/graphs/contributors)
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abbabon"><img src="https://avatars.githubusercontent.com/u/5870498?v=4?s=100" width="100px;" alt="AmitN"/><br /><sub><b>AmitN</b></sub></a><br /><a href="https://github.com/Abbabon/unity-mcp-sharp/commits?author=Abbabon" title="Code">💻</a> <a href="https://github.com/Abbabon/unity-mcp-sharp/commits?author=Abbabon" title="Documentation">📖</a> <a href="#infra-Abbabon" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Abbabon" title="Maintenance">🚧</a> <a href="#projectManagement-Abbabon" title="Project Management">📆</a></td>
+    </tr>
+  </tbody>
+</table>
 
-</div>
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ---
 
