@@ -88,3 +88,9 @@ public class ActiveSceneResponse
     public int RootCount { get; set; }
     public bool IsLoaded { get; set; }
 }
+
+public class OperationResponse
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+}

@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
@@ -85,6 +86,9 @@ namespace UnityMCPSharp.Editor
             Application.logMessageReceived += OnLogMessageReceived;
             CompilationPipeline.compilationStarted += OnCompilationStarted;
             CompilationPipeline.compilationFinished += OnCompilationFinished;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            EditorSceneManager.sceneLoaded += OnSceneLoaded;
+            EditorSceneManager.activeSceneChangedInEditMode += OnActiveSceneChanged;
 
             // Process main thread queue every frame
             EditorApplication.update -= ProcessMainThreadQueue;
@@ -177,6 +181,9 @@ namespace UnityMCPSharp.Editor
             Application.logMessageReceived -= OnLogMessageReceived;
             CompilationPipeline.compilationStarted -= OnCompilationStarted;
             CompilationPipeline.compilationFinished -= OnCompilationFinished;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorSceneManager.sceneLoaded -= OnSceneLoaded;
+            EditorSceneManager.activeSceneChangedInEditMode -= OnActiveSceneChanged;
             EditorApplication.update -= ProcessMainThreadQueue;
 
             Debug.Log("[MCPEditorIntegration] Cleanup complete");
@@ -311,6 +318,10 @@ namespace UnityMCPSharp.Editor
                     GetActiveSceneHandler.Handle(requestId, _client, _config);
                     break;
 
+                case "unity.setComponentField":
+                    SetComponentFieldHandler.Handle(requestId, parameters, _client, _config);
+                    break;
+
                 default:
                     Debug.LogWarning($"[MCPEditorIntegration] Unknown request method: {method}");
                     break;
@@ -358,6 +369,12 @@ namespace UnityMCPSharp.Editor
                     message = condition,
                     stackTrace = stackTrace
                 });
+
+                // Notify MCP that console logs resource has been updated
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://console/logs"
+                });
             }
         }
 
@@ -402,6 +419,62 @@ namespace UnityMCPSharp.Editor
                 await _client.SendNotificationAsync("unity.compilationFinished", new
                 {
                     succeeded = succeeded
+                });
+
+                // Notify MCP that compilation status resource has been updated
+                await _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://compilation/status"
+                });
+            }
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            Debug.Log($"[MCPEditorIntegration] Play mode state changed: {state}");
+
+            // Notify that play mode resource has been updated
+            if (_client != null && _client.IsConnected)
+            {
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://editor/playmode"
+                });
+            }
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Debug.Log($"[MCPEditorIntegration] Scene loaded: {scene.name} (mode: {mode})");
+
+            // Notify that scene resources have been updated
+            if (_client != null && _client.IsConnected)
+            {
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://scenes/active"
+                });
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://scenes/active/objects"
+                });
+            }
+        }
+
+        private static void OnActiveSceneChanged(Scene previousScene, Scene newScene)
+        {
+            Debug.Log($"[MCPEditorIntegration] Active scene changed: {previousScene.name} -> {newScene.name}");
+
+            // Notify that scene resources have been updated
+            if (_client != null && _client.IsConnected)
+            {
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://scenes/active"
+                });
+                _ = _client.SendNotificationAsync("unity.resourceUpdated", new
+                {
+                    uri = "unity://scenes/active/objects"
                 });
             }
         }

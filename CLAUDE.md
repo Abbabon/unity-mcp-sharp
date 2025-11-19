@@ -260,7 +260,77 @@ AssetDatabase.Refresh();  // Trigger immediate refresh
 
 **Important:** Always call `AssetDatabase.Refresh()` after any file I/O operations in the Assets folder to ensure Unity detects changes immediately.
 
-#### Step 4: Update Documentation
+#### Step 4: Asset Creation with Complex Structures
+
+The `unity_create_asset` tool uses an enhanced system for creating and populating Unity assets with complex nested structures.
+
+**AssetHelper Architecture:**
+
+1. **ConvertValue()** - Enhanced type conversion supporting:
+   - Unity types: Vector3, Vector2, Color, Quaternion, Bounds, Rect
+   - String formats: "x,y,z", "#RRGGBB", comma-separated values
+   - JSON objects: `{"x": 0, "y": 0, "z": 0}`
+   - Asset references: via AssetDatabase.LoadAssetAtPath
+
+2. **SetPropertiesFromJson_Advanced()** - Uses Unity's SerializedObject API:
+   - Handles complex nested structures (classes within classes)
+   - Properly populates arrays and List<T> (e.g., `List<PrimitiveData>`)
+   - Recursive property setting for nested objects
+   - Supports all Unity SerializedPropertyTypes
+
+3. **SetArrayProperty()** - Specialized array/list handling:
+   - Sets array size correctly
+   - Iterates elements and sets nested properties recursively
+   - Works with List<CustomClass> structures
+
+**Example - Creating ScriptableObject with nested List:**
+
+```csharp
+unity_create_asset(
+  assetName: "DemoPrimitives",
+  folderPath: "ScriptableObjects",
+  assetTypeName: "PrimitiveSpawnConfig",
+  propertiesJson: {
+    "primitives": [
+      {
+        "primitiveType": 0,
+        "position": {"x": 0, "y": 0, "z": 0},
+        "color": {"r": 1, "g": 0, "b": 0, "a": 1},
+        "scale": {"x": 1, "y": 1, "z": 1}
+      },
+      {
+        "primitiveType": 1,
+        "position": {"x": 2, "y": 0, "z": 0},
+        "color": {"r": 0, "g": 0, "b": 1, "a": 1},
+        "scale": {"x": 1, "y": 1, "z": 1}
+      }
+    ]
+  }
+)
+```
+
+This will properly populate a `List<PrimitiveData>` field on the ScriptableObject, with all nested Vector3 and Color values correctly set.
+
+**Supported Asset Types:**
+- **ScriptableObject** - Any custom ScriptableObject with complex nested structures
+- **Material** - With shader and property assignment
+- **Texture2D** - Basic texture creation
+- **AnimationClip** - Animation asset creation
+- **Any Unity asset type** - Generic fallback for other asset types
+
+**Implementation Details:**
+
+The system uses a hybrid approach:
+- **SerializedObject API** for complex structures (arrays, nested objects, Unity types)
+- **Reflection** as fallback for properties not found via SerializedProperty
+- **Type conversion** for both string and JSON inputs
+
+**Key Files:**
+- `Editor/Scripts/Handlers/Assets/AssetHelper.cs` - Core asset creation logic
+- `Editor/Scripts/Handlers/Assets/CreateAssetHandler.cs` - Handler that calls AssetHelper
+- `Server~/Tools/Assets/CreateAssetTool.cs` - MCP tool definition
+
+#### Step 5: Update Documentation
 
 - Add tool description to README.md with parameters, returns, and related tools
 - Add usage examples
@@ -454,6 +524,91 @@ curl http://localhost:8080/health
 ```bash
 npx @modelcontextprotocol/inspector http://localhost:8080/mcp
 ```
+
+#### Integration Test Scenario (Pre-Release Validation)
+
+**Purpose**: Comprehensive end-to-end test that validates MCP server, Unity integration, and all major tool categories before releases.
+
+**When to Run**:
+- Before committing major changes (e.g., Resources conversion, new features)
+- Before creating releases
+- When recording demos
+
+**Test Scenario: PrimitiveSpawn Demo**
+
+This scenario exercises the following MCP capabilities:
+- Script creation (`unity_create_script`)
+- Asset creation (`unity_create_asset` for ScriptableObjects)
+- GameObject creation (`unity_create_game_object`)
+- Component manipulation (`unity_add_component_to_object`)
+- Play mode control (`unity_enter_play_mode`, `unity_exit_play_mode`)
+- Scene queries (`unity_list_scene_objects`, `unity_find_game_object`)
+
+**Steps:**
+
+1. **Create ScriptableObject Configuration Script**
+   - Create `PrimitiveSpawnConfig.cs` in `Assets/Scripts/`
+   - Define fields: `List<PrimitiveData>` where each has `PrimitiveType`, `Vector3 position`, `Color color`
+   - Mark as `[CreateAssetMenu]`
+
+2. **Create Runtime Spawner Script**
+   - Create `PrimitiveSpawner.cs` in `Assets/Scripts/`
+   - Reference the ScriptableObject config
+   - In `Start()`: instantiate all primitives from config data
+   - Apply colors using materials
+
+3. **Create Camera Orbit Script**
+   - Create `CameraOrbit.cs` in `Assets/Scripts/`
+   - Fields: `Transform target`, `float distance`, `float rotationSpeed`
+   - In `Update()`: orbit around target using `RotateAround`
+
+4. **Create ScriptableObject Asset Instance**
+   - Use `unity_create_asset` to create instance of `PrimitiveSpawnConfig`
+   - Populate with mock data (5-7 primitives):
+     - Cube at (0, 0, 0), Red
+     - Sphere at (2, 0, 0), Blue
+     - Cylinder at (-2, 0, 0), Green
+     - Capsule at (0, 0, 2), Yellow
+     - Plane at (0, -1, 0), White (scaled 10x)
+
+5. **Setup Scene**
+   - Create `SpawnManager` GameObject
+   - Attach `PrimitiveSpawner` script
+   - Assign ScriptableObject config reference
+   - Find Main Camera
+   - Attach `CameraOrbit` script to camera
+   - Set camera target to first primitive's position (0, 0, 0)
+
+6. **Enter Play Mode and Validate**
+   - Call `unity_enter_play_mode`
+   - Verify primitives spawned correctly
+   - Verify camera orbits around first primitive
+   - Let run for 5-10 seconds to demonstrate
+   - Call `unity_exit_play_mode`
+
+**Expected Results:**
+- All scripts compile without errors
+- ScriptableObject created and populated
+- Scene setup completes successfully
+- Play mode shows 5-7 colored primitives
+- Camera smoothly orbits around center cube
+- No console errors
+
+**What This Tests:**
+- ✅ Script creation and compilation
+- ✅ Asset database operations
+- ✅ ScriptableObject workflow
+- ✅ GameObject and component manipulation
+- ✅ Play mode control
+- ✅ Runtime script execution
+- ✅ Material and rendering setup
+- ✅ Full MCP → Unity → Runtime pipeline
+
+**Troubleshooting:**
+- If compilation fails: Check `unity_get_compilation_status` and `unity_get_console_logs`
+- If primitives don't spawn: Verify ScriptableObject was populated correctly
+- If camera doesn't orbit: Check camera target assignment in inspector
+- If play mode fails: Ensure no compilation errors exist first
 
 ### Building Docker Images
 

@@ -83,7 +83,7 @@ namespace UnityMCPSharp.Editor.Handlers.Assets
                 // Set properties from JSON if provided
                 if (!string.IsNullOrEmpty(data.propertiesJson))
                 {
-                    AssetHelper.SetPropertiesFromJson(assetInstance, data.propertiesJson);
+                    AssetHelper.SetPropertiesFromJson_Advanced(assetInstance, data.propertiesJson);
                 }
 
                 // Determine file extension

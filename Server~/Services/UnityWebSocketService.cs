@@ -13,6 +13,9 @@ public class UnityWebSocketService
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object?>> _pendingRequests = new();
     private readonly JsonSerializerOptions _jsonOptions;
 
+    // Event raised when Unity notifies about a resource update
+    public event Action<string>? ResourceUpdated;
+
     public UnityWebSocketService(ILogger<UnityWebSocketService> logger)
     {
         _logger = logger;
@@ -120,8 +123,25 @@ public class UnityWebSocketService
 
             _logger.LogInformation("Received notification from Unity: {Method}", request.Method);
 
-            // For notifications from Unity, we could forward them somewhere (e.g., to MCP clients)
-            // For now, just acknowledge if it has an ID
+            // Check if this is a resource update notification from Unity
+            if (request.Method?.StartsWith("unity.resourceUpdated") == true && request.Params != null)
+            {
+                // Extract resource URI from parameters
+                var paramsJson = JsonSerializer.Serialize(request.Params, _jsonOptions);
+                using var paramsDoc = JsonDocument.Parse(paramsJson);
+                if (paramsDoc.RootElement.TryGetProperty("uri", out var uriElement))
+                {
+                    var resourceUri = uriElement.GetString();
+                    if (resourceUri != null)
+                    {
+                        _logger.LogInformation("Unity notified resource update: {ResourceUri}", resourceUri);
+                        // Raise event for ResourceSubscriptionService to handle
+                        ResourceUpdated?.Invoke(resourceUri);
+                    }
+                }
+            }
+
+            // For notifications from Unity, acknowledge if it has an ID
             if (request.Id != null)
             {
                 var response = new JsonRpcResponse
