@@ -12,6 +12,7 @@ using UnityMCPSharp.Editor.Handlers.System;
 using UnityMCPSharp.Editor.Handlers.GameObjects;
 using UnityMCPSharp.Editor.Handlers.Assets;
 using UnityMCPSharp.Editor.Handlers.Scenes;
+using UnityMCPSharp.Editor.Handlers.Prefabs;
 
 namespace UnityMCPSharp.Editor
 {
@@ -299,6 +300,26 @@ namespace UnityMCPSharp.Editor
                     CreateGameObjectInSceneHandler.Handle(parameters, _config);
                     break;
 
+                case "unity.createPrefab":
+                    CreatePrefabHandler.Handle(parameters, _config);
+                    break;
+
+                case "unity.instantiatePrefab":
+                    InstantiatePrefabHandler.Handle(parameters, _config);
+                    break;
+
+                case "unity.openPrefab":
+                    OpenPrefabHandler.Handle(parameters, _config);
+                    break;
+
+                case "unity.savePrefab":
+                    SavePrefabHandler.Handle(parameters, _config);
+                    break;
+
+                case "unity.closePrefabStage":
+                    ClosePrefabStageHandler.Handle(parameters, _config);
+                    break;
+
                 default:
                     Debug.LogWarning($"[MCPEditorIntegration] Unknown notification method: {method}");
                     break;
@@ -349,6 +370,10 @@ namespace UnityMCPSharp.Editor
 
                 case "unity.setComponentField":
                     SetComponentFieldHandler.Handle(requestId, parameters, _client, _config);
+                    break;
+
+                case "unity.getPrefabInfo":
+                    GetPrefabInfoHandler.Handle(requestId, parameters, _client, _config);
                     break;
 
                 default:
