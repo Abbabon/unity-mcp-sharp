@@ -24,7 +24,7 @@ public class CloseSceneTool(ILogger<CloseSceneTool> logger, UnityWebSocketServic
             sceneIdentifier
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.closeScene", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.closeScene", parameters);
 
         return $"Scene '{sceneIdentifier}' closed";
     }

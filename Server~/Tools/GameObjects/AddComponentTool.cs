@@ -26,7 +26,7 @@ public class AddComponentTool(ILogger<AddComponentTool> logger, UnityWebSocketSe
             componentType
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.addComponent", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.addComponent", parameters);
 
         return $"Component '{componentType}' added to GameObject '{gameObjectName}'";
     }

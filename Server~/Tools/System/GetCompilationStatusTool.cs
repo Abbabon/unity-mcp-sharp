@@ -21,7 +21,7 @@ public class GetCompilationStatusTool(ILogger<GetCompilationStatusTool> logger, 
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<CompilationStatusResponse>("unity.getCompilationStatus", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<CompilationStatusResponse>("unity.getCompilationStatus", null);
             if (response != null)
             {
                 var status = response.IsCompiling ? "Compiling..." : "Idle";

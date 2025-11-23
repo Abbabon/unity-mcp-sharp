@@ -21,7 +21,7 @@ public class GetProjectInfoTool(ILogger<GetProjectInfoTool> logger, UnityWebSock
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<ProjectInfoResponse>("unity.getProjectInfo", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<ProjectInfoResponse>("unity.getProjectInfo", null);
             if (response != null)
             {
                 return $"Project Name: {response.ProjectName}\n" +

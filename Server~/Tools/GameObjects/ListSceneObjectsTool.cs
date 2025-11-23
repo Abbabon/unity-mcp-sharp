@@ -21,7 +21,7 @@ public class ListSceneObjectsTool(ILogger<ListSceneObjectsTool> logger, UnityWeb
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<SceneObjectsResponse>("unity.listSceneObjects", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<SceneObjectsResponse>("unity.listSceneObjects", null);
             if (response?.Objects != null && response.Objects.Count > 0)
             {
                 return string.Join("\n", response.Objects.Select(obj =>

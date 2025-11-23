@@ -17,7 +17,7 @@ public class TriggerCompilationTool(ILogger<TriggerCompilationTool> logger, Unit
     public async Task<string> UnityTriggerScriptCompilationAsync()
     {
         _logger.LogInformation("Triggering Unity script compilation...");
-        await _webSocketService.BroadcastNotificationAsync("unity.triggerCompilation", null);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.triggerCompilation", null);
 
         return "Unity script compilation triggered. Unity will reload assemblies (temporary disconnect expected).";
     }

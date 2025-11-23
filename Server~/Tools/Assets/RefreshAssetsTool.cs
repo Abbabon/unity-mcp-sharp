@@ -18,7 +18,7 @@ public class RefreshAssetsTool(ILogger<RefreshAssetsTool> logger, UnityWebSocket
     {
         _logger.LogInformation("Refreshing Unity Asset Database");
 
-        await _webSocketService.BroadcastNotificationAsync("unity.refreshAssets", null);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.refreshAssets", null);
 
         return "Unity Asset Database refresh initiated. Unity will now reimport assets and recompile scripts.";
     }

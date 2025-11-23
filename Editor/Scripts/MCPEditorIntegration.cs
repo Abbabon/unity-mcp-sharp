@@ -199,8 +199,37 @@ namespace UnityMCPSharp.Editor
         {
             Debug.Log("[MCPEditorIntegration] Connected to MCP server");
 
+            // Register this Unity Editor instance with the server
+            _ = RegisterEditorAsync();
+
             // Send initial project info
             _ = SendProjectInfoAsync();
+        }
+
+        private static async System.Threading.Tasks.Task RegisterEditorAsync()
+        {
+            var metadata = new
+            {
+                projectName = Application.productName,
+                activeScene = SceneManager.GetActiveScene().name,
+                scenePath = SceneManager.GetActiveScene().path,
+                machineName = System.Environment.MachineName,
+                processId = System.Diagnostics.Process.GetCurrentProcess().Id,
+                unityVersion = Application.unityVersion,
+                dataPath = Application.dataPath,
+                platform = Application.platform.ToString(),
+                isPlaying = EditorApplication.isPlaying
+            };
+
+            try
+            {
+                await _client.SendNotificationAsync("unity.register", metadata);
+                Debug.Log($"[MCPEditorIntegration] Registered with server as '{metadata.projectName} - {metadata.activeScene} ({metadata.machineName})'");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[MCPEditorIntegration] Failed to register with server: {ex.Message}");
+            }
         }
 
         private static void HandleNotification(string method, object parameters)
@@ -464,6 +493,12 @@ namespace UnityMCPSharp.Editor
         private static void OnActiveSceneChanged(Scene previousScene, Scene newScene)
         {
             Debug.Log($"[MCPEditorIntegration] Active scene changed: {previousScene.name} -> {newScene.name}");
+
+            // Re-register to update scene metadata
+            if (_client != null && _client.IsConnected)
+            {
+                _ = RegisterEditorAsync();
+            }
 
             // Notify that scene resources have been updated
             if (_client != null && _client.IsConnected)

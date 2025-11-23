@@ -63,7 +63,8 @@ unity-mcp-sharp/
 │   ├── Installation.md
 │   ├── Configuration.md
 │   ├── Troubleshooting.md
-│   └── Testing.md
+│   ├── Testing.md
+│   └── MultiEditor-TechnicalRundown.md  # Technical deep-dive docs
 │
 ├── TestProject~/            # Test Unity project (excluded from package)
 │
@@ -103,11 +104,38 @@ The server supports **two transports simultaneously**:
    - JSON-RPC 2.0 protocol for consistency
    - Persistent connection for real-time updates
 
+### Multi-Editor Support (v0.5.0+)
+
+The server supports **multiple Unity Editor instances** connecting simultaneously:
+
+**Architecture:**
+- Each Unity Editor registers with unique metadata (project name, scene, machine, process ID)
+- Each MCP session (HTTP connection) can select a different Unity Editor
+- Session-to-editor mapping persists across Unity compilation reconnects
+- Smart auto-selection: single editor auto-selected, multiple editors require explicit selection
+
+**Key Components:**
+- `EditorSessionManager` - Manages session-to-editor mappings using `ConcurrentDictionary`
+- `McpSessionContext` - AsyncLocal storage for MCP session IDs (propagates through async chains)
+- `McpSessionMiddleware` - ASP.NET middleware captures HTTP connection ID as session ID
+- `EditorMetadata` - Rich metadata model for Unity Editor instances
+
+**Session Isolation:**
+```
+MCP Session A → Unity Editor 1 (ProjectX, SceneA)
+MCP Session B → Unity Editor 2 (ProjectY, SceneB)
+MCP Session C → Unity Editor 1 (same as Session A)
+```
+
+**New MCP Tools:**
+- `unity_list_editors` - List all connected editors with metadata
+- `unity_select_editor` - Select which editor to use for current session
+
 ### Request Handling Pattern
 
 1. **MCP Tool Invocation** (from IDE)
    - Tool called via MCP endpoint
-   - Server broadcasts JSON-RPC notification to Unity via WebSocket
+   - Server routes JSON-RPC notification to selected Unity Editor via WebSocket
    - Unity executes Editor API calls
    - Unity sends result back via WebSocket
    - Server returns MCP tool result
@@ -332,9 +360,16 @@ The system uses a hybrid approach:
 
 #### Step 5: Update Documentation
 
+**IMPORTANT:** All documentation files must be placed in the `Documentation~/` folder (excluded from Unity package).
+
 - Add tool description to README.md with parameters, returns, and related tools
 - Add usage examples
 - Update CHANGELOG.md
+- **For technical deep-dives:** Create feature-specific documentation in `Documentation~/` (e.g., `Documentation~/MultiEditor-TechnicalRundown.md`)
+  - Use descriptive names indicating the feature scope (not generic names like "TECHNICAL_RUNDOWN.md")
+  - Include comprehensive "what was done" and "how it was implemented" sections
+  - List all technologies/SDKs used
+  - Document architecture decisions and trade-offs
 
 ---
 
@@ -671,6 +706,8 @@ dotnet test /p:CollectCoverage=true
 - `develop` - Integration branch (optional)
 - `feature/*` - Feature branches
 - `fix/*` - Bug fix branches
+
+**IMPORTANT REMINDER:** Always create a feature branch (e.g., `feature/new-tool`, `fix/bug-name`) before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
 
 ### Commit Messages
 

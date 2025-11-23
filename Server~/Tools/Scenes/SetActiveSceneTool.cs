@@ -24,7 +24,7 @@ public class SetActiveSceneTool(ILogger<SetActiveSceneTool> logger, UnityWebSock
             sceneIdentifier
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.setActiveScene", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.setActiveScene", parameters);
 
         return $"Scene '{sceneIdentifier}' is now the active scene. New GameObjects will be created here.";
     }

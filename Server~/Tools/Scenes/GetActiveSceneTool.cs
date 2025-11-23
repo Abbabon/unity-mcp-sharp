@@ -21,7 +21,7 @@ public class GetActiveSceneTool(ILogger<GetActiveSceneTool> logger, UnityWebSock
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<ActiveSceneResponse>("unity.getActiveScene", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<ActiveSceneResponse>("unity.getActiveScene", null);
             if (response != null)
             {
                 return $"Scene Name: {response.Name}\n" +

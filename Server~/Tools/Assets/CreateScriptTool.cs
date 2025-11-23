@@ -28,7 +28,7 @@ public class CreateScriptTool(ILogger<CreateScriptTool> logger, UnityWebSocketSe
             scriptContent
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.createScript", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.createScript", parameters);
 
         return $"Script '{scriptName}.cs' created in Assets/{folderPath}/. Unity will now recompile scripts.";
     }

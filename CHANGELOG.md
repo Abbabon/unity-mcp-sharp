@@ -8,12 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
-- Support for multiple Unity instances
 - Performance monitoring and metrics
 - Advanced scene query capabilities
 - Prefab instantiation support
 - Build pipeline integration
 - Scene View overlay for MCP operations
+
+## [0.5.0] - 2025-11-23
+
+### Added
+- **Multi-Editor Support:** Full support for multiple Unity Editor instances connecting to a single MCP server
+  - Each Unity Editor registers with unique metadata (project name, scene, machine, process ID)
+  - Per-MCP-session editor selection: different LLM sessions can work with different Unity Editors simultaneously
+  - Smart auto-selection: automatically selects editor if only one is connected
+  - New MCP tools:
+    - `unity_list_editors` - List all connected Unity Editors with metadata
+    - `unity_select_editor` - Select which Unity Editor to use for the current MCP session
+  - Editor selection persists across compilation reconnects (critical for Unity's recompilation workflow)
+
+### Changed
+- **Session-Aware Routing:** All MCP tools now route to the selected Unity Editor instead of broadcasting to all editors
+  - Tools throw informative errors when multiple editors are connected but none is selected
+  - Backwards compatible: single-editor setups work seamlessly without requiring selection
+- **Editor Registration:** Unity Editors now register on connect with comprehensive metadata
+  - Metadata updates automatically when scenes change
+  - Server tracks editor connection state and removes disconnected editors from session mappings
+- **MCP Session Context:** New middleware captures MCP session context using AsyncLocal storage
+  - Enables per-session state management across async call chains
+  - Each HTTP connection is treated as a unique MCP session
+
+### Infrastructure
+- **New Services:**
+  - `EditorSessionManager` - Manages relationships between MCP sessions and Unity Editors
+  - `McpSessionContext` - Provides async-local storage for MCP session IDs
+  - `McpSessionMiddleware` - ASP.NET middleware to capture and propagate session context
+- **New Models:**
+  - `EditorMetadata` - Comprehensive metadata about connected Unity Editors
+- **Enhanced UnityWebSocketService:**
+  - `SendToEditorAsync` - Send to specific Unity Editor by connection ID
+  - `SendToCurrentSessionEditorAsync` - Send to the selected editor for the current MCP session
+  - `SendRequestToEditorAsync` - Send request to specific editor and await response
+  - `SendRequestToCurrentSessionEditorAsync` - Send request to session's selected editor
+  - Legacy broadcast methods retained for backwards compatibility
 
 ## [0.3.2] - 2025-11-16
 

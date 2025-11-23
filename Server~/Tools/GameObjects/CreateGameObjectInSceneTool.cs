@@ -34,7 +34,7 @@ public class CreateGameObjectInSceneTool(ILogger<CreateGameObjectInSceneTool> lo
             parent
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.createGameObjectInScene", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.createGameObjectInScene", parameters);
 
         var componentInfo = components != null ? $" with components [{components}]" : "";
         return $"GameObject '{name}' created in scene '{scenePath}' at position ({x}, {y}, {z}){componentInfo}";

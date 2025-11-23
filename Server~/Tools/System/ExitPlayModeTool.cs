@@ -18,7 +18,7 @@ public class ExitPlayModeTool(ILogger<ExitPlayModeTool> logger, UnityWebSocketSe
     {
         _logger.LogInformation("Exiting Unity play mode");
 
-        await _webSocketService.BroadcastNotificationAsync("unity.exitPlayMode", null);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.exitPlayMode", null);
 
         return "Unity exited play mode. All play mode changes have been reverted.";
     }

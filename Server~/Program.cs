@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using UnityMcpServer.Middleware;
 using UnityMcpServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,9 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// Add Editor Session Manager for multi-editor support
+builder.Services.AddSingleton<EditorSessionManager>();
 
 // Add WebSocket service for Unity Editor communication
 builder.Services.AddSingleton<UnityWebSocketService>();
@@ -53,6 +57,9 @@ builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 app.UseCors();
+
+// Add MCP session context middleware (must be before MapMcp)
+app.UseMcpSessionContext();
 
 // Map MCP endpoints with /mcp prefix (Streamable HTTP protocol)
 app.MapMcp("/mcp");
@@ -85,7 +92,7 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => new
 {
     name = "Unity MCP Server",
-    version = "0.4.0",
+    version = "0.5.0",
     transports = "http + websocket",
     endpoints = new
     {
