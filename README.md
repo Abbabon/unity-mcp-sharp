@@ -50,17 +50,28 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 </details>
 
 <details open>
-<summary><b>🛠️ 24 MCP Tools + 7 MCP Resources</b></summary>
+<summary><b>🛠️ 26 MCP Tools + 7 MCP Resources</b></summary>
 
 | Category | Tools & Resources |
 |----------|-------|
 | **Resources (Read-Only)** | Project info, console logs, compilation status, play mode, active scene, scene objects, all scenes |
+| **Multi-Editor** | List connected editors, select editor for session |
 | **Console & Compilation** | Trigger compilation, refresh assets |
 | **GameObjects** | Create, find, batch create, add components, set component fields, list scene objects |
 | **Scenes** | List, open, close, save, get/set active scene |
 | **Assets** | Create scripts, create assets with complex structures (ScriptableObjects, Materials, etc.) |
 | **Play Mode** | Enter, exit, get play mode state |
 | **System** | Run any Unity menu item programmatically |
+</details>
+
+<details open>
+<summary><b>🔀 Multi-Editor Support (v0.5.0+)</b></summary>
+
+- **Multiple Unity Editors**: Connect multiple Unity Editor instances to a single MCP server
+- **Per-Session Selection**: Each MCP client (LLM session) can select and work with different editors independently
+- **Smart Auto-Selection**: Single editor scenarios work seamlessly without manual selection
+- **Persistent Across Recompilations**: Editor selection survives Unity script compilation reconnects
+- **Rich Metadata**: Each editor reports project name, scene, machine, process ID, Unity version
 </details>
 
 <details open>
@@ -95,6 +106,7 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
 
 ## 🏗️ Architecture
 
+### Basic Flow
 ```
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐
 │   AI Assistant  │         │   Unity Editor   │         │  Unity Package  │
@@ -117,6 +129,33 @@ Enable AI assistants to interact with Unity through console logs, compilation, a
                     │   │  - JSON-RPC 2.0    │     │
                     │   └────────────────────┘     │
                     └──────────────────────────────┘
+```
+
+### Multi-Editor Architecture (v0.5.0+)
+```
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ MCP Session  │  │ MCP Session  │  │ MCP Session  │
+│     A        │  │     B        │  │     C        │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       └────────┬────────┴────────┬────────┘
+                │                 │
+                ▼                 ▼
+          ┌─────────────────────────────┐
+          │  MCP Server                 │
+          │  ┌───────────────────────┐  │
+          │  │ EditorSessionManager  │  │  Session → Editor Mapping
+          │  │ McpSessionMiddleware  │  │  AsyncLocal Context
+          │  └───────────────────────┘  │
+          └─────────────────────────────┘
+                │         │         │
+       ┌────────┘         │         └────────┐
+       ▼                  ▼                  ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│Unity Editor 1│   │Unity Editor 2│   │Unity Editor 3│
+│  ProjectA    │   │  ProjectB    │   │  ProjectC    │
+│  SceneX      │   │  SceneY      │   │  SceneZ      │
+└──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 ---

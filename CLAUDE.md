@@ -103,11 +103,38 @@ The server supports **two transports simultaneously**:
    - JSON-RPC 2.0 protocol for consistency
    - Persistent connection for real-time updates
 
+### Multi-Editor Support (v0.5.0+)
+
+The server supports **multiple Unity Editor instances** connecting simultaneously:
+
+**Architecture:**
+- Each Unity Editor registers with unique metadata (project name, scene, machine, process ID)
+- Each MCP session (HTTP connection) can select a different Unity Editor
+- Session-to-editor mapping persists across Unity compilation reconnects
+- Smart auto-selection: single editor auto-selected, multiple editors require explicit selection
+
+**Key Components:**
+- `EditorSessionManager` - Manages session-to-editor mappings using `ConcurrentDictionary`
+- `McpSessionContext` - AsyncLocal storage for MCP session IDs (propagates through async chains)
+- `McpSessionMiddleware` - ASP.NET middleware captures HTTP connection ID as session ID
+- `EditorMetadata` - Rich metadata model for Unity Editor instances
+
+**Session Isolation:**
+```
+MCP Session A → Unity Editor 1 (ProjectX, SceneA)
+MCP Session B → Unity Editor 2 (ProjectY, SceneB)
+MCP Session C → Unity Editor 1 (same as Session A)
+```
+
+**New MCP Tools:**
+- `unity_list_editors` - List all connected editors with metadata
+- `unity_select_editor` - Select which editor to use for current session
+
 ### Request Handling Pattern
 
 1. **MCP Tool Invocation** (from IDE)
    - Tool called via MCP endpoint
-   - Server broadcasts JSON-RPC notification to Unity via WebSocket
+   - Server routes JSON-RPC notification to selected Unity Editor via WebSocket
    - Unity executes Editor API calls
    - Unity sends result back via WebSocket
    - Server returns MCP tool result
