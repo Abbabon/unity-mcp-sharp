@@ -81,17 +81,24 @@ public class EditorSessionManager
     /// </summary>
     public void UpdateEditor(string connectionId, EditorMetadata metadata)
     {
-        if (_editors.TryGetValue(connectionId, out var existing))
-        {
-            metadata.ConnectionId = connectionId;
-            metadata.ConnectedAt = existing.ConnectedAt; // Preserve original connection time
-            _editors[connectionId] = metadata;
+        metadata.ConnectionId = connectionId;
 
-            _logger.LogInformation(
-                "Unity Editor metadata updated: {ConnectionId} - {DisplayName}",
-                connectionId,
-                metadata.DisplayName);
-        }
+        // Use atomic AddOrUpdate pattern for thread safety
+        _editors.AddOrUpdate(
+            connectionId,
+            // Add function (shouldn't be called if editor exists)
+            metadata,
+            // Update function - preserve original connection time
+            (key, existing) =>
+            {
+                metadata.ConnectedAt = existing.ConnectedAt;
+                return metadata;
+            });
+
+        _logger.LogInformation(
+            "Unity Editor metadata updated: {ConnectionId} - {DisplayName}",
+            connectionId,
+            metadata.DisplayName);
     }
 
     /// <summary>
@@ -183,12 +190,25 @@ public class EditorSessionManager
         if (editors.Count == 1)
         {
             var autoSelectedId = editors[0];
-            _sessionEditors[sessionId] = autoSelectedId;
-            _logger.LogInformation(
-                "Auto-selected editor {EditorId} for session {SessionId} (only one editor available)",
-                autoSelectedId,
-                sessionId);
-            return autoSelectedId;
+
+            // Verify editor still exists before selecting (race condition protection)
+            if (_editors.ContainsKey(autoSelectedId))
+            {
+                _sessionEditors[sessionId] = autoSelectedId;
+                _logger.LogInformation(
+                    "Auto-selected editor {EditorId} for session {SessionId} (only one editor available)",
+                    autoSelectedId,
+                    sessionId);
+                return autoSelectedId;
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Editor {EditorId} disconnected during auto-selection for session {SessionId}",
+                    autoSelectedId,
+                    sessionId);
+                return null;
+            }
         }
 
         // Multiple editors or no editors - require explicit selection

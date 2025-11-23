@@ -297,7 +297,19 @@ public class UnityWebSocketService
             }
         }
 
-        await SendToEditorAsync(editorId, method, parameters);
+        // Graceful error handling - verify editor is still connected
+        try
+        {
+            await SendToEditorAsync(editorId, method, parameters);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("is not connected"))
+        {
+            // Editor disconnected between selection and send
+            _logger.LogWarning(ex, "Selected editor {EditorId} disconnected before sending {Method}", editorId, method);
+            throw new InvalidOperationException(
+                $"The selected Unity Editor disconnected. Please use unity_list_editors to see available editors and unity_select_editor to choose a new one.",
+                ex);
+        }
     }
 
     /// <summary>
