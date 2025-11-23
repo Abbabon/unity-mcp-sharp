@@ -63,7 +63,8 @@ unity-mcp-sharp/
 │   ├── Installation.md
 │   ├── Configuration.md
 │   ├── Troubleshooting.md
-│   └── Testing.md
+│   ├── Testing.md
+│   └── MultiEditor-TechnicalRundown.md  # Technical deep-dive docs
 │
 ├── TestProject~/            # Test Unity project (excluded from package)
 │
@@ -359,9 +360,16 @@ The system uses a hybrid approach:
 
 #### Step 5: Update Documentation
 
+**IMPORTANT:** All documentation files must be placed in the `Documentation~/` folder (excluded from Unity package).
+
 - Add tool description to README.md with parameters, returns, and related tools
 - Add usage examples
 - Update CHANGELOG.md
+- **For technical deep-dives:** Create feature-specific documentation in `Documentation~/` (e.g., `Documentation~/MultiEditor-TechnicalRundown.md`)
+  - Use descriptive names indicating the feature scope (not generic names like "TECHNICAL_RUNDOWN.md")
+  - Include comprehensive "what was done" and "how it was implemented" sections
+  - List all technologies/SDKs used
+  - Document architecture decisions and trade-offs
 
 ---
 
