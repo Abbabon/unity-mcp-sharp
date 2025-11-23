@@ -1,9 +1,10 @@
 <div align="center">
 
-# 🎮 Unity MCP Server
+# 🎮 Unity MCP Sharp
 
-**Model Context Protocol (MCP) integration for Unity Editor**
-Enable AI assistants to interact with Unity through console logs, compilation, and scene manipulation.
+**The C# implementation of Model Context Protocol for Unity Editor**
+
+Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Claude, Cursor, etc.) to directly interact with Unity Editor. Built with .NET 9.0 and the official MCP C# SDK, it provides 26 powerful tools for game development automation including scene manipulation, GameObject creation, asset management, and real-time play mode control.
 
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
