@@ -18,7 +18,7 @@ public class EnterPlayModeTool(ILogger<EnterPlayModeTool> logger, UnityWebSocket
     {
         _logger.LogInformation("Entering Unity play mode");
 
-        await _webSocketService.BroadcastNotificationAsync("unity.enterPlayMode", null);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.enterPlayMode", null);
 
         return "Unity entered play mode. Remember: changes made in play mode are NOT saved!";
     }

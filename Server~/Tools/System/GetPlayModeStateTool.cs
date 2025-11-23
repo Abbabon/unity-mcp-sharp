@@ -21,7 +21,7 @@ public class GetPlayModeStateTool(ILogger<GetPlayModeStateTool> logger, UnityWeb
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<PlayModeStateResponse>("unity.getPlayModeState", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<PlayModeStateResponse>("unity.getPlayModeState", null);
             if (response != null)
             {
                 return $"Play Mode State: {response.State}";

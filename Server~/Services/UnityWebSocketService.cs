@@ -9,6 +9,7 @@ namespace UnityMcpServer.Services;
 public class UnityWebSocketService
 {
     private readonly ILogger<UnityWebSocketService> _logger;
+    private readonly EditorSessionManager _sessionManager;
     private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object?>> _pendingRequests = new();
     private readonly JsonSerializerOptions _jsonOptions;
@@ -16,9 +17,10 @@ public class UnityWebSocketService
     // Event raised when Unity notifies about a resource update
     public event Action<string>? ResourceUpdated;
 
-    public UnityWebSocketService(ILogger<UnityWebSocketService> logger)
+    public UnityWebSocketService(ILogger<UnityWebSocketService> logger, EditorSessionManager sessionManager)
     {
         _logger = logger;
+        _sessionManager = sessionManager;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -45,6 +47,7 @@ public class UnityWebSocketService
         finally
         {
             _connections.TryRemove(connectionId, out _);
+            _sessionManager.UnregisterEditor(connectionId);
             if (webSocket.State == WebSocketState.Open)
             {
                 await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection closed", CancellationToken.None);
@@ -122,6 +125,32 @@ public class UnityWebSocketService
             }
 
             _logger.LogInformation("Received notification from Unity: {Method}", request.Method);
+
+            // Handle editor registration
+            if (request.Method == "unity.register" && request.Params != null)
+            {
+                var paramsJson = JsonSerializer.Serialize(request.Params, _jsonOptions);
+                var metadata = JsonSerializer.Deserialize<EditorMetadata>(paramsJson, _jsonOptions);
+                if (metadata != null)
+                {
+                    _sessionManager.RegisterEditor(connectionId, metadata);
+                    _logger.LogInformation("Unity Editor registered: {DisplayName}", metadata.DisplayName);
+
+                    // Send acknowledgment back with the assigned connection ID
+                    var response = new JsonRpcResponse
+                    {
+                        Id = request.Id,
+                        Result = new
+                        {
+                            connectionId,
+                            status = "registered",
+                            message = $"Registered as {metadata.DisplayName}"
+                        }
+                    };
+                    await SendResponseAsync(webSocket, response);
+                }
+                return;
+            }
 
             // Check if this is a resource update notification from Unity
             if (request.Method?.StartsWith("unity.resourceUpdated") == true && request.Params != null)
@@ -204,6 +233,74 @@ public class UnityWebSocketService
     }
 
     /// <summary>
+    /// Send a notification to a specific Unity Editor instance
+    /// </summary>
+    public async Task SendToEditorAsync(string editorConnectionId, string method, object? parameters)
+    {
+        if (!_connections.TryGetValue(editorConnectionId, out var connection))
+        {
+            throw new InvalidOperationException($"Unity Editor '{editorConnectionId}' is not connected");
+        }
+
+        if (connection.State != WebSocketState.Open)
+        {
+            throw new InvalidOperationException($"Unity Editor '{editorConnectionId}' connection is not open (State: {connection.State})");
+        }
+
+        var notification = new JsonRpcNotification
+        {
+            Method = method,
+            Params = parameters
+        };
+
+        var json = JsonSerializer.Serialize(notification, _jsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+
+        try
+        {
+            await connection.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+            _logger.LogInformation("Sent notification to editor {EditorId}: {Method}", editorConnectionId, method);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending notification to editor {EditorId}", editorConnectionId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Send a notification to the Unity Editor selected for the current MCP session.
+    /// Uses smart auto-selection: auto-selects if only one editor, throws if multiple editors and none selected.
+    /// </summary>
+    public async Task SendToCurrentSessionEditorAsync(string method, object? parameters)
+    {
+        var sessionId = McpSessionContext.CurrentSessionId;
+        if (string.IsNullOrEmpty(sessionId))
+        {
+            // No session context - fall back to first editor for backwards compatibility
+            _logger.LogWarning("No MCP session context available, falling back to first connected editor");
+            await BroadcastNotificationAsync(method, parameters);
+            return;
+        }
+
+        var editorId = _sessionManager.GetOrAutoSelectEditor(sessionId);
+        if (editorId == null)
+        {
+            var editorCount = _sessionManager.GetEditorCount();
+            if (editorCount == 0)
+            {
+                throw new InvalidOperationException("No Unity Editor instances are connected. Please ensure a Unity Editor with the MCP package is running and connected.");
+            }
+            else
+            {
+                throw new InvalidOperationException($"Multiple Unity Editors are connected ({editorCount}), but no editor has been selected for this session. Use unity_list_editors to see available editors, then unity_select_editor to choose one.");
+            }
+        }
+
+        await SendToEditorAsync(editorId, method, parameters);
+    }
+
+    /// <summary>
     /// Broadcast a notification to all connected Unity Editor instances
     /// </summary>
     public async Task BroadcastNotificationAsync(string method, object? parameters)
@@ -241,7 +338,103 @@ public class UnityWebSocketService
     }
 
     /// <summary>
-    /// Send a request to Unity and wait for the response
+    /// Send a request to a specific Unity Editor and wait for the response
+    /// </summary>
+    public async Task<T?> SendRequestToEditorAsync<T>(string editorConnectionId, string method, object? parameters, int timeoutSeconds = 10)
+    {
+        if (!_connections.TryGetValue(editorConnectionId, out var connection))
+        {
+            throw new InvalidOperationException($"Unity Editor '{editorConnectionId}' is not connected");
+        }
+
+        if (connection.State != WebSocketState.Open)
+        {
+            throw new InvalidOperationException($"Unity Editor '{editorConnectionId}' connection is not open");
+        }
+
+        var requestId = Guid.NewGuid().ToString();
+        var tcs = new TaskCompletionSource<object?>();
+        _pendingRequests.TryAdd(requestId, tcs);
+
+        var request = new JsonRpcRequest
+        {
+            Id = requestId,
+            Method = method,
+            Params = parameters
+        };
+
+        var json = JsonSerializer.Serialize(request, _jsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+
+        try
+        {
+            await connection.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+            _logger.LogInformation("Sent request {RequestId} to editor {EditorId}: {Method}", requestId, editorConnectionId, method);
+        }
+        catch (Exception ex)
+        {
+            _pendingRequests.TryRemove(requestId, out _);
+            _logger.LogError(ex, "Error sending request to editor {EditorId}", editorConnectionId);
+            throw;
+        }
+
+        // Wait for response with timeout
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        var timeoutTask = Task.Delay(Timeout.Infinite, cts.Token);
+        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+        if (completedTask == tcs.Task)
+        {
+            var result = await tcs.Task;
+            if (result == null)
+            {
+                return default;
+            }
+
+            // Try to deserialize to target type
+            var resultJson = JsonSerializer.Serialize(result, _jsonOptions);
+            return JsonSerializer.Deserialize<T>(resultJson, _jsonOptions);
+        }
+        else
+        {
+            _pendingRequests.TryRemove(requestId, out _);
+            throw new TimeoutException($"Request {requestId} to editor {editorConnectionId} timed out after {timeoutSeconds} seconds");
+        }
+    }
+
+    /// <summary>
+    /// Send a request to the Unity Editor selected for the current MCP session and wait for the response.
+    /// Uses smart auto-selection.
+    /// </summary>
+    public async Task<T?> SendRequestToCurrentSessionEditorAsync<T>(string method, object? parameters, int timeoutSeconds = 10)
+    {
+        var sessionId = McpSessionContext.CurrentSessionId;
+        if (string.IsNullOrEmpty(sessionId))
+        {
+            // No session context - fall back to first editor for backwards compatibility
+            _logger.LogWarning("No MCP session context available, falling back to first connected editor");
+            return await SendRequestAsync<T>(method, parameters, timeoutSeconds);
+        }
+
+        var editorId = _sessionManager.GetOrAutoSelectEditor(sessionId);
+        if (editorId == null)
+        {
+            var editorCount = _sessionManager.GetEditorCount();
+            if (editorCount == 0)
+            {
+                throw new InvalidOperationException("No Unity Editor instances are connected");
+            }
+            else
+            {
+                throw new InvalidOperationException($"Multiple Unity Editors are connected ({editorCount}), but no editor has been selected for this session. Use unity_list_editors and unity_select_editor.");
+            }
+        }
+
+        return await SendRequestToEditorAsync<T>(editorId, method, parameters, timeoutSeconds);
+    }
+
+    /// <summary>
+    /// Send a request to Unity and wait for the response (legacy method - sends to first editor)
     /// </summary>
     public async Task<T?> SendRequestAsync<T>(string method, object? parameters, int timeoutSeconds = 10)
     {

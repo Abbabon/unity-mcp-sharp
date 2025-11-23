@@ -21,7 +21,7 @@ public class GetConsoleLogsTool(ILogger<GetConsoleLogsTool> logger, UnityWebSock
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<ConsoleLogsResponse>("unity.getConsoleLogs", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<ConsoleLogsResponse>("unity.getConsoleLogs", null);
             if (response?.Logs != null && response.Logs.Count > 0)
             {
                 return string.Join("\n", response.Logs.Select(log =>

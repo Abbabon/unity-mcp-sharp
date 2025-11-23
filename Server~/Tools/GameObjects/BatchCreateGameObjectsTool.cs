@@ -24,7 +24,7 @@ public class BatchCreateGameObjectsTool(ILogger<BatchCreateGameObjectsTool> logg
             gameObjectsJson
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.batchCreateGameObjects", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.batchCreateGameObjects", parameters);
 
         return $"Batch GameObject creation initiated. Use unity_list_scene_objects to verify.";
     }

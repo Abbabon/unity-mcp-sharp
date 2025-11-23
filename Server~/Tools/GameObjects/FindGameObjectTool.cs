@@ -29,7 +29,7 @@ public class FindGameObjectTool(ILogger<FindGameObjectTool> logger, UnityWebSock
                 searchBy
             };
 
-            var response = await _webSocketService.SendRequestAsync<GameObjectInfoResponse>("unity.findGameObject", parameters);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<GameObjectInfoResponse>("unity.findGameObject", parameters);
             if (response != null)
             {
                 var info = $"Name: {response.Name}\n" +

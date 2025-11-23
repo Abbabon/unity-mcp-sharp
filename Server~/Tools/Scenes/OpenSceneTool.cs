@@ -26,7 +26,7 @@ public class OpenSceneTool(ILogger<OpenSceneTool> logger, UnityWebSocketService 
             additive
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.openScene", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.openScene", parameters);
 
         var mode = additive ? "additively (keeping other scenes open)" : "in single mode (closing other scenes)";
         return $"Scene '{scenePath}' opened {mode}";

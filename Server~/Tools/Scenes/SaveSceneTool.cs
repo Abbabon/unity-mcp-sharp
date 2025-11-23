@@ -26,7 +26,7 @@ public class SaveSceneTool(ILogger<SaveSceneTool> logger, UnityWebSocketService 
             saveAll
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.saveScene", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.saveScene", parameters);
 
         if (saveAll)
             return "All open scenes saved";

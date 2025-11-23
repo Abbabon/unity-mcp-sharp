@@ -672,6 +672,8 @@ dotnet test /p:CollectCoverage=true
 - `feature/*` - Feature branches
 - `fix/*` - Bug fix branches
 
+**IMPORTANT REMINDER:** Always create a feature branch (e.g., `feature/new-tool`, `fix/bug-name`) before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+
 ### Commit Messages
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):

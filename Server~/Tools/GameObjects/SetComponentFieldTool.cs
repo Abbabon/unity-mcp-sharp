@@ -36,7 +36,7 @@ public class SetComponentFieldTool(ILogger<SetComponentFieldTool> logger, UnityW
                 valueType
             };
 
-            var response = await _webSocketService.SendRequestAsync<OperationResponse>("unity.setComponentField", parameters);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<OperationResponse>("unity.setComponentField", parameters);
             if (response != null)
             {
                 if (response.Success)

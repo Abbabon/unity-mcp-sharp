@@ -30,7 +30,7 @@ public class CreateAssetTool(ILogger<CreateAssetTool> logger, UnityWebSocketServ
             propertiesJson
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.createAsset", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.createAsset", parameters);
 
         var propsInfo = propertiesJson != null ? $" with properties: {propertiesJson}" : "";
         return $"Asset '{assetName}' of type '{assetTypeName}' created in Assets/{folderPath}/{propsInfo}";

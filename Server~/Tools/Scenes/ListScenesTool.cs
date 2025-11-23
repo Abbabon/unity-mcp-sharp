@@ -21,7 +21,7 @@ public class ListScenesTool(ILogger<ListScenesTool> logger, UnityWebSocketServic
 
         try
         {
-            var response = await _webSocketService.SendRequestAsync<SceneListResponse>("unity.listScenes", null);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<SceneListResponse>("unity.listScenes", null);
             if (response?.Scenes != null && response.Scenes.Count > 0)
             {
                 return string.Join("\n", response.Scenes);

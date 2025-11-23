@@ -21,7 +21,7 @@ public class RunMenuItemTool(ILogger<RunMenuItemTool> logger, UnityWebSocketServ
     {
         _logger.LogInformation("Executing Unity menu item: {MenuPath}", menuPath);
 
-        await _webSocketService.BroadcastNotificationAsync("unity.runMenuItem", new
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.runMenuItem", new
         {
             menuPath
         });

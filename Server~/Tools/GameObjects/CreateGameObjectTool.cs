@@ -32,7 +32,7 @@ public class CreateGameObjectTool(ILogger<CreateGameObjectTool> logger, UnityWeb
             parent
         };
 
-        await _webSocketService.BroadcastNotificationAsync("unity.createGameObject", parameters);
+        await _webSocketService.SendToCurrentSessionEditorAsync("unity.createGameObject", parameters);
 
         var componentInfo = components != null ? $" with components [{components}]" : "";
         var parentInfo = parent != null ? $" as child of '{parent}'" : " at root level";
