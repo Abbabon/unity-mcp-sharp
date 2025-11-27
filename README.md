@@ -4,7 +4,7 @@
 
 **The C# implementation of Model Context Protocol for Unity Editor**
 
-Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Claude, Cursor, etc.) to directly interact with Unity Editor. Built with .NET 9.0 and the official MCP C# SDK, it provides 26 powerful tools for game development automation including scene manipulation, GameObject creation, asset management, and real-time play mode control.
+Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Claude, Cursor, etc.) to directly interact with Unity Editor. Built with .NET 9.0 and the official MCP C# SDK, it provides 32 powerful tools for game development automation including scene manipulation, GameObject creation, prefab management, asset management, and real-time play mode control.
 
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
@@ -482,6 +482,126 @@ Create a GameObject in a specific scene (not necessarily the active one).
 **Returns:** Confirmation with scene path, name, and position
 
 **⚠️ Note:** If scene is not loaded, it will be opened additively first.
+
+</details>
+
+<details>
+<summary><b>📦 Prefabs (6 tools)</b></summary>
+
+### `unity_create_prefab`
+Create a prefab asset from an existing GameObject in the scene.
+
+**Parameters:**
+- `gameObjectName` (string, required): Name of the GameObject to convert to prefab
+- `assetFolderPath` (string, required): Path within Assets folder (e.g., "Prefabs", "Prefabs/Characters")
+- `prefabName` (string, optional): Name for the prefab file (defaults to GameObject name)
+- `createVariant` (bool, default: false): Create a prefab variant instead of regular prefab
+
+**Returns:** Confirmation with prefab path and source GameObject name
+
+**📌 Example:** Convert "Player" GameObject to prefab in Assets/Prefabs/Characters/Player.prefab
+
+**🔗 Related:** `unity_find_game_object`, `unity_get_prefab_info`, `unity_instantiate_prefab`
+
+**💡 Tip:** Use `unity_find_game_object` first to verify the GameObject exists. Folder will be created if it doesn't exist.
+
+---
+
+### `unity_instantiate_prefab`
+Instantiate (spawn) a prefab into the currently active scene.
+
+**Parameters:**
+- `prefabPath` (string, required): Path to prefab relative to Assets folder (e.g., "Prefabs/Character.prefab")
+- `x`, `y`, `z` (float, default: 0): World position
+- `rotationX`, `rotationY`, `rotationZ` (float, default: 0): Euler angles rotation
+- `scaleX`, `scaleY`, `scaleZ` (float, default: 1): Scale multipliers
+- `parent` (string, optional): Parent GameObject name
+- `instanceName` (string, optional): Custom name for the spawned instance
+
+**Returns:** Confirmation with instance name, position, and prefab source path
+
+**📌 Example:** Spawn "Enemy" prefab at (10, 0, 5) with 90° Y rotation
+
+**🔗 Related:** `unity_find_game_object`, `unity_list_scene_objects`
+
+**💡 Tip:** Instances maintain connection to prefab asset and can receive updates when prefab is modified.
+
+---
+
+### `unity_get_prefab_info`
+Get detailed information about a GameObject's prefab status and relationships.
+
+**Parameters:**
+- `gameObjectNameOrPath` (string, required): GameObject name in scene or prefab asset path
+
+**Returns:** JSON object with prefab information:
+- `isPrefabAsset`: Is this a prefab asset file
+- `isPrefabInstance`: Is this a prefab instance in a scene
+- `isPrefabVariant`: Is this a prefab variant
+- `assetPath`: Path to the prefab asset
+- `isModified`: Does the instance have overrides
+- `prefabInstanceStatus`: Connection status to source prefab
+
+**📌 Example:** Check if "Player" is a prefab instance with modifications
+
+**🔗 Related:** `unity_create_prefab`, `unity_open_prefab`
+
+**💡 Tip:** Use this before `unity_open_prefab` to understand prefab relationships.
+
+---
+
+### `unity_open_prefab`
+Open a prefab asset in Prefab Mode (isolation mode) for editing.
+
+**Parameters:**
+- `prefabPath` (string, required): Path to prefab relative to Assets folder
+- `inContext` (bool, default: false): Open in Context mode (shows scene context) vs. Isolation mode
+
+**Returns:** Confirmation with prefab path and mode information
+
+**📌 Example:** Open "Assets/Prefabs/Enemy.prefab" in isolation mode for editing
+
+**🔗 Related:** `unity_save_prefab`, `unity_close_prefab_stage`
+
+**⚠️ Important:** Only one prefab can be open in Prefab Mode at a time. Close current prefab before opening another.
+
+**💡 Tip:** Use Isolation mode for focused editing, Context mode to see how prefab fits in scene.
+
+---
+
+### `unity_save_prefab`
+Save changes made to a prefab currently open in Prefab Mode.
+
+**Parameters:**
+- `prefabPath` (string, optional): Specific prefab to save (if not provided, saves currently open prefab)
+
+**Returns:** Confirmation indicating what was saved
+
+**📌 Example:** Save modifications to the currently open prefab
+
+**🔗 Related:** `unity_open_prefab`, `unity_close_prefab_stage`
+
+**⚠️ Important:** Always call this after making changes in Prefab Mode to ensure changes are not lost.
+
+**💡 Tip:** Can also apply overrides from prefab instances back to the source prefab asset.
+
+---
+
+### `unity_close_prefab_stage`
+Close the currently open Prefab Mode and return to scene editing.
+
+**Parameters:**
+- `saveBeforeClosing` (bool, default: true): Save prefab before closing (false discards unsaved changes)
+
+**Returns:** Confirmation indicating the Prefab Stage was closed
+
+**📌 Example:** Close prefab editing mode and save changes
+
+**🔗 Related:** `unity_open_prefab`, `unity_save_prefab`
+
+**⚠️ Important:** Unsaved changes will be lost if `saveBeforeClosing` is false. Must close before opening another prefab.
+
+**💡 Tip:** Set `saveBeforeClosing` to true (default) to avoid losing work.
 
 </details>
 
