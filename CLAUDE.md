@@ -40,6 +40,7 @@ unity-mcp-sharp/
 │
 ├── Scripts~/                # Development scripts (excluded from Unity package via ~)
 │   ├── rebuild.sh           # Build .NET server + Docker image
+│   ├── sign-package.sh      # Sign UPM package for Unity 6+
 │   ├── start-mcp-server.sh  # Start MCP server container
 │   └── test.sh              # Smoke test script
 │
@@ -62,6 +63,7 @@ unity-mcp-sharp/
 ├── Documentation~/          # User documentation (excluded from package)
 │   ├── Installation.md
 │   ├── Configuration.md
+│   ├── PackageSigning.md    # Unity 6+ package signing guide
 │   ├── Troubleshooting.md
 │   ├── Testing.md
 │   └── MultiEditor-TechnicalRundown.md  # Technical deep-dive docs
@@ -851,6 +853,23 @@ Runs comprehensive smoke tests for the server:
 ./Scripts~/test.sh
 ```
 
+### sign-package.sh
+Signs the UPM package for Unity 6+ compatibility (requires Unity 6.3+ and Unity Cloud org):
+```bash
+# First, set up credentials in .env (copy from .env.example)
+cp .env.example .env
+# Edit .env with your Unity credentials
+
+# Sign the package
+./Scripts~/sign-package.sh
+
+# Or with a specific version
+./Scripts~/sign-package.sh 0.6.0
+
+# Sign and upload to GitHub release
+./Scripts~/sign-package.sh --upload
+```
+
 ## Useful Commands
 
 ```bash
@@ -858,6 +877,7 @@ Runs comprehensive smoke tests for the server:
 ./Scripts~/rebuild.sh           # Build server + Docker image
 ./Scripts~/start-mcp-server.sh  # Start MCP server container
 ./Scripts~/test.sh              # Run smoke tests
+./Scripts~/sign-package.sh      # Sign UPM package for Unity 6+
 
 # Server development
 cd Server~
@@ -891,6 +911,33 @@ This section documents the complete process for publishing a new version to Open
 - Docker image published to ghcr.io (automatic on push to main)
 - All tests passing
 - Version number decided (follow [Semantic Versioning](https://semver.org/))
+- (Optional) Package signing configured for Unity 6+ compatibility
+
+### Package Signing Setup (Unity 6+ Compatibility)
+
+To enable automated package signing in CI/CD:
+
+**GitHub Secrets Required** (Settings → Secrets and variables → Actions):
+| Secret | Description |
+|--------|-------------|
+| `UNITY_EMAIL` | Unity account email |
+| `UNITY_PASSWORD` | Unity account password |
+| `UNITY_ORG_ID` | Unity Cloud Organization ID |
+| `UNITY_LICENSE` | Unity license file content (`.ulf` file) |
+
+**GitHub Variable Required** (Settings → Secrets and variables → Actions → Variables):
+| Variable | Value |
+|----------|-------|
+| `ENABLE_PACKAGE_SIGNING` | `true` |
+
+**Get Organization ID:** https://cloud.unity.com/account/my-organizations
+
+**Get Unity License for CI:**
+1. Run: `unity-editor -batchmode -createManualActivationFile`
+2. Upload `.alf` to https://license.unity3d.com/manual
+3. Download `.ulf` and paste contents as `UNITY_LICENSE` secret
+
+If signing is not configured, releases still work - just without signed packages.
 
 ### Release Checklist
 
@@ -973,10 +1020,12 @@ gh run view <run-id>
 The workflow will:
 - Extract version from tag
 - Verify `package.json` version matches tag
+- (If signing enabled) Sign the UPM package with Unity Cloud credentials
 - Create GitHub Release with:
   - Release notes from CHANGELOG
   - Docker pull command
   - OpenUPM installation command
+  - Signed `.tgz` package (if signing enabled)
 - Display manual steps for OpenUPM submission
 
 #### 7. Submit to OpenUPM
