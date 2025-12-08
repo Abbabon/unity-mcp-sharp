@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  UNITY_VERSION: 6000.3.0f1
+
 jobs:
   # Job 1: Sign the package (optional - requires Unity secrets)
   sign-package:
@@ -32,14 +35,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /opt/unity
-        key: unity-6000.3.0f1-linux
+        key: unity-${{ env.UNITY_VERSION }}-linux
 
     - name: Install Unity
       uses: game-ci/unity-builder@v4
       id: unity-install
       with:
         targetPlatform: StandaloneLinux64
-        unityVersion: 6000.3.0f1
+        unityVersion: ${{ env.UNITY_VERSION }}
         # Only install, don't build
         buildMethod: ''
       env:

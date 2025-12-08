@@ -71,7 +71,7 @@ artifacts/
 *.nupkg
 *.snupkg
 .nuget/
-#packages/
+packages/
 !Server~/packages/
 !TestProject~/Packages/
 

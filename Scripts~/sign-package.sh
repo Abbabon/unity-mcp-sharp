@@ -18,6 +18,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Check dependencies
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required but not installed."
+    echo "Install it with: brew install jq (macOS) or apt-get install jq (Linux)"
+    exit 1
+fi
+
 # Parse arguments
 UPLOAD_TO_RELEASE=false
 VERSION=""
@@ -35,10 +42,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Load .env file if it exists
+# Load .env file if it exists (using safer source method)
 if [ -f "$PROJECT_ROOT/.env" ]; then
     echo "Loading credentials from .env file..."
-    export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
 fi
 
 # Validate required environment variables
@@ -93,14 +102,14 @@ FINAL_OUTPUT="$PROJECT_ROOT/unity-mcp-sharp-${VERSION}.tgz"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-# Sign the package
+# Sign the package (|| true because Unity CLI may return non-zero even on success)
 echo "Signing package..."
 "$UNITY" -batchmode -quit \
     -username "$UNITY_EMAIL" \
     -password "$UNITY_PASSWORD" \
     -upmPack "$PROJECT_ROOT" "$OUTPUT_DIR" \
     -cloudOrganization "$UNITY_ORG_ID" \
-    -logfile -
+    -logfile - || true
 
 # Unity creates: dist/{package-name}-{version}.tgz
 if [ -f "$EXPECTED_OUTPUT" ]; then
