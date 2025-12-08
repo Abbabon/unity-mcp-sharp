@@ -64,25 +64,42 @@ fi
 
 echo "Using Unity: $UNITY"
 
+# Get package name from package.json
+PACKAGE_NAME=$(jq -r '.name' "$PROJECT_ROOT/package.json")
+OUTPUT_DIR="$PROJECT_ROOT/dist"
+EXPECTED_OUTPUT="$OUTPUT_DIR/${PACKAGE_NAME}-${VERSION}.tgz"
+FINAL_OUTPUT="$PROJECT_ROOT/unity-mcp-sharp-${VERSION}.tgz"
+
+# Clean up previous output
+rm -rf "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+
 # Sign the package
 echo "Signing package..."
 "$UNITY" -batchmode -quit \
     -username "$UNITY_EMAIL" \
     -password "$UNITY_PASSWORD" \
-    -upmPack "$PROJECT_ROOT" "$OUTPUT_FILE" \
+    -upmPack "$PROJECT_ROOT" "$OUTPUT_DIR" \
     -cloudOrganization "$UNITY_ORG_ID" \
     -logfile -
 
-if [ -f "$OUTPUT_FILE" ]; then
+# Unity creates: dist/{package-name}-{version}.tgz
+if [ -f "$EXPECTED_OUTPUT" ]; then
+    # Move to project root with simpler name
+    mv "$EXPECTED_OUTPUT" "$FINAL_OUTPUT"
+    rm -rf "$OUTPUT_DIR"
+
     echo ""
     echo "Package signed successfully!"
-    echo "Output: $OUTPUT_FILE"
+    echo "Output: $FINAL_OUTPUT"
     echo ""
     echo "To verify the signature, import this .tgz file in Unity 6.3+ and check Package Manager."
 
     # Show file info
-    ls -lh "$OUTPUT_FILE"
+    ls -lh "$FINAL_OUTPUT"
 else
     echo "Error: Package signing failed. Check the Unity log output above."
+    echo "Expected output at: $EXPECTED_OUTPUT"
+    ls -la "$OUTPUT_DIR" 2>/dev/null || echo "Output directory not created"
     exit 1
 fi

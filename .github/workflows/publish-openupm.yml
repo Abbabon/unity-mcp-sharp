@@ -50,21 +50,31 @@ jobs:
     - name: Sign UPM Package
       id: sign
       run: |
-        OUTPUT_FILE="unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz"
+        VERSION="${{ steps.version.outputs.version }}"
+        PACKAGE_NAME=$(jq -r '.name' package.json)
+        OUTPUT_DIR="dist"
+        EXPECTED_OUTPUT="$OUTPUT_DIR/${PACKAGE_NAME}-${VERSION}.tgz"
+        FINAL_OUTPUT="unity-mcp-sharp-${VERSION}.tgz"
+
+        mkdir -p "$OUTPUT_DIR"
 
         # Use Unity CLI to sign the package
         /opt/unity/Editor/Unity -batchmode -quit \
           -username "${{ secrets.UNITY_EMAIL }}" \
           -password "${{ secrets.UNITY_PASSWORD }}" \
-          -upmPack "." "$OUTPUT_FILE" \
+          -upmPack "." "$OUTPUT_DIR" \
           -cloudOrganization "${{ secrets.UNITY_ORG_ID }}" \
           -logfile - || true
 
-        if [ -f "$OUTPUT_FILE" ]; then
+        # Unity creates: dist/{package-name}-{version}.tgz
+        if [ -f "$EXPECTED_OUTPUT" ]; then
+          mv "$EXPECTED_OUTPUT" "$FINAL_OUTPUT"
+          rm -rf "$OUTPUT_DIR"
           echo "Package signed successfully"
-          echo "output_file=$OUTPUT_FILE" >> $GITHUB_OUTPUT
+          echo "output_file=$FINAL_OUTPUT" >> $GITHUB_OUTPUT
         else
-          echo "Package signing failed or skipped"
+          echo "Package signing failed"
+          ls -la "$OUTPUT_DIR" 2>/dev/null || echo "Output directory not created"
           exit 1
         fi
 
