@@ -8,13 +8,32 @@
 # 3. OR set environment variables directly
 #
 # Usage:
-#   ./Scripts~/sign-package.sh [version]
-#   ./Scripts~/sign-package.sh 0.6.0
+#   ./Scripts~/sign-package.sh [--upload] [version]
+#   ./Scripts~/sign-package.sh                    # Sign only
+#   ./Scripts~/sign-package.sh --upload           # Sign and upload to GitHub release
+#   ./Scripts~/sign-package.sh --upload 0.6.0     # Sign specific version and upload
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Parse arguments
+UPLOAD_TO_RELEASE=false
+VERSION=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --upload|-u)
+            UPLOAD_TO_RELEASE=true
+            shift
+            ;;
+        *)
+            VERSION="$1"
+            shift
+            ;;
+    esac
+done
 
 # Load .env file if it exists
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -33,7 +52,7 @@ if [ -z "$UNITY_EMAIL" ] || [ -z "$UNITY_PASSWORD" ] || [ -z "$UNITY_ORG_ID" ]; 
 fi
 
 # Get version from argument or package.json
-VERSION="${1:-$(jq -r '.version' "$PROJECT_ROOT/package.json")}"
+VERSION="${VERSION:-$(jq -r '.version' "$PROJECT_ROOT/package.json")}"
 OUTPUT_FILE="$PROJECT_ROOT/unity-mcp-sharp-${VERSION}.tgz"
 
 echo "Signing Unity MCP Sharp package v${VERSION}"
@@ -93,10 +112,41 @@ if [ -f "$EXPECTED_OUTPUT" ]; then
     echo "Package signed successfully!"
     echo "Output: $FINAL_OUTPUT"
     echo ""
-    echo "To verify the signature, import this .tgz file in Unity 6.3+ and check Package Manager."
 
     # Show file info
     ls -lh "$FINAL_OUTPUT"
+
+    # Upload to GitHub release if requested
+    if [ "$UPLOAD_TO_RELEASE" = true ]; then
+        echo ""
+        echo "Uploading to GitHub release v${VERSION}..."
+
+        # Check if gh CLI is available
+        if ! command -v gh &> /dev/null; then
+            echo "Error: GitHub CLI (gh) not found. Install it with: brew install gh"
+            exit 1
+        fi
+
+        # Check if release exists
+        if ! gh release view "v${VERSION}" &> /dev/null; then
+            echo "Error: Release v${VERSION} not found."
+            echo "Create the release first by pushing a tag: git tag v${VERSION} && git push origin v${VERSION}"
+            exit 1
+        fi
+
+        # Upload the file (--clobber overwrites if exists)
+        gh release upload "v${VERSION}" "$FINAL_OUTPUT" --clobber
+
+        echo ""
+        echo "Uploaded successfully!"
+        echo "View release: $(gh release view "v${VERSION}" --json url --jq '.url')"
+    else
+        echo "To upload to GitHub release, run:"
+        echo "  ./Scripts~/sign-package.sh --upload"
+        echo ""
+        echo "Or manually:"
+        echo "  gh release upload v${VERSION} $FINAL_OUTPUT"
+    fi
 else
     echo "Error: Package signing failed. Check the Unity log output above."
     echo "Expected output at: $EXPECTED_OUTPUT"

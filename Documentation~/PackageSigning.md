@@ -65,6 +65,24 @@ Or with a specific version:
 
 This creates a signed `.tgz` file: `unity-mcp-sharp-{version}.tgz`
 
+### Sign and Upload to GitHub Release
+
+To sign and automatically upload to an existing GitHub release:
+
+```bash
+./Scripts~/sign-package.sh --upload
+```
+
+This will:
+1. Sign the package
+2. Find the matching GitHub release (v{version})
+3. Upload the `.tgz` as a release asset
+
+**Note:** The release must already exist. Create it first by pushing a tag:
+```bash
+git tag v0.6.0 && git push origin v0.6.0
+```
+
 ### Manual Signing
 
 You can also sign manually using Unity CLI:

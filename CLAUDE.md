@@ -865,6 +865,9 @@ cp .env.example .env
 
 # Or with a specific version
 ./Scripts~/sign-package.sh 0.6.0
+
+# Sign and upload to GitHub release
+./Scripts~/sign-package.sh --upload
 ```
 
 ## Useful Commands
