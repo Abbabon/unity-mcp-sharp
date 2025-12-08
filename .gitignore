@@ -71,7 +71,7 @@ artifacts/
 *.nupkg
 *.snupkg
 .nuget/
-packages/
+#packages/
 !Server~/packages/
 !TestProject~/Packages/
 
@@ -108,6 +108,7 @@ Desktop.ini
 !Scripts~/
 !Documentation~/
 !TestProject~/
+!PackageSigningProject~/
 
 # TestProject Unity generated folders
 TestProject~/[Ll]ibrary/
