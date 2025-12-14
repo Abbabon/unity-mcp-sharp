@@ -40,7 +40,7 @@ namespace UnityMCPSharp.Editor
         {
             if (_client != null && _client.IsConnected)
             {
-                Debug.Log("[MCPEditorIntegration] Disconnecting before assembly reload");
+                MCPLogger.Log("[MCPEditorIntegration] Disconnecting before assembly reload");
                 _ = _client.DisconnectAsync();
             }
         }
@@ -77,7 +77,7 @@ namespace UnityMCPSharp.Editor
             // If client was connected, disconnect and reconnect to activate new event subscriptions
             if (wasConnected)
             {
-                Debug.Log("[MCPEditorIntegration] Reconnecting to activate event subscriptions");
+                MCPLogger.Log("[MCPEditorIntegration] Reconnecting to activate event subscriptions");
                 await _client.DisconnectAsync();
                 await System.Threading.Tasks.Task.Delay(500);
             }
@@ -94,7 +94,7 @@ namespace UnityMCPSharp.Editor
             EditorApplication.update -= ProcessMainThreadQueue;
             EditorApplication.update += ProcessMainThreadQueue;
 
-            Debug.Log("[MCPEditorIntegration] Initialized");
+            MCPLogger.Log("[MCPEditorIntegration] Initialized");
 
             // Auto-start and auto-connect if configured
             bool serverReady = false;
@@ -104,17 +104,17 @@ namespace UnityMCPSharp.Editor
                 var isRunning = await _serverManager.IsContainerRunningAsync();
                 if (!isRunning)
                 {
-                    Debug.Log("[MCPEditorIntegration] Auto-starting MCP server container...");
+                    MCPLogger.Log("[MCPEditorIntegration] Auto-starting MCP server container...");
                     serverReady = await _serverManager.StartServerAsync();
 
                     if (!serverReady)
                     {
-                        Debug.LogWarning("[MCPEditorIntegration] Auto-start failed. Server will not be available.");
+                        MCPLogger.LogWarning("[MCPEditorIntegration] Auto-start failed. Server will not be available.");
                     }
                 }
                 else
                 {
-                    Debug.Log("[MCPEditorIntegration] Server container already running");
+                    MCPLogger.Log("[MCPEditorIntegration] Server container already running");
                     serverReady = true;
                 }
             }
@@ -126,7 +126,7 @@ namespace UnityMCPSharp.Editor
 
             if (_config.autoConnect && serverReady)
             {
-                Debug.Log("[MCPEditorIntegration] Auto-connecting to MCP server...");
+                MCPLogger.Log("[MCPEditorIntegration] Auto-connecting to MCP server...");
                 // Wait a bit for server to be ready
                 await System.Threading.Tasks.Task.Delay(2000);
 
@@ -137,36 +137,36 @@ namespace UnityMCPSharp.Editor
                     connected = await _client.ConnectAsync();
                     if (connected)
                     {
-                        Debug.Log($"[MCPEditorIntegration] Auto-connect succeeded on attempt {attempt}");
+                        MCPLogger.Log($"[MCPEditorIntegration] Auto-connect succeeded on attempt {attempt}");
                         break;
                     }
 
                     if (attempt < _config.retryAttempts)
                     {
-                        Debug.LogWarning($"[MCPEditorIntegration] Auto-connect attempt {attempt} failed, retrying in {_config.retryDelay} seconds...");
+                        MCPLogger.LogWarning($"[MCPEditorIntegration] Auto-connect attempt {attempt} failed, retrying in {_config.retryDelay} seconds...");
                         await System.Threading.Tasks.Task.Delay(_config.retryDelay * 1000);
                     }
                 }
 
                 if (!connected)
                 {
-                    Debug.LogError($"[MCPEditorIntegration] Auto-connect failed after {_config.retryAttempts} attempts. You can manually connect from the MCP Dashboard.");
+                    MCPLogger.LogError($"[MCPEditorIntegration] Auto-connect failed after {_config.retryAttempts} attempts. You can manually connect from the MCP Dashboard.");
                 }
             }
             else if (_config.autoConnect && !serverReady)
             {
-                Debug.LogWarning("[MCPEditorIntegration] Auto-connect skipped: server is not running. Enable auto-start container or start the server manually.");
+                MCPLogger.LogWarning("[MCPEditorIntegration] Auto-connect skipped: server is not running. Enable auto-start container or start the server manually.");
             }
         }
 
         private static void Cleanup()
         {
-            Debug.Log("[MCPEditorIntegration] Shutting down - cleaning up resources...");
+            MCPLogger.Log("[MCPEditorIntegration] Shutting down - cleaning up resources...");
 
             // Gracefully disconnect client before Unity closes
             if (_client != null && _client.IsConnected)
             {
-                Debug.Log("[MCPEditorIntegration] Disconnecting from MCP server...");
+                MCPLogger.Log("[MCPEditorIntegration] Disconnecting from MCP server...");
                 _ = _client.DisconnectAsync();
             }
 
@@ -186,7 +186,7 @@ namespace UnityMCPSharp.Editor
             EditorSceneManager.activeSceneChangedInEditMode -= OnActiveSceneChanged;
             EditorApplication.update -= ProcessMainThreadQueue;
 
-            Debug.Log("[MCPEditorIntegration] Cleanup complete");
+            MCPLogger.Log("[MCPEditorIntegration] Cleanup complete");
         }
 
         private static void ProcessMainThreadQueue()
@@ -197,7 +197,7 @@ namespace UnityMCPSharp.Editor
 
         private static void OnConnected()
         {
-            Debug.Log("[MCPEditorIntegration] Connected to MCP server");
+            MCPLogger.Log("[MCPEditorIntegration] Connected to MCP server");
 
             // Register this Unity Editor instance with the server
             _ = RegisterEditorAsync();
@@ -224,17 +224,17 @@ namespace UnityMCPSharp.Editor
             try
             {
                 await _client.SendNotificationAsync("unity.register", metadata);
-                Debug.Log($"[MCPEditorIntegration] Registered with server as '{metadata.projectName} - {metadata.activeScene} ({metadata.machineName})'");
+                MCPLogger.Log($"[MCPEditorIntegration] Registered with server as '{metadata.projectName} - {metadata.activeScene} ({metadata.machineName})'");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[MCPEditorIntegration] Failed to register with server: {ex.Message}");
+                MCPLogger.LogError($"[MCPEditorIntegration] Failed to register with server: {ex.Message}");
             }
         }
 
         private static void HandleNotification(string method, object parameters)
         {
-            Debug.Log($"[MCPEditorIntegration] Received notification: {method}");
+            MCPLogger.Log($"[MCPEditorIntegration] Received notification: {method}");
 
             // Route to appropriate handler based on method name
             switch (method)
@@ -300,7 +300,7 @@ namespace UnityMCPSharp.Editor
                     break;
 
                 default:
-                    Debug.LogWarning($"[MCPEditorIntegration] Unknown notification method: {method}");
+                    MCPLogger.LogWarning($"[MCPEditorIntegration] Unknown notification method: {method}");
                     break;
             }
         }
@@ -309,7 +309,7 @@ namespace UnityMCPSharp.Editor
         {
             if (_config.verboseLogging)
             {
-                Debug.Log($"[MCPEditorIntegration] Received request {requestId}: {method}");
+                MCPLogger.Log($"[MCPEditorIntegration] Received request {requestId}: {method}");
             }
 
             // Route to appropriate handler based on method name
@@ -352,7 +352,7 @@ namespace UnityMCPSharp.Editor
                     break;
 
                 default:
-                    Debug.LogWarning($"[MCPEditorIntegration] Unknown request method: {method}");
+                    MCPLogger.LogWarning($"[MCPEditorIntegration] Unknown request method: {method}");
                     break;
             }
         }
@@ -410,7 +410,7 @@ namespace UnityMCPSharp.Editor
         private static void OnCompilationStarted(object obj)
         {
             _isCompiling = true;
-            Debug.Log("[MCPEditorIntegration] Compilation started");
+            MCPLogger.Log("[MCPEditorIntegration] Compilation started");
 
             if (_client.IsConnected)
             {
@@ -423,7 +423,7 @@ namespace UnityMCPSharp.Editor
             _isCompiling = false;
             var succeeded = !EditorUtility.scriptCompilationFailed;
 
-            Debug.Log($"[MCPEditorIntegration] Compilation finished: {(succeeded ? "Success" : "Failed")}");
+            MCPLogger.Log($"[MCPEditorIntegration] Compilation finished: {(succeeded ? "Success" : "Failed")}");
 
             _ = HandleCompilationFinishedAsync(succeeded);
         }
@@ -433,11 +433,11 @@ namespace UnityMCPSharp.Editor
             // Try to reconnect if disconnected during compilation
             if (!_client.IsConnected && _config.autoConnect)
             {
-                Debug.Log("[MCPEditorIntegration] Reconnecting after compilation...");
+                MCPLogger.Log("[MCPEditorIntegration] Reconnecting after compilation...");
                 var connected = await _client.ConnectAsync();
                 if (!connected)
                 {
-                    Debug.LogWarning("[MCPEditorIntegration] Failed to reconnect after compilation");
+                    MCPLogger.LogWarning("[MCPEditorIntegration] Failed to reconnect after compilation");
                     return;
                 }
             }
@@ -460,7 +460,7 @@ namespace UnityMCPSharp.Editor
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
-            Debug.Log($"[MCPEditorIntegration] Play mode state changed: {state}");
+            MCPLogger.Log($"[MCPEditorIntegration] Play mode state changed: {state}");
 
             // Notify that play mode resource has been updated
             if (_client != null && _client.IsConnected)
@@ -474,7 +474,7 @@ namespace UnityMCPSharp.Editor
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            Debug.Log($"[MCPEditorIntegration] Scene loaded: {scene.name} (mode: {mode})");
+            MCPLogger.Log($"[MCPEditorIntegration] Scene loaded: {scene.name} (mode: {mode})");
 
             // Notify that scene resources have been updated
             if (_client != null && _client.IsConnected)
@@ -492,7 +492,7 @@ namespace UnityMCPSharp.Editor
 
         private static void OnActiveSceneChanged(Scene previousScene, Scene newScene)
         {
-            Debug.Log($"[MCPEditorIntegration] Active scene changed: {previousScene.name} -> {newScene.name}");
+            MCPLogger.Log($"[MCPEditorIntegration] Active scene changed: {previousScene.name} -> {newScene.name}");
 
             // Re-register to update scene metadata
             if (_client != null && _client.IsConnected)

@@ -123,7 +123,7 @@ namespace UnityMCPSharp
             // Try configured image
             if (await IsImageAvailableLocallyAsync(_config.dockerImage))
             {
-                UnityEngine.Debug.Log($"[MCPServerManager] Found configured image locally: {_config.dockerImage}");
+                MCPLogger.Log($"[MCPServerManager] Found configured image locally: {_config.dockerImage}");
                 return _config.dockerImage;
             }
 
@@ -131,7 +131,7 @@ namespace UnityMCPSharp
             var testImage = "unity-mcp-server:test";
             if (await IsImageAvailableLocallyAsync(testImage))
             {
-                UnityEngine.Debug.Log($"[MCPServerManager] Using local development image: {testImage}");
+                MCPLogger.Log($"[MCPServerManager] Using local development image: {testImage}");
                 return testImage;
             }
 
@@ -139,12 +139,12 @@ namespace UnityMCPSharp
             var localLatest = "unity-mcp-server:latest";
             if (await IsImageAvailableLocallyAsync(localLatest))
             {
-                UnityEngine.Debug.Log($"[MCPServerManager] Using local latest image: {localLatest}");
+                MCPLogger.Log($"[MCPServerManager] Using local latest image: {localLatest}");
                 return localLatest;
             }
 
             // No local image found, will need to pull
-            UnityEngine.Debug.Log($"[MCPServerManager] No local image found, will pull: {_config.dockerImage}");
+            MCPLogger.Log($"[MCPServerManager] No local image found, will pull: {_config.dockerImage}");
             return _config.dockerImage;
         }
 
@@ -184,7 +184,7 @@ namespace UnityMCPSharp
                 if (existsCode == 0 && !string.IsNullOrWhiteSpace(existsOutput))
                 {
                     // Container exists, just start it
-                    UnityEngine.Debug.Log("[MCPServerManager] Starting existing container...");
+                    MCPLogger.Log("[MCPServerManager] Starting existing container...");
                     var (startCode, startOutput) = await RunCommandAsync("docker", $"start {_config.containerName}");
 
                     if (startCode != 0)
@@ -196,7 +196,7 @@ namespace UnityMCPSharp
                 else
                 {
                     // Container doesn't exist, find available image
-                    UnityEngine.Debug.Log("[MCPServerManager] Creating new container...");
+                    MCPLogger.Log("[MCPServerManager] Creating new container...");
                     SetStatus(ServerStatus.Starting, "Looking for Docker image...");
 
                     var imageToUse = await FindAvailableImageAsync();
@@ -208,7 +208,7 @@ namespace UnityMCPSharp
                         // If image doesn't exist locally, try to pull it
                         if (runOutput.Contains("Unable to find image"))
                         {
-                            UnityEngine.Debug.Log($"[MCPServerManager] Image not found locally, attempting to pull: {imageToUse}");
+                            MCPLogger.Log($"[MCPServerManager] Image not found locally, attempting to pull: {imageToUse}");
                             SetStatus(ServerStatus.Starting, "Downloading server image from registry...");
 
                             var (pullCode, pullOutput) = await RunCommandAsync("docker", $"pull {imageToUse}");
@@ -228,7 +228,7 @@ namespace UnityMCPSharp
                             }
 
                             // Try running again
-                            UnityEngine.Debug.Log("[MCPServerManager] Pull succeeded, creating container...");
+                            MCPLogger.Log("[MCPServerManager] Pull succeeded, creating container...");
                             var (runCode2, runOutput2) = await RunCommandAsync("docker", dockerRunCmd);
                             if (runCode2 != 0)
                             {
@@ -273,7 +273,7 @@ namespace UnityMCPSharp
         {
             try
             {
-                UnityEngine.Debug.Log("[MCPServerManager] Stopping container...");
+                MCPLogger.Log("[MCPServerManager] Stopping container...");
                 var (exitCode, output) = await RunCommandAsync("docker", $"stop {_config.containerName}");
 
                 if (exitCode == 0)
@@ -319,11 +319,11 @@ namespace UnityMCPSharp
             // Log to Unity Console - use LogError for errors, Log for everything else
             if (status == ServerStatus.Error)
             {
-                UnityEngine.Debug.LogError($"[MCPServerManager] {status}: {message}");
+                MCPLogger.LogError($"[MCPServerManager] {status}: {message}");
             }
             else
             {
-                UnityEngine.Debug.Log($"[MCPServerManager] Status: {status} - {message}");
+                MCPLogger.Log($"[MCPServerManager] Status: {status} - {message}");
             }
         }
 
@@ -348,7 +348,7 @@ namespace UnityMCPSharp
                             if (System.IO.File.Exists(path))
                             {
                                 executablePath = path;
-                                UnityEngine.Debug.Log($"[MCPServerManager] Found docker at: {path}");
+                                MCPLogger.LogVerbose($"[MCPServerManager] Found docker at: {path}");
                                 break;
                             }
                         }

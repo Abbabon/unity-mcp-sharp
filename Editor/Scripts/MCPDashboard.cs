@@ -31,6 +31,7 @@ namespace UnityMCPSharp.Editor
         private ScrollView _operationsScrollView;
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
+        private Toggle _enableMcpLogsToggle;
         private Toggle _verboseLoggingToggle;
         private Toggle _showParametersToggle;
 
@@ -544,9 +545,17 @@ namespace UnityMCPSharp.Editor
             _autoStartToggle.style.marginBottom = 5;
             container.Add(_autoStartToggle);
 
+            // Enable MCP logs toggle
+            _enableMcpLogsToggle = new Toggle("Enable MCP logs in Console");
+            _enableMcpLogsToggle.value = _config.enableMcpLogs;
+            _enableMcpLogsToggle.tooltip = "Show MCP connection, protocol, and operation logs in Unity Console";
+            _enableMcpLogsToggle.style.marginBottom = 5;
+            container.Add(_enableMcpLogsToggle);
+
             // Verbose logging toggle
-            _verboseLoggingToggle = new Toggle("Verbose logging");
+            _verboseLoggingToggle = new Toggle("Verbose logging (debug)");
             _verboseLoggingToggle.value = _config.verboseLogging;
+            _verboseLoggingToggle.tooltip = "Show additional debug information (only when MCP logs enabled)";
             _verboseLoggingToggle.style.marginBottom = 15;
             container.Add(_verboseLoggingToggle);
 
@@ -810,7 +819,7 @@ Note: Cursor must support MCP for this to work.";
         private void CopyToClipboard(string text)
         {
             EditorGUIUtility.systemCopyBuffer = text;
-            Debug.Log("[MCPDashboard] Configuration copied to clipboard");
+            MCPLogger.Log("[MCPDashboard] Configuration copied to clipboard");
         }
 
         // Event Handlers
@@ -853,7 +862,7 @@ Note: Cursor must support MCP for this to work.";
         {
             EditorApplication.delayCall += () =>
             {
-                Debug.LogError($"[MCPDashboard] Client error: {error}");
+                MCPLogger.LogError($"[MCPDashboard] Client error: {error}");
             };
         }
 
@@ -922,13 +931,15 @@ Note: Cursor must support MCP for this to work.";
             _config.dockerImage = _dockerImageField.value;
             _config.autoConnect = _autoConnectToggle.value;
             _config.autoStartContainer = _autoStartToggle.value;
+            _config.enableMcpLogs = _enableMcpLogsToggle.value;
             _config.verboseLogging = _verboseLoggingToggle.value;
 
             _config.SaveToResources();
 
-            Debug.Log("[MCPDashboard] Configuration saved");
+            MCPLogger.Log("[MCPDashboard] Configuration saved");
 
             // Refresh the dashboard to update status indicator
+            rootVisualElement.Clear();
             CreateGUI();
         }
 
@@ -947,11 +958,13 @@ Note: Cursor must support MCP for this to work.";
                 _dockerImageField.value = _config.dockerImage;
                 _autoConnectToggle.value = _config.autoConnect;
                 _autoStartToggle.value = _config.autoStartContainer;
+                _enableMcpLogsToggle.value = _config.enableMcpLogs;
                 _verboseLoggingToggle.value = _config.verboseLogging;
 
-                Debug.Log("[MCPDashboard] Configuration reset to defaults");
+                MCPLogger.Log("[MCPDashboard] Configuration reset to defaults");
 
                 // Refresh the dashboard to update status indicator
+                rootVisualElement.Clear();
                 CreateGUI();
             }
         }
