@@ -579,7 +579,13 @@ namespace UnityMCPSharp.Editor
 
             var resetButton = new Button(ResetConfiguration) { text = "Reset to Defaults" };
             resetButton.style.flexGrow = 1;
+            resetButton.style.marginRight = 5;
             buttonRow.Add(resetButton);
+
+            var devButton = new Button(LoadDevConfiguration) { text = "Load Dev Config" };
+            devButton.style.flexGrow = 1;
+            devButton.tooltip = "Set Docker image to local test image (unity-mcp-server:test)";
+            buttonRow.Add(devButton);
 
             container.Add(buttonRow);
 
@@ -980,6 +986,14 @@ Note: Cursor must support MCP for this to work.";
                 rootVisualElement.Clear();
                 CreateGUI();
             }
+        }
+
+        private void LoadDevConfiguration()
+        {
+            // Set Docker image to local test image for development
+            _dockerImageField.value = "unity-mcp-server:test";
+
+            MCPLogger.Log("[MCPDashboard] Loaded dev configuration (unity-mcp-server:test)");
         }
     }
 }
