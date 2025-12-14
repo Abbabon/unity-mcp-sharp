@@ -936,9 +936,12 @@ Note: Cursor must support MCP for this to work.";
 
             _config.SaveToResources();
 
+            // Invalidate logger cache so new settings take effect immediately
+            MCPLogger.InvalidateCache();
+
             MCPLogger.Log("[MCPDashboard] Configuration saved");
 
-            // Refresh the dashboard to update status indicator
+            // Full UI refresh needed to update status indicator (in-memory vs saved state)
             rootVisualElement.Clear();
             CreateGUI();
         }

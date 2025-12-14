@@ -307,10 +307,7 @@ namespace UnityMCPSharp.Editor
 
         private static void HandleRequest(string requestId, string method, object parameters)
         {
-            if (_config.verboseLogging)
-            {
-                MCPLogger.Log($"[MCPEditorIntegration] Received request {requestId}: {method}");
-            }
+            MCPLogger.LogVerbose($"[MCPEditorIntegration] Received request {requestId}: {method}");
 
             // Route to appropriate handler based on method name
             switch (method)

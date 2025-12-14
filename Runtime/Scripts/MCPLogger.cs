@@ -5,15 +5,24 @@ namespace UnityMCPSharp
     /// <summary>
     /// Centralized logging for MCP components.
     /// Respects MCPConfiguration.enableMcpLogs setting.
+    /// Caches configuration reference for performance in hot paths.
     /// </summary>
     public static class MCPLogger
     {
+        private static MCPConfiguration _cachedConfig;
+        private static MCPConfiguration Config => _cachedConfig ??= MCPConfiguration.Instance;
+
+        /// <summary>
+        /// Invalidate cached configuration. Call this when configuration changes.
+        /// </summary>
+        public static void InvalidateCache() => _cachedConfig = null;
+
         /// <summary>
         /// Log an informational message (only if MCP logs are enabled)
         /// </summary>
         public static void Log(string message)
         {
-            if (MCPConfiguration.Instance.enableMcpLogs)
+            if (Config.enableMcpLogs)
             {
                 Debug.Log(message);
             }
@@ -24,7 +33,7 @@ namespace UnityMCPSharp
         /// </summary>
         public static void LogWarning(string message)
         {
-            if (MCPConfiguration.Instance.enableMcpLogs)
+            if (Config.enableMcpLogs)
             {
                 Debug.LogWarning(message);
             }
@@ -44,7 +53,7 @@ namespace UnityMCPSharp
         /// </summary>
         public static void LogVerbose(string message)
         {
-            var config = MCPConfiguration.Instance;
+            var config = Config;
             if (config.enableMcpLogs && config.verboseLogging)
             {
                 Debug.Log(message);
