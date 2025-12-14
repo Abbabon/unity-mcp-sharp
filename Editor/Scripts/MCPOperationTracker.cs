@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityMCPSharp;
 using Newtonsoft.Json;
 
 namespace UnityMCPSharp.Editor
@@ -75,7 +76,7 @@ namespace UnityMCPSharp.Editor
 
             if (verboseLogging)
             {
-                Debug.Log($"[MCP Operation] Started: {operationName}");
+                MCPLogger.Log($"[MCP Operation] Started: {operationName}");
             }
         }
 
@@ -97,7 +98,7 @@ namespace UnityMCPSharp.Editor
 
                 if (verboseLogging)
                 {
-                    Debug.Log($"[MCP Operation] {(success ? "Completed" : "Failed")}: {_currentOperation}");
+                    MCPLogger.Log($"[MCP Operation] {(success ? "Completed" : "Failed")}: {_currentOperation}");
                 }
             }
             _currentOperation = null;
@@ -124,7 +125,7 @@ namespace UnityMCPSharp.Editor
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPOperationTracker] Error loading operations log: {ex.Message}");
+                MCPLogger.LogError($"[MCPOperationTracker] Error loading operations log: {ex.Message}");
             }
         }
 
@@ -141,7 +142,7 @@ namespace UnityMCPSharp.Editor
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPOperationTracker] Error saving operations log: {ex.Message}");
+                MCPLogger.LogError($"[MCPOperationTracker] Error saving operations log: {ex.Message}");
             }
         }
 
