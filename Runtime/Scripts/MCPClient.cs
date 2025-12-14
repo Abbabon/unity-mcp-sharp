@@ -36,7 +36,7 @@ namespace UnityMCPSharp
         public bool IsConnected => _isConnected && _webSocket?.State == WebSocketState.Open;
         public bool AutoReconnect { get => _autoReconnect; set => _autoReconnect = value; }
 
-        public MCPClient(string serverUrl = "ws://localhost:8080/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
+        public MCPClient(string serverUrl = "ws://localhost:3727/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
         {
             _serverUrl = serverUrl;
             _autoReconnect = autoReconnect;

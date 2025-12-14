@@ -9,11 +9,14 @@ namespace UnityMCPSharp
     public class MCPConfiguration : ScriptableObject
     {
         [Header("Server Settings")]
+        [Tooltip("Port for the MCP server (used for Docker container)")]
+        public int serverPort = 3727;
+
         [Tooltip("WebSocket URL of the MCP server")]
-        public string serverUrl = "ws://localhost:8080/ws";
+        public string serverUrl = "ws://localhost:3727/ws";
 
         [Tooltip("HTTP URL of the MCP server")]
-        public string httpUrl = "http://localhost:8080";
+        public string httpUrl = "http://localhost:3727";
 
         [Tooltip("Docker container name")]
         public string containerName = "unity-mcp-server";
@@ -149,8 +152,9 @@ namespace UnityMCPSharp
 
         public void ResetToDefaults()
         {
-            serverUrl = "ws://localhost:8080/ws";
-            httpUrl = "http://localhost:8080";
+            serverPort = 3727;
+            serverUrl = "ws://localhost:3727/ws";
+            httpUrl = "http://localhost:3727";
             containerName = "unity-mcp-server";
             dockerImage = "ghcr.io/abbabon/unity-mcp-server:latest";
             autoConnect = true;

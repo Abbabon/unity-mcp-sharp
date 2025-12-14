@@ -18,18 +18,18 @@ Alternatively, you can access and create configuration through the Dashboard:
 ### Server Settings
 
 #### Server URL
-- **Default:** `ws://localhost:8080/ws`
+- **Default:** `ws://localhost:3727/ws`
 - **Description:** WebSocket URL of the MCP server that Unity connects to
 - **When to change:** If you're running the server on a different port or remote machine
 
 **Example:**
 ```
-ws://192.168.1.100:8080/ws  (remote server)
+ws://192.168.1.100:3727/ws  (remote server)
 ws://localhost:9000/ws       (custom port)
 ```
 
 #### HTTP URL
-- **Default:** `http://localhost:8080`
+- **Default:** `http://localhost:3727`
 - **Description:** HTTP URL for health checks and server info
 - **When to change:** When server URL changes
 
@@ -118,7 +118,7 @@ ws://localhost:9000/ws       (custom port)
 ### Development Setup
 
 ```
-Server URL: ws://localhost:8080/ws
+Server URL: ws://localhost:3727/ws
 Auto Connect: true
 Auto Start Container: true
 Retry Attempts: 3
@@ -132,7 +132,7 @@ Max Log Buffer: 500
 ### Production/Team Setup
 
 ```
-Server URL: ws://mcp-server.company.local:8080/ws
+Server URL: ws://mcp-server.company.local:3727/ws
 Auto Connect: true
 Auto Start Container: false
 Retry Attempts: 5
@@ -203,11 +203,11 @@ You can create platform-specific configurations:
 
 ```csharp
 #if UNITY_EDITOR_WIN
-config.serverUrl = "ws://windows-server:8080/ws";
+config.serverUrl = "ws://windows-server:3727/ws";
 #elif UNITY_EDITOR_OSX
-config.serverUrl = "ws://mac-server:8080/ws";
+config.serverUrl = "ws://mac-server:3727/ws";
 #elif UNITY_EDITOR_LINUX
-config.serverUrl = "ws://linux-server:8080/ws";
+config.serverUrl = "ws://linux-server:3727/ws";
 #endif
 ```
 
@@ -271,7 +271,7 @@ Run multiple servers on different ports:
 **Server 1:**
 ```
 Container Name: unity-mcp-server-1
-Server URL: ws://localhost:8080/ws
+Server URL: ws://localhost:3727/ws
 ```
 
 **Server 2:**
@@ -300,7 +300,7 @@ Server URL: ws://localhost:8081/ws
 - [ ] Auto Connect is enabled in configuration
 - [ ] Docker Desktop is running
 - [ ] Server container is running (`docker ps`)
-- [ ] No firewall blocking port 8080
+- [ ] No firewall blocking port 3727
 - [ ] Check Unity Console for errors
 
 ### Container not starting automatically

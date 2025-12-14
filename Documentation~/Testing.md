@@ -6,7 +6,7 @@
 - [ ] `dotnet restore` succeeds without errors
 - [ ] `dotnet build` succeeds without errors
 - [ ] `dotnet run` starts server successfully
-- [ ] Server listens on port 8080
+- [ ] Server listens on port 3727
 - [ ] No errors in server console output
 
 ### Endpoints

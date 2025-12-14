@@ -16,10 +16,11 @@ done
 # Start container with:
 # - Consistent name for predictability
 # - Interactive mode for stdio
-# - Port 8080 exposed for Unity WebSocket
+# - Port 3727 exposed for Unity WebSocket
 # - Stdio mode enabled for MCP protocol
 docker run -i --rm \
   --name unity-mcp-server \
-  -p 8080:8080 \
+  -p 3727:3727 \
+  -e UNITY_MCP_ASPPORT=3727 \
   -e MCP_STDIO_MODE=true \
   unity-mcp-server:test

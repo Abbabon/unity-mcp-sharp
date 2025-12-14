@@ -624,7 +624,7 @@ Use unity_list_editors to see available editors.
 ## Testing Performed
 
 ### Test Environment
-- **Server:** Docker container (unity-mcp-server:test) on port 8080
+- **Server:** Docker container (unity-mcp-server:test) on port 3727
 - **Unity Projects:**
   - TestProject~ (ProjectName: "TestProject~", Scene: "Demo")
   - TestProject2~ (ProjectName: "TestProject2", Scene: "Demo")

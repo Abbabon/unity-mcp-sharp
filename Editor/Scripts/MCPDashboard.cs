@@ -25,6 +25,7 @@ namespace UnityMCPSharp.Editor
         private Button _connectButton;
         private Button _disconnectButton;
         private Button _refreshButton;
+        private IntegerField _serverPortField;
         private TextField _serverUrlField;
         private TextField _dockerImageField;
         private ScrollView _logsScrollView;
@@ -521,6 +522,13 @@ namespace UnityMCPSharp.Editor
 
             container.Add(statusIndicator);
 
+            // Server Port
+            _serverPortField = new IntegerField("Server Port");
+            _serverPortField.value = _config.serverPort;
+            _serverPortField.tooltip = "Port for the MCP server (used for Docker container)";
+            _serverPortField.style.marginBottom = 5;
+            container.Add(_serverPortField);
+
             // Server URL
             _serverUrlField = new TextField("Server URL");
             _serverUrlField.value = _config.serverUrl;
@@ -694,10 +702,10 @@ namespace UnityMCPSharp.Editor
 #
 # Setup command:
 
-claude mcp add --transport http unity-mcp http://localhost:8080/mcp
+claude mcp add --transport http unity-mcp http://localhost:3727/mcp
 
 # This connects Claude Code to:
-# - Unity-managed container on port 8080
+# - Unity-managed container on port 3727
 # - HTTP endpoint at /mcp (Streamable HTTP protocol)
 # - Tools are available when Unity is running";
                     instructions = $@"Setup Instructions:
@@ -706,7 +714,7 @@ claude mcp add --transport http unity-mcp http://localhost:8080/mcp
 2. Wait for 'Running' status
 3. Open your terminal and run:
 
-   claude mcp add --transport http unity-mcp http://localhost:8080/mcp
+   claude mcp add --transport http unity-mcp http://localhost:3727/mcp
 
 4. In Claude Code, type /mcp to verify 'unity-mcp' shows as connected
 5. Use the tools - they work only when Unity is running!
@@ -729,7 +737,7 @@ Note: Unity manages the server lifecycle. Claude Code just connects to it.";
 {
   ""mcpServers"": {
     ""unity-mcp"": {
-      ""url"": ""http://localhost:8080/mcp""
+      ""url"": ""http://localhost:3727/mcp""
     }
   }
 }";
@@ -758,7 +766,7 @@ Available MCP Tools:
   ""mcp"": {
     ""servers"": {
       ""unity-mcp"": {
-        ""url"": ""http://localhost:8080/mcp""
+        ""url"": ""http://localhost:3727/mcp""
       }
     }
   }
@@ -788,7 +796,7 @@ Note: GitHub Copilot must support MCP for this to work.";
 {
   ""mcpServers"": {
     ""unity-mcp"": {
-      ""url"": ""http://localhost:8080/mcp""
+      ""url"": ""http://localhost:3727/mcp""
     }
   }
 }";
@@ -927,6 +935,7 @@ Note: Cursor must support MCP for this to work.";
 
         private void SaveConfiguration()
         {
+            _config.serverPort = _serverPortField.value;
             _config.serverUrl = _serverUrlField.value;
             _config.dockerImage = _dockerImageField.value;
             _config.autoConnect = _autoConnectToggle.value;
@@ -957,6 +966,7 @@ Note: Cursor must support MCP for this to work.";
                 _config.ResetToDefaults();
 
                 // Refresh UI fields
+                _serverPortField.value = _config.serverPort;
                 _serverUrlField.value = _config.serverUrl;
                 _dockerImageField.value = _config.dockerImage;
                 _autoConnectToggle.value = _config.autoConnect;
