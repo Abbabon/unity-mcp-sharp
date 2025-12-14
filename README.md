@@ -846,6 +846,17 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 If still not found, ensure Docker Desktop is installed and running.
 </details>
 
+<details>
+<summary><b>⚠️ Unity 6+: "Package signature warning"</b></summary>
+
+Starting with Unity 6.3, the Package Manager displays signature warnings for unsigned packages. This is informational only - the package still works correctly.
+
+**Options:**
+1. Download the signed `.tgz` from [GitHub Releases](https://github.com/Abbabon/unity-mcp-sharp/releases) (if available)
+2. Install via OpenUPM (warning is cosmetic only)
+3. See [Package Signing Guide](Documentation~/PackageSigning.md) for details
+</details>
+
 For more troubleshooting help, see the [Troubleshooting Guide](Documentation~/Troubleshooting.md).
 
 ---
@@ -900,6 +911,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [Configuration Guide](Documentation~/Configuration.md)
 - [Troubleshooting Guide](Documentation~/Troubleshooting.md)
 - [Testing Guide](Documentation~/Testing.md)
+- [Package Signing Guide](Documentation~/PackageSigning.md) (Unity 6+)
 
 ### 🌐 Resources
 - **Issues:** [GitHub Issues](https://github.com/Abbabon/unity-mcp-sharp/issues)
