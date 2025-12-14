@@ -704,12 +704,34 @@ dotnet test /p:CollectCoverage=true
 
 ### Branch Strategy
 
-- `main` - Stable releases, protected
-- `develop` - Integration branch (optional)
+- `main` - Stable releases only, protected. Only receives merges from `develop` during version releases.
+- `develop` - Integration branch for all features. This is the default PR target.
 - `feature/*` - Feature branches
 - `fix/*` - Bug fix branches
 
 **IMPORTANT REMINDER:** Always create a feature branch (e.g., `feature/new-tool`, `fix/bug-name`) before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+
+### Pull Request Targets
+
+**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
+
+| PR Type | Target Branch | Example |
+|---------|---------------|---------|
+| Feature PR | `develop` | `feature/prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/websocket-timeout` → `develop` |
+| Hotfix PR | `main` (rare) | Critical production fixes only |
+| Release PR | `main` | `develop` → `main` (version release) |
+
+**Workflow:**
+1. Create feature branch from `develop`
+2. Open PR targeting `develop`
+3. Merge feature into `develop`
+4. When ready for release: merge `develop` → `main` and tag
+
+**If you accidentally target `main`:** Change the PR base branch immediately:
+```bash
+gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
+```
 
 ### Commit Messages
 
