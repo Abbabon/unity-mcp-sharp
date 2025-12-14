@@ -18,6 +18,16 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Cleanup function for handling failures
+cleanup() {
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo "Script failed with exit code $exit_code. Cleaning up..."
+        rm -rf "$PROJECT_ROOT/dist" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
 # Check dependencies
 if ! command -v jq &> /dev/null; then
     echo "Error: jq is required but not installed."

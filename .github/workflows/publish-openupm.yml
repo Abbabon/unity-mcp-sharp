@@ -52,6 +52,10 @@ jobs:
 
     - name: Sign UPM Package
       id: sign
+      env:
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        UNITY_ORG_ID: ${{ secrets.UNITY_ORG_ID }}
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         PACKAGE_NAME=$(jq -r '.name' package.json)
@@ -61,12 +65,12 @@ jobs:
 
         mkdir -p "$OUTPUT_DIR"
 
-        # Use Unity CLI to sign the package
+        # Use Unity CLI to sign the package (credentials via env vars to avoid log exposure)
         /opt/unity/Editor/Unity -batchmode -quit \
-          -username "${{ secrets.UNITY_EMAIL }}" \
-          -password "${{ secrets.UNITY_PASSWORD }}" \
+          -username "$UNITY_EMAIL" \
+          -password "$UNITY_PASSWORD" \
           -upmPack "." "$OUTPUT_DIR" \
-          -cloudOrganization "${{ secrets.UNITY_ORG_ID }}" \
+          -cloudOrganization "$UNITY_ORG_ID" \
           -logfile - || true
 
         # Unity creates: dist/{package-name}-{version}.tgz
