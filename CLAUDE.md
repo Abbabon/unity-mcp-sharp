@@ -739,6 +739,28 @@ dotnet test /p:CollectCoverage=true
 gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
 ```
 
+### Pull Request Targets
+
+**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
+
+| PR Type | Target Branch | Example |
+|---------|---------------|---------|
+| Feature PR | `develop` | `feature/prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/websocket-timeout` → `develop` |
+| Hotfix PR | `main` (rare) | Critical production fixes only |
+| Release PR | `main` | `develop` → `main` (version release) |
+
+**Workflow:**
+1. Create feature branch from `develop`
+2. Open PR targeting `develop`
+3. Merge feature into `develop`
+4. When ready for release: merge `develop` → `main` and tag
+
+**If you accidentally target `main`:** Change the PR base branch immediately:
+```bash
+gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
+```
+
 ### Commit Messages
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):

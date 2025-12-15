@@ -238,6 +238,36 @@ Add to `Packages/manifest.json`:
 
 ## 🤖 Using with AI Assistants
 
+<details open>
+<summary><b>Claude Code (CLI)</b></summary>
+
+Add to your project's `.mcp.json` file in the project root:
+
+```json
+{
+  "mcpServers": {
+    "unity": {
+      "url": "http://localhost:3727/mcp"
+    }
+  }
+}
+```
+
+Or add globally to `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "unity": {
+      "url": "http://localhost:3727/mcp"
+    }
+  }
+}
+```
+
+**Tip:** After adding the configuration, restart Claude Code or use `/mcp` to verify the server is connected.
+</details>
+
 <details>
 <summary><b>VS Code / GitHub Copilot</b></summary>
 
