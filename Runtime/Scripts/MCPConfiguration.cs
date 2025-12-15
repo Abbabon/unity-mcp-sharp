@@ -9,7 +9,8 @@ namespace UnityMCPSharp
     public class MCPConfiguration : ScriptableObject
     {
         [Header("Server Settings")]
-        [Tooltip("Port for the MCP server (used for Docker container)")]
+        [Tooltip("Port for the MCP server (used for Docker container). Must be 1024-65535.")]
+        [Range(1024, 65535)]
         public int serverPort = 3727;
 
         [Tooltip("WebSocket URL of the MCP server")]

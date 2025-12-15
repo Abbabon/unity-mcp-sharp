@@ -68,6 +68,17 @@ namespace UnityMCPSharp
         public MCPClient GetClient() => _client;
 
         /// <summary>
+        /// Update the client's server URL (call when port changes)
+        /// </summary>
+        public async Task UpdateClientUrlAsync(string newUrl)
+        {
+            if (_client != null)
+            {
+                await _client.UpdateServerUrlAsync(newUrl);
+            }
+        }
+
+        /// <summary>
         /// Check if Docker is installed
         /// </summary>
         public async Task<bool> IsDockerInstalledAsync()

@@ -951,7 +951,8 @@ Note: Cursor must support MCP for this to work.";
             }
 
             // Auto-update URLs if port changed
-            if (port != _config.serverPort)
+            var portChanged = port != _config.serverPort;
+            if (portChanged)
             {
                 _config.serverUrl = $"ws://localhost:{port}/ws";
                 _config.httpUrl = $"http://localhost:{port}";
@@ -971,6 +972,12 @@ Note: Cursor must support MCP for this to work.";
             _config.verboseLogging = _verboseLoggingToggle.value;
 
             _config.SaveToResources();
+
+            // Update MCPClient URL if port changed
+            if (portChanged && _serverManager != null)
+            {
+                _ = _serverManager.UpdateClientUrlAsync(_config.serverUrl);
+            }
 
             // Invalidate logger cache so new settings take effect immediately
             MCPLogger.InvalidateCache();
