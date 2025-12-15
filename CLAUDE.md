@@ -166,7 +166,7 @@ dotnet build
 # Run locally (no Docker)
 dotnet run
 
-# Server will be available at http://localhost:8080
+# Server will be available at http://localhost:3727
 ```
 
 #### Unity Package Development
@@ -540,11 +540,11 @@ When creating a new MCP tool, verify:
 # Or manually:
 cd Server~
 docker build -t unity-mcp-server:test .
-docker run -p 8080:8080 unity-mcp-server:test
+docker run -p 3727:3727 unity-mcp-server:test
 
 # Test endpoints
-curl http://localhost:8080/
-curl http://localhost:8080/health
+curl http://localhost:3727/
+curl http://localhost:3727/health
 
 # Run smoke tests
 ./Scripts~/test.sh
@@ -559,7 +559,7 @@ curl http://localhost:8080/health
 5. Test tools via IDE (VS Code, Cursor) or MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 #### Integration Test Scenario (Pre-Release Validation)
@@ -659,7 +659,7 @@ docker build -t unity-mcp-server .
 docker buildx build --platform linux/amd64,linux/arm64 -t unity-mcp-server .
 
 # Test the image
-docker run --rm -p 8080:8080 unity-mcp-server
+docker run --rm -p 3727:3727 unity-mcp-server
 ```
 
 ### Running Tests
@@ -841,10 +841,10 @@ dotnet build
 
 ### WebSocket connection fails locally
 
-- Check server is running: `curl http://localhost:8080/health`
-- Verify port 8080 is not in use
+- Check server is running: `curl http://localhost:3727/health`
+- Verify port 3727 is not in use
 - Check firewall settings
-- Try connecting to `ws://127.0.0.1:8080/ws` instead of localhost
+- Try connecting to `ws://127.0.0.1:3727/ws` instead of localhost
 
 ### Docker build fails
 
@@ -910,7 +910,7 @@ dotnet build -c Release         # Production build
 # Docker operations (manual)
 cd Server~
 docker build -t unity-mcp-server:test .   # Build image
-docker run -p 8080:8080 unity-mcp-server:test  # Run container
+docker run -p 3727:3727 unity-mcp-server:test  # Run container
 docker logs unity-mcp-server    # View logs
 docker exec -it unity-mcp-server sh  # Enter container
 
@@ -920,7 +920,7 @@ git status                      # Check working tree
 git diff                        # View changes
 
 # Testing MCP
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 ## Release Process
