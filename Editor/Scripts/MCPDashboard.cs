@@ -941,8 +941,29 @@ Note: Cursor must support MCP for this to work.";
 
         private void SaveConfiguration()
         {
-            _config.serverPort = _serverPortField.value;
-            _config.serverUrl = _serverUrlField.value;
+            // Validate port range
+            var port = _serverPortField.value;
+            if (port < 1024 || port > 65535)
+            {
+                MCPLogger.LogError($"[MCPDashboard] Invalid port {port}. Must be between 1024 and 65535.");
+                _serverPortField.value = _config.serverPort; // Revert to current value
+                return;
+            }
+
+            // Auto-update URLs if port changed
+            if (port != _config.serverPort)
+            {
+                _config.serverUrl = $"ws://localhost:{port}/ws";
+                _config.httpUrl = $"http://localhost:{port}";
+                _serverUrlField.value = _config.serverUrl;
+                MCPLogger.Log($"[MCPDashboard] Updated URLs to use port {port}");
+            }
+            else
+            {
+                _config.serverUrl = _serverUrlField.value;
+            }
+
+            _config.serverPort = port;
             _config.dockerImage = _dockerImageField.value;
             _config.autoConnect = _autoConnectToggle.value;
             _config.autoStartContainer = _autoStartToggle.value;

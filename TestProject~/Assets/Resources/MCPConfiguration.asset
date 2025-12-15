@@ -16,7 +16,7 @@ MonoBehaviour:
   serverUrl: ws://localhost:3727/ws
   httpUrl: http://localhost:3727
   containerName: unity-mcp-server
-  dockerImage: abbabon/unity-mcp-server:test
+  dockerImage: ghcr.io/abbabon/unity-mcp-server:latest
   autoConnect: 1
   autoStartContainer: 1
   retryAttempts: 3
