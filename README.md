@@ -238,6 +238,36 @@ Add to `Packages/manifest.json`:
 
 ## 🤖 Using with AI Assistants
 
+<details open>
+<summary><b>Claude Code (CLI)</b></summary>
+
+Add to your project's `.mcp.json` file in the project root:
+
+```json
+{
+  "mcpServers": {
+    "unity": {
+      "url": "http://localhost:3727/mcp"
+    }
+  }
+}
+```
+
+Or add globally to `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "unity": {
+      "url": "http://localhost:3727/mcp"
+    }
+  }
+}
+```
+
+**Tip:** After adding the configuration, restart Claude Code or use `/mcp` to verify the server is connected.
+</details>
+
 <details>
 <summary><b>VS Code / GitHub Copilot</b></summary>
 
@@ -247,7 +277,7 @@ Add to `.vscode/settings.json`:
 {
   "mcpServers": {
     "unity": {
-      "url": "http://localhost:8080/mcp",
+      "url": "http://localhost:3727/mcp",
       "transport": "sse"
     }
   }
@@ -264,7 +294,7 @@ Add to `~/.cursor/config.json`:
 {
   "mcpServers": {
     "unity": {
-      "url": "http://localhost:8080/mcp",
+      "url": "http://localhost:3727/mcp",
       "transport": "sse"
     }
   }
@@ -281,7 +311,7 @@ Add to your Claude Desktop MCP configuration:
 {
   "mcpServers": {
     "unity": {
-      "url": "http://localhost:8080/mcp",
+      "url": "http://localhost:3727/mcp",
       "transport": "sse"
     }
   }
@@ -690,7 +720,7 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 ```bash
 docker run -d \
   --name unity-mcp-server \
-  -p 8080:8080 \
+  -p 3727:3727 \
   --restart unless-stopped \
   ghcr.io/abbabon/unity-mcp-server:latest
 ```
@@ -780,7 +810,7 @@ Access configuration via `Tools → Unity MCP Server → Create MCP Configuratio
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Server URL | `ws://localhost:8080/ws` | WebSocket connection URL |
+| Server URL | `ws://localhost:3727/ws` | WebSocket connection URL |
 | Docker Image | `ghcr.io/abbabon/unity-mcp-server:latest` | Docker image to use |
 | Auto-connect | `true` | Connect automatically on startup |
 | Auto-start | `false` | Start container automatically |
@@ -808,7 +838,7 @@ Download from [docker.com](https://www.docker.com/products/docker-desktop/)
 **Possible causes:**
 
 1. **Docker container not running** → Start it from Dashboard
-2. **Port 8080 already in use** → Change port in configuration
+2. **Port 3727 already in use** → Change port in configuration
 3. **Firewall blocking connection** → Allow Docker in firewall settings
 </details>
 
