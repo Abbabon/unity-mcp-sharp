@@ -136,19 +136,19 @@ docker ps -a
 docker logs unity-mcp-server
 
 # Check for port conflicts
-lsof -i :8080  # macOS/Linux
-netstat -ano | findstr :8080  # Windows
+lsof -i :3727  # macOS/Linux
+netstat -ano | findstr :3727  # Windows
 ```
 
 **Common causes:**
 
-1. **Port 8080 already in use**
+1. **Port 3727 already in use**
    ```bash
-   # Find process using port 8080
-   lsof -i :8080
+   # Find process using port 3727
+   lsof -i :3727
 
    # Kill the process or change MCP server port
-   docker run -p 8081:8080 ghcr.io/abbabon/unity-mcp-server
+   docker run -p 8081:3727 ghcr.io/abbabon/unity-mcp-server
 
    # Update Unity configuration to use port 8081
    ```
@@ -192,9 +192,9 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 
 **Diagnostic Checklist:**
 - [ ] Server container is running: `docker ps | grep unity-mcp-server`
-- [ ] Server is healthy: `curl http://localhost:8080/health`
-- [ ] Correct URL in configuration: `ws://localhost:8080/ws`
-- [ ] No firewall blocking port 8080
+- [ ] Server is healthy: `curl http://localhost:3727/health`
+- [ ] Correct URL in configuration: `ws://localhost:3727/ws`
+- [ ] No firewall blocking port 3727
 - [ ] Docker is running
 
 **Solutions:**
@@ -205,16 +205,16 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 
 2. **Check server health:**
    ```bash
-   curl http://localhost:8080/health
+   curl http://localhost:3727/health
    # Should return: {"status":"Healthy"}
 
-   curl http://localhost:8080/
+   curl http://localhost:3727/
    # Should return server info
    ```
 
 3. **Verify WebSocket endpoint:**
    - Use WebSocket test tool: https://www.piesocket.com/websocket-tester
-   - Connect to: `ws://localhost:8080/ws`
+   - Connect to: `ws://localhost:3727/ws`
    - Should connect successfully
 
 4. **Check firewall:**
@@ -234,7 +234,7 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
    ```
 3. Verify server is responding:
    ```bash
-   telnet localhost 8080
+   telnet localhost 3727
    ```
 4. Check Docker container logs for errors:
    ```bash
@@ -276,7 +276,7 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 **Diagnostic:**
 ```bash
 # Check if server is alive
-curl http://localhost:8080/health
+curl http://localhost:3727/health
 
 # Check server logs
 docker logs unity-mcp-server --tail 100
@@ -295,7 +295,7 @@ docker stop unity-mcp-server
 docker rm unity-mcp-server
 
 # Start fresh
-docker run -d --name unity-mcp-server -p 8080:8080 \
+docker run -d --name unity-mcp-server -p 3727:3727 \
   ghcr.io/abbabon/unity-mcp-server:latest
 ```
 
@@ -311,7 +311,7 @@ docker logs unity-mcp-server
 **Common errors:**
 
 1. **"Address already in use"**
-   - Port 8080 is taken
+   - Port 3727 is taken
    - Solution: Change port or kill conflicting process
 
 2. **"Permission denied"**
@@ -451,7 +451,7 @@ docker stats unity-mcp-server
 2. Or recreate with limits:
    ```bash
    docker run -d --name unity-mcp-server \
-     -p 8080:8080 \
+     -p 3727:3727 \
      --cpus=1 \
      --memory=512m \
      ghcr.io/abbabon/unity-mcp-server:latest
@@ -469,7 +469,7 @@ docker stats unity-mcp-server
    {
      "mcpServers": {
        "unity": {
-         "url": "http://localhost:8080/mcp",
+         "url": "http://localhost:3727/mcp",
          "transport": "sse"
        }
      }
@@ -478,7 +478,7 @@ docker stats unity-mcp-server
 
 2. Restart VS Code
 3. Check VS Code output panel for errors
-4. Verify server is running: `curl http://localhost:8080/mcp`
+4. Verify server is running: `curl http://localhost:3727/mcp`
 
 ### Tools not showing in Cursor
 
@@ -489,7 +489,7 @@ docker stats unity-mcp-server
 2. Restart Cursor IDE
 3. Use MCP Inspector to verify tools are exposed:
    ```bash
-   npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+   npx @modelcontextprotocol/inspector http://localhost:3727/mcp
    ```
 
 ## Getting Help
@@ -523,7 +523,7 @@ docker logs unity-mcp-server --tail 200 > mcp-server.log
 docker ps -a | grep unity-mcp > container-status.txt
 
 # Network test
-curl -v http://localhost:8080/health > health-check.txt
+curl -v http://localhost:3727/health > health-check.txt
 ```
 
 ### Reporting Issues

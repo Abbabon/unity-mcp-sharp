@@ -68,6 +68,17 @@ namespace UnityMCPSharp
         public MCPClient GetClient() => _client;
 
         /// <summary>
+        /// Update the client's server URL (call when port changes)
+        /// </summary>
+        public async Task UpdateClientUrlAsync(string newUrl)
+        {
+            if (_client != null)
+            {
+                await _client.UpdateServerUrlAsync(newUrl);
+            }
+        }
+
+        /// <summary>
         /// Check if Docker is installed
         /// </summary>
         public async Task<bool> IsDockerInstalledAsync()
@@ -200,7 +211,7 @@ namespace UnityMCPSharp
                     SetStatus(ServerStatus.Starting, "Looking for Docker image...");
 
                     var imageToUse = await FindAvailableImageAsync();
-                    var dockerRunCmd = $"run -d --name {_config.containerName} -p 8080:8080 --restart unless-stopped {imageToUse}";
+                    var dockerRunCmd = $"run -d --name {_config.containerName} -p {_config.serverPort}:{_config.serverPort} -e UNITY_MCP_ASPPORT={_config.serverPort} --restart unless-stopped {imageToUse}";
                     var (runCode, runOutput) = await RunCommandAsync("docker", dockerRunCmd);
 
                     if (runCode != 0)

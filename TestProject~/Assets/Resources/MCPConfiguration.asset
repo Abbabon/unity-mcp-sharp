@@ -12,13 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdc2695ffcf154e75a0da5c765f8e487, type: 3}
   m_Name: MCPConfiguration
   m_EditorClassIdentifier: 
-  serverUrl: ws://localhost:8080/ws
-  httpUrl: http://localhost:8080
+  serverPort: 3727
+  serverUrl: ws://localhost:3727/ws
+  httpUrl: http://localhost:3727
   containerName: unity-mcp-server
   dockerImage: ghcr.io/abbabon/unity-mcp-server:latest
   autoConnect: 1
   autoStartContainer: 1
   retryAttempts: 3
   retryDelay: 5
+  enableMcpLogs: 1
   verboseLogging: 0
   maxLogBuffer: 500
+  showVisualFeedback: 1
+  feedbackColor: {r: 0.3, g: 0.5, b: 0.7, a: 0.1}
+  showOperationLog: 1
+  maxOperationLogEntries: 20
+  showSceneViewOverlay: 1

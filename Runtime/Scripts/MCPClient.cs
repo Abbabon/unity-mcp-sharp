@@ -35,8 +35,26 @@ namespace UnityMCPSharp
 
         public bool IsConnected => _isConnected && _webSocket?.State == WebSocketState.Open;
         public bool AutoReconnect { get => _autoReconnect; set => _autoReconnect = value; }
+        public string ServerUrl => _serverUrl;
 
-        public MCPClient(string serverUrl = "ws://localhost:8080/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
+        /// <summary>
+        /// Update the server URL. If connected, disconnects first.
+        /// </summary>
+        public async Task UpdateServerUrlAsync(string newUrl)
+        {
+            if (_serverUrl == newUrl) return;
+
+            MCPLogger.Log($"[MCPClient] Updating server URL from {_serverUrl} to {newUrl}");
+
+            if (IsConnected)
+            {
+                await DisconnectAsync();
+            }
+
+            _serverUrl = newUrl;
+        }
+
+        public MCPClient(string serverUrl = "ws://localhost:3727/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
         {
             _serverUrl = serverUrl;
             _autoReconnect = autoReconnect;

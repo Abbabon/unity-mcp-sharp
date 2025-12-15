@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Configurable Server Port:** Default port changed from 8080 to 3727 to avoid conflicts with common applications
+  - New `serverPort` field in MCPConfiguration (validated range: 1024-65535)
+  - Port configurable via Dashboard Configuration tab
+  - URLs auto-update when port changes
+  - Docker container uses `UNITY_MCP_ASPPORT` environment variable for dynamic port configuration
+  - "Load Dev Config" button for quickly switching to local test image
+- **Option to Disable MCP Logs:** New toggle in Dashboard to enable/disable MCP logs in Unity Console
+
 ### Planned Features
 - Performance monitoring and metrics
 - Advanced scene query capabilities

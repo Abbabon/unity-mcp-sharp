@@ -166,7 +166,7 @@ dotnet build
 # Run locally (no Docker)
 dotnet run
 
-# Server will be available at http://localhost:8080
+# Server will be available at http://localhost:3727
 ```
 
 #### Unity Package Development
@@ -540,11 +540,11 @@ When creating a new MCP tool, verify:
 # Or manually:
 cd Server~
 docker build -t unity-mcp-server:test .
-docker run -p 8080:8080 unity-mcp-server:test
+docker run -p 3727:3727 unity-mcp-server:test
 
 # Test endpoints
-curl http://localhost:8080/
-curl http://localhost:8080/health
+curl http://localhost:3727/
+curl http://localhost:3727/health
 
 # Run smoke tests
 ./Scripts~/test.sh
@@ -559,7 +559,7 @@ curl http://localhost:8080/health
 5. Test tools via IDE (VS Code, Cursor) or MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 #### Integration Test Scenario (Pre-Release Validation)
@@ -659,7 +659,7 @@ docker build -t unity-mcp-server .
 docker buildx build --platform linux/amd64,linux/arm64 -t unity-mcp-server .
 
 # Test the image
-docker run --rm -p 8080:8080 unity-mcp-server
+docker run --rm -p 3727:3727 unity-mcp-server
 ```
 
 ### Running Tests
@@ -709,7 +709,35 @@ dotnet test /p:CollectCoverage=true
 - `feature/*` - Feature branches
 - `fix/*` - Bug fix branches
 
-**IMPORTANT REMINDER:** Always create a feature branch (e.g., `feature/new-tool`, `fix/bug-name`) before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+**Branch Naming Convention:**
+- `feature/ISSUE_NUMBER_name` - When working on a GitHub issue (e.g., `feature/42_prefab-support`)
+- `feature/name` - When no issue exists (e.g., `feature/websocket-improvements`)
+- `fix/ISSUE_NUMBER_name` - Bug fix with issue (e.g., `fix/15_connection-timeout`)
+- `fix/name` - Bug fix without issue (e.g., `fix/typo-in-readme`)
+
+**IMPORTANT REMINDER:** Always create a feature branch before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+
+### Pull Request Targets
+
+**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
+
+| PR Type | Target Branch | Example |
+|---------|---------------|---------|
+| Feature PR | `develop` | `feature/42_prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/15_websocket-timeout` → `develop` |
+| Hotfix PR | `main` (rare) | Critical production fixes only |
+| Release PR | `main` | `develop` → `main` (version release) |
+
+**Workflow:**
+1. Create feature branch from `develop`
+2. Open PR targeting `develop`
+3. Merge feature into `develop`
+4. When ready for release: merge `develop` → `main` and tag
+
+**If you accidentally target `main`:** Change the PR base branch immediately:
+```bash
+gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
+```
 
 ### Pull Request Targets
 
@@ -748,7 +776,10 @@ ci: add multi-arch Docker build
 ### Making Changes
 
 ```bash
-# Create feature branch
+# Create feature branch (with issue number if available)
+git checkout -b feature/42_amazing-feature
+
+# Or without issue number
 git checkout -b feature/amazing-feature
 
 # Make changes and commit
@@ -756,7 +787,7 @@ git add .
 git commit -m "feat: add amazing feature"
 
 # Push to GitHub
-git push origin feature/amazing-feature
+git push origin feature/42_amazing-feature
 
 # Create Pull Request on GitHub
 ```
@@ -841,10 +872,10 @@ dotnet build
 
 ### WebSocket connection fails locally
 
-- Check server is running: `curl http://localhost:8080/health`
-- Verify port 8080 is not in use
+- Check server is running: `curl http://localhost:3727/health`
+- Verify port 3727 is not in use
 - Check firewall settings
-- Try connecting to `ws://127.0.0.1:8080/ws` instead of localhost
+- Try connecting to `ws://127.0.0.1:3727/ws` instead of localhost
 
 ### Docker build fails
 
@@ -910,7 +941,7 @@ dotnet build -c Release         # Production build
 # Docker operations (manual)
 cd Server~
 docker build -t unity-mcp-server:test .   # Build image
-docker run -p 8080:8080 unity-mcp-server:test  # Run container
+docker run -p 3727:3727 unity-mcp-server:test  # Run container
 docker logs unity-mcp-server    # View logs
 docker exec -it unity-mcp-server sh  # Enter container
 
@@ -920,7 +951,7 @@ git status                      # Check working tree
 git diff                        # View changes
 
 # Testing MCP
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 ## Release Process

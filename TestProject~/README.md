@@ -125,7 +125,7 @@ If you get compilation errors:
 ### Server Connection Fails
 
 If Unity can't connect to server:
-1. Verify server is running: `curl http://localhost:8080/health`
+1. Verify server is running: `curl http://localhost:3727/health`
 2. Check server URL in configuration matches
 3. Ensure Docker Desktop is running (if using Docker)
 4. Check firewall settings
