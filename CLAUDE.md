@@ -702,6 +702,31 @@ dotnet test /p:CollectCoverage=true
 
 ## Git Workflow
 
+### Starting New Work
+
+**Before writing any code, follow this workflow:**
+
+1. **Check for existing issue** - Search GitHub issues for related work:
+   ```bash
+   gh issue list --search "your feature keywords"
+   ```
+
+2. **Create issue if none exists** - Document what you're building:
+   ```bash
+   gh issue create --title "Feature: Brief description" --body "Details..."
+   ```
+
+3. **Create feature branch** - Branch from `develop` with issue number:
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout -b feature/ISSUE_NUMBER-short-title
+   ```
+
+4. **Update issue as you develop** - Add comments for significant decisions or changes
+
+5. **Create PR targeting `develop`** - Reference the issue in the PR description
+
 ### Branch Strategy
 
 - `main` - Stable releases only, protected. Only receives merges from `develop` during version releases.
@@ -710,10 +735,10 @@ dotnet test /p:CollectCoverage=true
 - `fix/*` - Bug fix branches
 
 **Branch Naming Convention:**
-- `feature/ISSUE_NUMBER_name` - When working on a GitHub issue (e.g., `feature/42_prefab-support`)
-- `feature/name` - When no issue exists (e.g., `feature/websocket-improvements`)
-- `fix/ISSUE_NUMBER_name` - Bug fix with issue (e.g., `fix/15_connection-timeout`)
-- `fix/name` - Bug fix without issue (e.g., `fix/typo-in-readme`)
+- `feature/ISSUE_NUMBER-short-title` - When working on a GitHub issue (e.g., `feature/42-prefab-support`)
+- `feature/short-title` - When no issue exists (e.g., `feature/websocket-improvements`)
+- `fix/ISSUE_NUMBER-short-title` - Bug fix with issue (e.g., `fix/15-connection-timeout`)
+- `fix/short-title` - Bug fix without issue (e.g., `fix/typo-in-readme`)
 
 **IMPORTANT REMINDER:** Always create a feature branch before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
 
@@ -723,38 +748,17 @@ dotnet test /p:CollectCoverage=true
 
 | PR Type | Target Branch | Example |
 |---------|---------------|---------|
-| Feature PR | `develop` | `feature/42_prefab-system` → `develop` |
-| Bug fix PR | `develop` | `fix/15_websocket-timeout` → `develop` |
+| Feature PR | `develop` | `feature/42-prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/15-websocket-timeout` → `develop` |
 | Hotfix PR | `main` (rare) | Critical production fixes only |
 | Release PR | `main` | `develop` → `main` (version release) |
 
 **Workflow:**
-1. Create feature branch from `develop`
-2. Open PR targeting `develop`
-3. Merge feature into `develop`
-4. When ready for release: merge `develop` → `main` and tag
-
-**If you accidentally target `main`:** Change the PR base branch immediately:
-```bash
-gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
-```
-
-### Pull Request Targets
-
-**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
-
-| PR Type | Target Branch | Example |
-|---------|---------------|---------|
-| Feature PR | `develop` | `feature/prefab-system` → `develop` |
-| Bug fix PR | `develop` | `fix/websocket-timeout` → `develop` |
-| Hotfix PR | `main` (rare) | Critical production fixes only |
-| Release PR | `main` | `develop` → `main` (version release) |
-
-**Workflow:**
-1. Create feature branch from `develop`
-2. Open PR targeting `develop`
-3. Merge feature into `develop`
-4. When ready for release: merge `develop` → `main` and tag
+1. Check for / create GitHub issue
+2. Create feature branch from `develop` with issue number
+3. Open PR targeting `develop`
+4. Merge feature into `develop`
+5. When ready for release: merge `develop` → `main` and tag
 
 **If you accidentally target `main`:** Change the PR base branch immediately:
 ```bash
@@ -776,20 +780,23 @@ ci: add multi-arch Docker build
 ### Making Changes
 
 ```bash
-# Create feature branch (with issue number if available)
-git checkout -b feature/42_amazing-feature
+# 1. Check for existing issue or create one
+gh issue list --search "amazing feature"
+gh issue create --title "Feature: Amazing feature" --body "Description..."
 
-# Or without issue number
-git checkout -b feature/amazing-feature
+# 2. Create feature branch (with issue number)
+git checkout develop && git pull origin develop
+git checkout -b feature/42-amazing-feature
 
-# Make changes and commit
+# 3. Make changes and commit
 git add .
 git commit -m "feat: add amazing feature"
 
-# Push to GitHub
-git push origin feature/42_amazing-feature
+# 4. Push to GitHub
+git push origin feature/42-amazing-feature
 
-# Create Pull Request on GitHub
+# 5. Create Pull Request targeting develop
+gh pr create --base develop --title "feat: add amazing feature" --body "Closes #42"
 ```
 
 ## Release Process

@@ -35,6 +35,7 @@ namespace UnityMCPSharp.Editor
         private Toggle _enableMcpLogsToggle;
         private Toggle _verboseLoggingToggle;
         private Toggle _showParametersToggle;
+        private Toggle _useTestImageToggle;
 
         // Tab buttons
         private Button _statusTab;
@@ -538,8 +539,30 @@ namespace UnityMCPSharp.Editor
             // Docker Image
             _dockerImageField = new TextField("Docker Image");
             _dockerImageField.value = _config.dockerImage;
-            _dockerImageField.style.marginBottom = 10;
+            _dockerImageField.style.marginBottom = 5;
             container.Add(_dockerImageField);
+
+            // Use Test Image toggle (dev mode)
+            _useTestImageToggle = new Toggle("Use test image (dev)");
+            _useTestImageToggle.value = _config.dockerImage == "unity-mcp-server:test";
+            _useTestImageToggle.tooltip = "Use local development image (unity-mcp-server:test) instead of registry image. Takes effect immediately.";
+            _useTestImageToggle.style.marginBottom = 10;
+            _useTestImageToggle.RegisterValueChangedCallback(evt =>
+            {
+                var newImage = evt.newValue
+                    ? "unity-mcp-server:test"
+                    : "ghcr.io/abbabon/unity-mcp-server:latest";
+                _dockerImageField.value = newImage;
+                _dockerImageField.SetEnabled(!evt.newValue);
+                
+                // Apply immediately so Start Server uses the correct image
+                _config.dockerImage = newImage;
+                MCPLogger.Log($"[MCPDashboard] Docker image set to: {newImage}");
+            });
+            container.Add(_useTestImageToggle);
+
+            // Disable Docker Image field if using test image
+            _dockerImageField.SetEnabled(_config.dockerImage != "unity-mcp-server:test");
 
             // Auto-connect toggle
             _autoConnectToggle = new Toggle("Auto-connect on startup");
@@ -1003,6 +1026,8 @@ Note: Cursor must support MCP for this to work.";
                 _serverPortField.value = _config.serverPort;
                 _serverUrlField.value = _config.serverUrl;
                 _dockerImageField.value = _config.dockerImage;
+                _useTestImageToggle.value = false;
+                _dockerImageField.SetEnabled(true);
                 _autoConnectToggle.value = _config.autoConnect;
                 _autoStartToggle.value = _config.autoStartContainer;
                 _enableMcpLogsToggle.value = _config.enableMcpLogs;
@@ -1020,6 +1045,11 @@ Note: Cursor must support MCP for this to work.";
         {
             // Set Docker image to local test image for development
             _dockerImageField.value = "unity-mcp-server:test";
+            _useTestImageToggle.value = true;
+            _dockerImageField.SetEnabled(false);
+            
+            // Apply immediately so Start Server uses the correct image
+            _config.dockerImage = "unity-mcp-server:test";
 
             MCPLogger.Log("[MCPDashboard] Loaded dev configuration (unity-mcp-server:test)");
         }
