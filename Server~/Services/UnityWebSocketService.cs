@@ -12,7 +12,12 @@ public class UnityWebSocketService
     private readonly EditorSessionManager _sessionManager;
     private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object?>> _pendingRequests = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionPingTimers = new();
     private readonly JsonSerializerOptions _jsonOptions;
+
+    // Keep-alive configuration
+    private const int PingIntervalSeconds = 15;
+    private const int DefaultTimeoutSeconds = 30;
 
     // Event raised when Unity notifies about a resource update
     public event Action<string>? ResourceUpdated;
@@ -36,6 +41,11 @@ public class UnityWebSocketService
 
         _logger.LogInformation("Unity Editor connected: {ConnectionId}", connectionId);
 
+        // Start keep-alive ping timer for this connection
+        var pingCts = new CancellationTokenSource();
+        _connectionPingTimers.TryAdd(connectionId, pingCts);
+        _ = StartKeepAlivePingAsync(webSocket, connectionId, pingCts.Token);
+
         try
         {
             await ReceiveMessagesAsync(webSocket, connectionId);
@@ -46,6 +56,13 @@ public class UnityWebSocketService
         }
         finally
         {
+            // Stop keep-alive ping timer
+            if (_connectionPingTimers.TryRemove(connectionId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+
             _connections.TryRemove(connectionId, out _);
             _sessionManager.UnregisterEditor(connectionId);
             if (webSocket.State == WebSocketState.Open)
@@ -54,6 +71,62 @@ public class UnityWebSocketService
             }
             webSocket.Dispose();
             _logger.LogInformation("Unity Editor disconnected: {ConnectionId}", connectionId);
+        }
+    }
+
+    /// <summary>
+    /// Sends periodic WebSocket pings to keep the connection alive.
+    /// This runs on a background thread and doesn't require Unity's main thread.
+    /// </summary>
+    private async Task StartKeepAlivePingAsync(WebSocket webSocket, string connectionId, CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Starting keep-alive ping for connection {ConnectionId}", connectionId);
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && webSocket.State == WebSocketState.Open)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(PingIntervalSeconds), cancellationToken);
+
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    try
+                    {
+                        // Send a JSON-RPC ping notification
+                        // Unity can respond to this from its background WebSocket thread
+                        var pingNotification = new JsonRpcNotification
+                        {
+                            Method = "unity.ping",
+                            Params = new { timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() }
+                        };
+
+                        var json = JsonSerializer.Serialize(pingNotification, _jsonOptions);
+                        var bytes = Encoding.UTF8.GetBytes(json);
+
+                        await webSocket.SendAsync(
+                            new ArraySegment<byte>(bytes),
+                            WebSocketMessageType.Text,
+                            true,
+                            cancellationToken);
+
+                        _logger.LogDebug("Sent keep-alive ping to {ConnectionId}", connectionId);
+                    }
+                    catch (WebSocketException ex)
+                    {
+                        _logger.LogWarning(ex, "Keep-alive ping failed for {ConnectionId}, connection may be dead", connectionId);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cancellation when connection closes
+            _logger.LogDebug("Keep-alive ping stopped for {ConnectionId}", connectionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in keep-alive ping for {ConnectionId}", connectionId);
         }
     }
 
@@ -352,7 +425,7 @@ public class UnityWebSocketService
     /// <summary>
     /// Send a request to a specific Unity Editor and wait for the response
     /// </summary>
-    public async Task<T?> SendRequestToEditorAsync<T>(string editorConnectionId, string method, object? parameters, int timeoutSeconds = 10)
+    public async Task<T?> SendRequestToEditorAsync<T>(string editorConnectionId, string method, object? parameters, int timeoutSeconds = DefaultTimeoutSeconds)
     {
         if (!_connections.TryGetValue(editorConnectionId, out var connection))
         {
@@ -410,7 +483,10 @@ public class UnityWebSocketService
         else
         {
             _pendingRequests.TryRemove(requestId, out _);
-            throw new TimeoutException($"Request {requestId} to editor {editorConnectionId} timed out after {timeoutSeconds} seconds");
+            throw new TimeoutException(
+                $"Request to Unity Editor timed out after {timeoutSeconds} seconds. " +
+                "This may happen if Unity Editor is unfocused or minimized - operations will complete when Unity regains focus. " +
+                "You can also try increasing the timeout.");
         }
     }
 
@@ -418,7 +494,7 @@ public class UnityWebSocketService
     /// Send a request to the Unity Editor selected for the current MCP session and wait for the response.
     /// Uses smart auto-selection.
     /// </summary>
-    public async Task<T?> SendRequestToCurrentSessionEditorAsync<T>(string method, object? parameters, int timeoutSeconds = 10)
+    public async Task<T?> SendRequestToCurrentSessionEditorAsync<T>(string method, object? parameters, int timeoutSeconds = DefaultTimeoutSeconds)
     {
         var sessionId = McpSessionContext.CurrentSessionId;
         if (string.IsNullOrEmpty(sessionId))
@@ -448,7 +524,7 @@ public class UnityWebSocketService
     /// <summary>
     /// Send a request to Unity and wait for the response (legacy method - sends to first editor)
     /// </summary>
-    public async Task<T?> SendRequestAsync<T>(string method, object? parameters, int timeoutSeconds = 10)
+    public async Task<T?> SendRequestAsync<T>(string method, object? parameters, int timeoutSeconds = DefaultTimeoutSeconds)
     {
         if (_connections.IsEmpty)
         {
@@ -509,7 +585,10 @@ public class UnityWebSocketService
         else
         {
             _pendingRequests.TryRemove(requestId, out _);
-            throw new TimeoutException($"Request {requestId} to Unity timed out after {timeoutSeconds} seconds");
+            throw new TimeoutException(
+                $"Request to Unity Editor timed out after {timeoutSeconds} seconds. " +
+                "This may happen if Unity Editor is unfocused or minimized - operations will complete when Unity regains focus. " +
+                "You can also try increasing the timeout.");
         }
     }
 }

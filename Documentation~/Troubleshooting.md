@@ -7,6 +7,7 @@ This guide covers common issues you may encounter when using Unity MCP Server an
 - [Installation Issues](#installation-issues)
 - [Docker Issues](#docker-issues)
 - [Connection Issues](#connection-issues)
+  - [Operations timeout when Unity is unfocused](#operations-timeout-when-unity-is-unfocusedminimized)
 - [Server Issues](#server-issues)
 - [Unity Integration Issues](#unity-integration-issues)
 - [Performance Issues](#performance-issues)
@@ -266,6 +267,48 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 4. **Proxy/VPN conflicts**
    - Try disabling VPN
    - Configure proxy settings in Docker
+
+### Operations timeout when Unity is unfocused/minimized
+
+**Symptom:** MCP operations timeout or appear disconnected when Unity Editor is not in the foreground (e.g., when you're working in your IDE)
+
+**Root Cause:** This is a fundamental Unity limitation. When Unity Editor loses focus, its main thread update loop is throttled. Since Unity APIs must be called from the main thread, MCP operations that require Unity API calls (creating GameObjects, modifying scenes, etc.) get queued and wait for the main thread to process them.
+
+**What's happening:**
+- The WebSocket connection stays alive (handled by background thread)
+- The server sends keep-alive pings which Unity responds to from its background thread
+- Operations requiring Unity APIs are queued and will complete when Unity regains focus
+- The server uses a 30-second default timeout to accommodate brief focus loss
+
+**Solutions:**
+
+1. **Keep Unity in focus when using MCP tools:**
+   - Use a multi-monitor setup with Unity visible
+   - Or quickly switch to Unity after triggering MCP operations
+
+2. **Increase operation timeout if needed:**
+   - In Unity: Open MCP Configuration asset (`Assets/Resources/MCPConfiguration.asset`)
+   - Increase `Operation Timeout` (default: 30 seconds, max: 120 seconds)
+   - This gives more time for Unity to process when briefly unfocused
+
+3. **Use split screen / multiple monitors:**
+   - Keep Unity Editor visible alongside your IDE
+   - Even partially visible, Unity will continue processing
+
+4. **Understand the behavior:**
+   - Operations are NOT lost - they're queued
+   - When Unity regains focus, queued operations execute
+   - The connection stays alive via ping/pong mechanism
+   - Error messages indicate Unity may be unfocused (not disconnected)
+
+**What the error looks like:**
+```
+Request to Unity Editor timed out after 30 seconds. 
+This may happen if Unity Editor is unfocused or minimized - 
+operations will complete when Unity regains focus.
+```
+
+**Technical note:** This is an inherent Unity Editor limitation. Unity's `EditorApplication.update` callback, which processes the MCP message queue, is throttled when the editor is unfocused. There is no way to force Unity's main thread to run from a background thread.
 
 ## Server Issues
 

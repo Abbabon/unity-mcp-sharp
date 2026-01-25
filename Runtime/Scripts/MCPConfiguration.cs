@@ -40,6 +40,11 @@ namespace UnityMCPSharp
         [Range(1, 30)]
         public int retryDelay = 5;
 
+        [Header("Background Behavior")]
+        [Tooltip("Timeout for MCP operations in seconds. Increase this if Unity is often unfocused/minimized when using MCP tools. Operations are queued and will complete when Unity regains focus.")]
+        [Range(10, 120)]
+        public int operationTimeout = 30;
+
         [Header("Logging")]
         [Tooltip("Enable MCP logs in Unity console (connection, protocol, operations)")]
         public bool enableMcpLogs = true;
@@ -162,6 +167,7 @@ namespace UnityMCPSharp
             autoStartContainer = true;
             retryAttempts = 3;
             retryDelay = 5;
+            operationTimeout = 30;
             enableMcpLogs = true;
             verboseLogging = false;
             maxLogBuffer = 500;

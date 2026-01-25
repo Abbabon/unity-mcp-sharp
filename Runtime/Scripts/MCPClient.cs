@@ -215,6 +215,14 @@ namespace UnityMCPSharp
 
                 if (!string.IsNullOrEmpty(jsonRpc.method))
                 {
+                    // Handle ping immediately from background thread (no main thread needed)
+                    // This keeps the connection alive even when Unity is unfocused
+                    if (jsonRpc.method == "unity.ping")
+                    {
+                        _ = SendPongAsync(jsonRpc.@params);
+                        return;
+                    }
+
                     // Check if this is a request (has both method and id) or notification (method only)
                     if (!string.IsNullOrEmpty(jsonRpc.id))
                     {
@@ -237,6 +245,44 @@ namespace UnityMCPSharp
             catch (Exception ex)
             {
                 MCPLogger.LogError($"[MCPClient] Error parsing message: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Sends a pong response to the server's ping.
+        /// This runs on the background WebSocket thread and doesn't require Unity's main thread.
+        /// </summary>
+        private async Task SendPongAsync(object pingParams)
+        {
+            try
+            {
+                if (!IsConnected)
+                    return;
+
+                var pong = new JsonRpcNotification
+                {
+                    jsonrpc = "2.0",
+                    method = "unity.pong",
+                    @params = new
+                    {
+                        originalTimestamp = pingParams,
+                        responseTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    }
+                };
+
+                var json = JsonConvert.SerializeObject(pong);
+                var bytes = Encoding.UTF8.GetBytes(json);
+
+                await _webSocket.SendAsync(
+                    new ArraySegment<byte>(bytes),
+                    WebSocketMessageType.Text,
+                    true,
+                    _cancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                // Don't log errors for pong failures - connection may be closing
+                MCPLogger.LogVerbose($"[MCPClient] Pong send failed: {ex.Message}");
             }
         }
 
