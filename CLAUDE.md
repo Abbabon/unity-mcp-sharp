@@ -40,6 +40,7 @@ unity-mcp-sharp/
 │
 ├── Scripts~/                # Development scripts (excluded from Unity package via ~)
 │   ├── rebuild.sh           # Build .NET server + Docker image
+│   ├── sign-package.sh      # Sign UPM package for Unity 6+
 │   ├── start-mcp-server.sh  # Start MCP server container
 │   └── test.sh              # Smoke test script
 │
@@ -62,6 +63,7 @@ unity-mcp-sharp/
 ├── Documentation~/          # User documentation (excluded from package)
 │   ├── Installation.md
 │   ├── Configuration.md
+│   ├── PackageSigning.md    # Unity 6+ package signing guide
 │   ├── Troubleshooting.md
 │   ├── Testing.md
 │   └── MultiEditor-TechnicalRundown.md  # Technical deep-dive docs
@@ -164,7 +166,7 @@ dotnet build
 # Run locally (no Docker)
 dotnet run
 
-# Server will be available at http://localhost:8080
+# Server will be available at http://localhost:3727
 ```
 
 #### Unity Package Development
@@ -538,11 +540,11 @@ When creating a new MCP tool, verify:
 # Or manually:
 cd Server~
 docker build -t unity-mcp-server:test .
-docker run -p 8080:8080 unity-mcp-server:test
+docker run -p 3727:3727 unity-mcp-server:test
 
 # Test endpoints
-curl http://localhost:8080/
-curl http://localhost:8080/health
+curl http://localhost:3727/
+curl http://localhost:3727/health
 
 # Run smoke tests
 ./Scripts~/test.sh
@@ -557,7 +559,7 @@ curl http://localhost:8080/health
 5. Test tools via IDE (VS Code, Cursor) or MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 #### Integration Test Scenario (Pre-Release Validation)
@@ -657,7 +659,7 @@ docker build -t unity-mcp-server .
 docker buildx build --platform linux/amd64,linux/arm64 -t unity-mcp-server .
 
 # Test the image
-docker run --rm -p 8080:8080 unity-mcp-server
+docker run --rm -p 3727:3727 unity-mcp-server
 ```
 
 ### Running Tests
@@ -702,12 +704,62 @@ dotnet test /p:CollectCoverage=true
 
 ### Branch Strategy
 
-- `main` - Stable releases, protected
-- `develop` - Integration branch (optional)
+- `main` - Stable releases only, protected. Only receives merges from `develop` during version releases.
+- `develop` - Integration branch for all features. This is the default PR target.
 - `feature/*` - Feature branches
 - `fix/*` - Bug fix branches
 
-**IMPORTANT REMINDER:** Always create a feature branch (e.g., `feature/new-tool`, `fix/bug-name`) before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+**Branch Naming Convention:**
+- `feature/ISSUE_NUMBER_name` - When working on a GitHub issue (e.g., `feature/42_prefab-support`)
+- `feature/name` - When no issue exists (e.g., `feature/websocket-improvements`)
+- `fix/ISSUE_NUMBER_name` - Bug fix with issue (e.g., `fix/15_connection-timeout`)
+- `fix/name` - Bug fix without issue (e.g., `fix/typo-in-readme`)
+
+**IMPORTANT REMINDER:** Always create a feature branch before starting new work. Do not commit directly to `develop` or `main`. This enables proper PR reviews and keeps the history clean.
+
+### Pull Request Targets
+
+**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
+
+| PR Type | Target Branch | Example |
+|---------|---------------|---------|
+| Feature PR | `develop` | `feature/42_prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/15_websocket-timeout` → `develop` |
+| Hotfix PR | `main` (rare) | Critical production fixes only |
+| Release PR | `main` | `develop` → `main` (version release) |
+
+**Workflow:**
+1. Create feature branch from `develop`
+2. Open PR targeting `develop`
+3. Merge feature into `develop`
+4. When ready for release: merge `develop` → `main` and tag
+
+**If you accidentally target `main`:** Change the PR base branch immediately:
+```bash
+gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
+```
+
+### Pull Request Targets
+
+**CRITICAL: Feature PRs MUST target `develop`, NEVER `main`!**
+
+| PR Type | Target Branch | Example |
+|---------|---------------|---------|
+| Feature PR | `develop` | `feature/prefab-system` → `develop` |
+| Bug fix PR | `develop` | `fix/websocket-timeout` → `develop` |
+| Hotfix PR | `main` (rare) | Critical production fixes only |
+| Release PR | `main` | `develop` → `main` (version release) |
+
+**Workflow:**
+1. Create feature branch from `develop`
+2. Open PR targeting `develop`
+3. Merge feature into `develop`
+4. When ready for release: merge `develop` → `main` and tag
+
+**If you accidentally target `main`:** Change the PR base branch immediately:
+```bash
+gh api repos/OWNER/REPO/pulls/PR_NUMBER -X PATCH -f base=develop
+```
 
 ### Commit Messages
 
@@ -724,7 +776,10 @@ ci: add multi-arch Docker build
 ### Making Changes
 
 ```bash
-# Create feature branch
+# Create feature branch (with issue number if available)
+git checkout -b feature/42_amazing-feature
+
+# Or without issue number
 git checkout -b feature/amazing-feature
 
 # Make changes and commit
@@ -732,7 +787,7 @@ git add .
 git commit -m "feat: add amazing feature"
 
 # Push to GitHub
-git push origin feature/amazing-feature
+git push origin feature/42_amazing-feature
 
 # Create Pull Request on GitHub
 ```
@@ -817,10 +872,10 @@ dotnet build
 
 ### WebSocket connection fails locally
 
-- Check server is running: `curl http://localhost:8080/health`
-- Verify port 8080 is not in use
+- Check server is running: `curl http://localhost:3727/health`
+- Verify port 3727 is not in use
 - Check firewall settings
-- Try connecting to `ws://127.0.0.1:8080/ws` instead of localhost
+- Try connecting to `ws://127.0.0.1:3727/ws` instead of localhost
 
 ### Docker build fails
 
@@ -851,6 +906,23 @@ Runs comprehensive smoke tests for the server:
 ./Scripts~/test.sh
 ```
 
+### sign-package.sh
+Signs the UPM package for Unity 6+ compatibility (requires Unity 6.3+ and Unity Cloud org):
+```bash
+# First, set up credentials in .env (copy from .env.example)
+cp .env.example .env
+# Edit .env with your Unity credentials
+
+# Sign the package
+./Scripts~/sign-package.sh
+
+# Or with a specific version
+./Scripts~/sign-package.sh 0.6.0
+
+# Sign and upload to GitHub release
+./Scripts~/sign-package.sh --upload
+```
+
 ## Useful Commands
 
 ```bash
@@ -858,6 +930,7 @@ Runs comprehensive smoke tests for the server:
 ./Scripts~/rebuild.sh           # Build server + Docker image
 ./Scripts~/start-mcp-server.sh  # Start MCP server container
 ./Scripts~/test.sh              # Run smoke tests
+./Scripts~/sign-package.sh      # Sign UPM package for Unity 6+
 
 # Server development
 cd Server~
@@ -868,7 +941,7 @@ dotnet build -c Release         # Production build
 # Docker operations (manual)
 cd Server~
 docker build -t unity-mcp-server:test .   # Build image
-docker run -p 8080:8080 unity-mcp-server:test  # Run container
+docker run -p 3727:3727 unity-mcp-server:test  # Run container
 docker logs unity-mcp-server    # View logs
 docker exec -it unity-mcp-server sh  # Enter container
 
@@ -878,7 +951,7 @@ git status                      # Check working tree
 git diff                        # View changes
 
 # Testing MCP
-npx @modelcontextprotocol/inspector http://localhost:8080/mcp
+npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
 
 ## Release Process
@@ -891,6 +964,33 @@ This section documents the complete process for publishing a new version to Open
 - Docker image published to ghcr.io (automatic on push to main)
 - All tests passing
 - Version number decided (follow [Semantic Versioning](https://semver.org/))
+- (Optional) Package signing configured for Unity 6+ compatibility
+
+### Package Signing Setup (Unity 6+ Compatibility)
+
+To enable automated package signing in CI/CD:
+
+**GitHub Secrets Required** (Settings → Secrets and variables → Actions):
+| Secret | Description |
+|--------|-------------|
+| `UNITY_EMAIL` | Unity account email |
+| `UNITY_PASSWORD` | Unity account password |
+| `UNITY_ORG_ID` | Unity Cloud Organization ID |
+| `UNITY_LICENSE` | Unity license file content (`.ulf` file) |
+
+**GitHub Variable Required** (Settings → Secrets and variables → Actions → Variables):
+| Variable | Value |
+|----------|-------|
+| `ENABLE_PACKAGE_SIGNING` | `true` |
+
+**Get Organization ID:** https://cloud.unity.com/account/my-organizations
+
+**Get Unity License for CI:**
+1. Run: `unity-editor -batchmode -createManualActivationFile`
+2. Upload `.alf` to https://license.unity3d.com/manual
+3. Download `.ulf` and paste contents as `UNITY_LICENSE` secret
+
+If signing is not configured, releases still work - just without signed packages.
 
 ### Release Checklist
 
@@ -973,10 +1073,12 @@ gh run view <run-id>
 The workflow will:
 - Extract version from tag
 - Verify `package.json` version matches tag
+- (If signing enabled) Sign the UPM package with Unity Cloud credentials
 - Create GitHub Release with:
   - Release notes from CHANGELOG
   - Docker pull command
   - OpenUPM installation command
+  - Signed `.tgz` package (if signing enabled)
 - Display manual steps for OpenUPM submission
 
 #### 7. Submit to OpenUPM

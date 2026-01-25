@@ -48,7 +48,7 @@ The Unity MCP package will automatically check for Docker and guide you through 
 1. After installation, go to `Tools > Unity MCP Server > Dashboard` in Unity
 2. The dashboard will check if Docker is installed
 3. Click "Start Server" to download and run the MCP server container
-4. The server will start on `http://localhost:8080`
+4. The server will start on `http://localhost:3727`
 
 ## Verifying Installation
 

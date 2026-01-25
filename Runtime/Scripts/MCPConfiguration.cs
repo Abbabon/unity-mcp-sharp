@@ -9,11 +9,15 @@ namespace UnityMCPSharp
     public class MCPConfiguration : ScriptableObject
     {
         [Header("Server Settings")]
+        [Tooltip("Port for the MCP server (used for Docker container). Must be 1024-65535.")]
+        [Range(1024, 65535)]
+        public int serverPort = 3727;
+
         [Tooltip("WebSocket URL of the MCP server")]
-        public string serverUrl = "ws://localhost:8080/ws";
+        public string serverUrl = "ws://localhost:3727/ws";
 
         [Tooltip("HTTP URL of the MCP server")]
-        public string httpUrl = "http://localhost:8080";
+        public string httpUrl = "http://localhost:3727";
 
         [Tooltip("Docker container name")]
         public string containerName = "unity-mcp-server";
@@ -37,7 +41,10 @@ namespace UnityMCPSharp
         public int retryDelay = 5;
 
         [Header("Logging")]
-        [Tooltip("Enable verbose logging")]
+        [Tooltip("Enable MCP logs in Unity console (connection, protocol, operations)")]
+        public bool enableMcpLogs = true;
+
+        [Tooltip("Enable verbose/debug logging (more detailed output)")]
         public bool verboseLogging = false;
 
         [Tooltip("Maximum number of console logs to buffer")]
@@ -74,7 +81,7 @@ namespace UnityMCPSharp
                     {
 #if UNITY_EDITOR
                         // Auto-create config file on first run
-                        Debug.Log("[MCPConfiguration] No configuration found. Creating default configuration file...");
+                        MCPLogger.Log("[MCPConfiguration] No configuration found. Creating default configuration file...");
                         _instance = CreateInstance<MCPConfiguration>();
 
                         var path = "Assets/Resources";
@@ -86,10 +93,10 @@ namespace UnityMCPSharp
                         var assetPath = $"{path}/MCPConfiguration.asset";
                         UnityEditor.AssetDatabase.CreateAsset(_instance, assetPath);
                         UnityEditor.AssetDatabase.SaveAssets();
-                        Debug.Log($"[MCPConfiguration] Created default configuration at {assetPath}");
+                        MCPLogger.Log($"[MCPConfiguration] Created default configuration at {assetPath}");
 #else
                         // Runtime fallback (shouldn't happen in normal use)
-                        Debug.LogWarning("[MCPConfiguration] No configuration found. Using in-memory defaults.");
+                        MCPLogger.LogWarning("[MCPConfiguration] No configuration found. Using in-memory defaults.");
                         _instance = CreateInstance<MCPConfiguration>();
 #endif
                     }
@@ -124,14 +131,14 @@ namespace UnityMCPSharp
                 // Check if file already exists
                 if (System.IO.File.Exists(assetPath))
                 {
-                    Debug.LogWarning($"[MCPConfiguration] Config file already exists at {assetPath}. Loading existing instead.");
+                    MCPLogger.LogWarning($"[MCPConfiguration] Config file already exists at {assetPath}. Loading existing instead.");
                     _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<MCPConfiguration>(assetPath);
                 }
                 else
                 {
                     UnityEditor.AssetDatabase.CreateAsset(this, assetPath);
                     UnityEditor.AssetDatabase.SaveAssets();
-                    Debug.Log($"[MCPConfiguration] Created and saved to {assetPath}");
+                    MCPLogger.Log($"[MCPConfiguration] Created and saved to {assetPath}");
                 }
             }
             else
@@ -139,21 +146,23 @@ namespace UnityMCPSharp
                 // Save existing asset
                 UnityEditor.EditorUtility.SetDirty(this);
                 UnityEditor.AssetDatabase.SaveAssets();
-                Debug.Log($"[MCPConfiguration] Configuration saved");
+                MCPLogger.Log($"[MCPConfiguration] Configuration saved");
             }
 #endif
         }
 
         public void ResetToDefaults()
         {
-            serverUrl = "ws://localhost:8080/ws";
-            httpUrl = "http://localhost:8080";
+            serverPort = 3727;
+            serverUrl = "ws://localhost:3727/ws";
+            httpUrl = "http://localhost:3727";
             containerName = "unity-mcp-server";
             dockerImage = "ghcr.io/abbabon/unity-mcp-server:latest";
             autoConnect = true;
             autoStartContainer = true;
             retryAttempts = 3;
             retryDelay = 5;
+            enableMcpLogs = true;
             verboseLogging = false;
             maxLogBuffer = 500;
             showVisualFeedback = true;
@@ -169,7 +178,7 @@ namespace UnityMCPSharp
                 UnityEditor.AssetDatabase.SaveAssets();
             }
 #endif
-            Debug.Log("[MCPConfiguration] Reset to default values");
+            MCPLogger.Log("[MCPConfiguration] Reset to default values");
         }
     }
 }

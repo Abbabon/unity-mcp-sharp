@@ -25,12 +25,14 @@ namespace UnityMCPSharp.Editor
         private Button _connectButton;
         private Button _disconnectButton;
         private Button _refreshButton;
+        private IntegerField _serverPortField;
         private TextField _serverUrlField;
         private TextField _dockerImageField;
         private ScrollView _logsScrollView;
         private ScrollView _operationsScrollView;
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
+        private Toggle _enableMcpLogsToggle;
         private Toggle _verboseLoggingToggle;
         private Toggle _showParametersToggle;
 
@@ -520,6 +522,13 @@ namespace UnityMCPSharp.Editor
 
             container.Add(statusIndicator);
 
+            // Server Port
+            _serverPortField = new IntegerField("Server Port");
+            _serverPortField.value = _config.serverPort;
+            _serverPortField.tooltip = "Port for the MCP server (used for Docker container)";
+            _serverPortField.style.marginBottom = 5;
+            container.Add(_serverPortField);
+
             // Server URL
             _serverUrlField = new TextField("Server URL");
             _serverUrlField.value = _config.serverUrl;
@@ -544,9 +553,17 @@ namespace UnityMCPSharp.Editor
             _autoStartToggle.style.marginBottom = 5;
             container.Add(_autoStartToggle);
 
+            // Enable MCP logs toggle
+            _enableMcpLogsToggle = new Toggle("Enable MCP logs in Console");
+            _enableMcpLogsToggle.value = _config.enableMcpLogs;
+            _enableMcpLogsToggle.tooltip = "Show MCP connection, protocol, and operation logs in Unity Console";
+            _enableMcpLogsToggle.style.marginBottom = 5;
+            container.Add(_enableMcpLogsToggle);
+
             // Verbose logging toggle
-            _verboseLoggingToggle = new Toggle("Verbose logging");
+            _verboseLoggingToggle = new Toggle("Verbose logging (debug)");
             _verboseLoggingToggle.value = _config.verboseLogging;
+            _verboseLoggingToggle.tooltip = "Show additional debug information (only when MCP logs enabled)";
             _verboseLoggingToggle.style.marginBottom = 15;
             container.Add(_verboseLoggingToggle);
 
@@ -562,7 +579,13 @@ namespace UnityMCPSharp.Editor
 
             var resetButton = new Button(ResetConfiguration) { text = "Reset to Defaults" };
             resetButton.style.flexGrow = 1;
+            resetButton.style.marginRight = 5;
             buttonRow.Add(resetButton);
+
+            var devButton = new Button(LoadDevConfiguration) { text = "Load Dev Config" };
+            devButton.style.flexGrow = 1;
+            devButton.tooltip = "Set Docker image to local test image (unity-mcp-server:test)";
+            buttonRow.Add(devButton);
 
             container.Add(buttonRow);
 
@@ -685,10 +708,10 @@ namespace UnityMCPSharp.Editor
 #
 # Setup command:
 
-claude mcp add --transport http unity-mcp http://localhost:8080/mcp
+claude mcp add --transport http unity-mcp http://localhost:3727/mcp
 
 # This connects Claude Code to:
-# - Unity-managed container on port 8080
+# - Unity-managed container on port 3727
 # - HTTP endpoint at /mcp (Streamable HTTP protocol)
 # - Tools are available when Unity is running";
                     instructions = $@"Setup Instructions:
@@ -697,7 +720,7 @@ claude mcp add --transport http unity-mcp http://localhost:8080/mcp
 2. Wait for 'Running' status
 3. Open your terminal and run:
 
-   claude mcp add --transport http unity-mcp http://localhost:8080/mcp
+   claude mcp add --transport http unity-mcp http://localhost:3727/mcp
 
 4. In Claude Code, type /mcp to verify 'unity-mcp' shows as connected
 5. Use the tools - they work only when Unity is running!
@@ -720,7 +743,7 @@ Note: Unity manages the server lifecycle. Claude Code just connects to it.";
 {
   ""mcpServers"": {
     ""unity-mcp"": {
-      ""url"": ""http://localhost:8080/mcp""
+      ""url"": ""http://localhost:3727/mcp""
     }
   }
 }";
@@ -749,7 +772,7 @@ Available MCP Tools:
   ""mcp"": {
     ""servers"": {
       ""unity-mcp"": {
-        ""url"": ""http://localhost:8080/mcp""
+        ""url"": ""http://localhost:3727/mcp""
       }
     }
   }
@@ -779,7 +802,7 @@ Note: GitHub Copilot must support MCP for this to work.";
 {
   ""mcpServers"": {
     ""unity-mcp"": {
-      ""url"": ""http://localhost:8080/mcp""
+      ""url"": ""http://localhost:3727/mcp""
     }
   }
 }";
@@ -810,7 +833,7 @@ Note: Cursor must support MCP for this to work.";
         private void CopyToClipboard(string text)
         {
             EditorGUIUtility.systemCopyBuffer = text;
-            Debug.Log("[MCPDashboard] Configuration copied to clipboard");
+            MCPLogger.Log("[MCPDashboard] Configuration copied to clipboard");
         }
 
         // Event Handlers
@@ -853,7 +876,7 @@ Note: Cursor must support MCP for this to work.";
         {
             EditorApplication.delayCall += () =>
             {
-                Debug.LogError($"[MCPDashboard] Client error: {error}");
+                MCPLogger.LogError($"[MCPDashboard] Client error: {error}");
             };
         }
 
@@ -918,17 +941,51 @@ Note: Cursor must support MCP for this to work.";
 
         private void SaveConfiguration()
         {
-            _config.serverUrl = _serverUrlField.value;
+            // Validate port range
+            var port = _serverPortField.value;
+            if (port < 1024 || port > 65535)
+            {
+                MCPLogger.LogError($"[MCPDashboard] Invalid port {port}. Must be between 1024 and 65535.");
+                _serverPortField.value = _config.serverPort; // Revert to current value
+                return;
+            }
+
+            // Auto-update URLs if port changed
+            var portChanged = port != _config.serverPort;
+            if (portChanged)
+            {
+                _config.serverUrl = $"ws://localhost:{port}/ws";
+                _config.httpUrl = $"http://localhost:{port}";
+                _serverUrlField.value = _config.serverUrl;
+                MCPLogger.Log($"[MCPDashboard] Updated URLs to use port {port}");
+            }
+            else
+            {
+                _config.serverUrl = _serverUrlField.value;
+            }
+
+            _config.serverPort = port;
             _config.dockerImage = _dockerImageField.value;
             _config.autoConnect = _autoConnectToggle.value;
             _config.autoStartContainer = _autoStartToggle.value;
+            _config.enableMcpLogs = _enableMcpLogsToggle.value;
             _config.verboseLogging = _verboseLoggingToggle.value;
 
             _config.SaveToResources();
 
-            Debug.Log("[MCPDashboard] Configuration saved");
+            // Update MCPClient URL if port changed
+            if (portChanged && _serverManager != null)
+            {
+                _ = _serverManager.UpdateClientUrlAsync(_config.serverUrl);
+            }
 
-            // Refresh the dashboard to update status indicator
+            // Invalidate logger cache so new settings take effect immediately
+            MCPLogger.InvalidateCache();
+
+            MCPLogger.Log("[MCPDashboard] Configuration saved");
+
+            // Full UI refresh needed to update status indicator (in-memory vs saved state)
+            rootVisualElement.Clear();
             CreateGUI();
         }
 
@@ -943,17 +1000,28 @@ Note: Cursor must support MCP for this to work.";
                 _config.ResetToDefaults();
 
                 // Refresh UI fields
+                _serverPortField.value = _config.serverPort;
                 _serverUrlField.value = _config.serverUrl;
                 _dockerImageField.value = _config.dockerImage;
                 _autoConnectToggle.value = _config.autoConnect;
                 _autoStartToggle.value = _config.autoStartContainer;
+                _enableMcpLogsToggle.value = _config.enableMcpLogs;
                 _verboseLoggingToggle.value = _config.verboseLogging;
 
-                Debug.Log("[MCPDashboard] Configuration reset to defaults");
+                MCPLogger.Log("[MCPDashboard] Configuration reset to defaults");
 
                 // Refresh the dashboard to update status indicator
+                rootVisualElement.Clear();
                 CreateGUI();
             }
+        }
+
+        private void LoadDevConfiguration()
+        {
+            // Set Docker image to local test image for development
+            _dockerImageField.value = "unity-mcp-server:test";
+
+            MCPLogger.Log("[MCPDashboard] Loaded dev configuration (unity-mcp-server:test)");
         }
     }
 }

@@ -7,6 +7,10 @@ using UnityMcpServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure port from UNITY_MCP_ASPPORT environment variable (default: 3727)
+var port = Environment.GetEnvironmentVariable("UNITY_MCP_ASPPORT") ?? "3727";
+builder.WebHost.UseUrls($"http://+:{port}");
+
 // Configure logging - send to stderr to keep stdout clean with timestamps
 builder.Logging.ClearProviders();
 builder.Logging.AddSimpleConsole(options =>

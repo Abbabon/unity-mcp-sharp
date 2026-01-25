@@ -35,8 +35,26 @@ namespace UnityMCPSharp
 
         public bool IsConnected => _isConnected && _webSocket?.State == WebSocketState.Open;
         public bool AutoReconnect { get => _autoReconnect; set => _autoReconnect = value; }
+        public string ServerUrl => _serverUrl;
 
-        public MCPClient(string serverUrl = "ws://localhost:8080/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
+        /// <summary>
+        /// Update the server URL. If connected, disconnects first.
+        /// </summary>
+        public async Task UpdateServerUrlAsync(string newUrl)
+        {
+            if (_serverUrl == newUrl) return;
+
+            MCPLogger.Log($"[MCPClient] Updating server URL from {_serverUrl} to {newUrl}");
+
+            if (IsConnected)
+            {
+                await DisconnectAsync();
+            }
+
+            _serverUrl = newUrl;
+        }
+
+        public MCPClient(string serverUrl = "ws://localhost:3727/ws", bool autoReconnect = true, int reconnectAttempts = 3, int reconnectDelay = 5)
         {
             _serverUrl = serverUrl;
             _autoReconnect = autoReconnect;
@@ -48,7 +66,7 @@ namespace UnityMCPSharp
         {
             if (_isConnecting || IsConnected)
             {
-                Debug.LogWarning("[MCPClient] Already connected or connecting");
+                MCPLogger.LogWarning("[MCPClient] Already connected or connecting");
                 return IsConnected;
             }
 
@@ -61,14 +79,14 @@ namespace UnityMCPSharp
                 _cancellationTokenSource?.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                Debug.Log($"[MCPClient] Connecting to {_serverUrl}...");
+                MCPLogger.Log($"[MCPClient] Connecting to {_serverUrl}...");
 
                 await _webSocket.ConnectAsync(new Uri(_serverUrl), _cancellationTokenSource.Token);
 
                 _isConnected = true;
                 _isConnecting = false;
 
-                Debug.Log("[MCPClient] Connected successfully");
+                MCPLogger.Log("[MCPClient] Connected successfully");
                 OnConnected?.Invoke();
 
                 // Start receiving messages
@@ -80,7 +98,7 @@ namespace UnityMCPSharp
             {
                 _isConnected = false;
                 _isConnecting = false;
-                Debug.LogError($"[MCPClient] Connection failed: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Connection failed: {ex.Message}");
                 OnError?.Invoke($"Connection failed: {ex.Message}");
                 return false;
             }
@@ -101,12 +119,12 @@ namespace UnityMCPSharp
                 }
 
                 _isConnected = false;
-                Debug.Log("[MCPClient] Disconnected");
+                MCPLogger.Log("[MCPClient] Disconnected");
                 OnDisconnected?.Invoke("Client initiated disconnect");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPClient] Error during disconnect: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Error during disconnect: {ex.Message}");
             }
         }
 
@@ -127,7 +145,7 @@ namespace UnityMCPSharp
                     {
                         _isConnected = false;
                         var reason = result.CloseStatusDescription ?? "Server closed connection";
-                        Debug.LogWarning($"[MCPClient] Connection closed: {reason}");
+                        MCPLogger.LogWarning($"[MCPClient] Connection closed: {reason}");
                         OnDisconnected?.Invoke(reason);
 
                         // Attempt to reconnect if enabled
@@ -154,12 +172,12 @@ namespace UnityMCPSharp
             }
             catch (OperationCanceledException)
             {
-                Debug.Log("[MCPClient] Receive operation cancelled");
+                MCPLogger.Log("[MCPClient] Receive operation cancelled");
             }
             catch (Exception ex)
             {
                 _isConnected = false;
-                Debug.LogError($"[MCPClient] Error receiving messages: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Error receiving messages: {ex.Message}");
                 OnError?.Invoke($"Error receiving messages: {ex.Message}");
 
                 // Attempt to reconnect if enabled
@@ -174,19 +192,19 @@ namespace UnityMCPSharp
         {
             for (int attempt = 1; attempt <= _reconnectAttempts; attempt++)
             {
-                Debug.Log($"[MCPClient] Reconnection attempt {attempt}/{_reconnectAttempts}...");
+                MCPLogger.Log($"[MCPClient] Reconnection attempt {attempt}/{_reconnectAttempts}...");
 
                 await Task.Delay(_reconnectDelay * 1000);
 
                 var success = await ConnectAsync();
                 if (success)
                 {
-                    Debug.Log($"[MCPClient] Reconnected successfully on attempt {attempt}");
+                    MCPLogger.Log($"[MCPClient] Reconnected successfully on attempt {attempt}");
                     return;
                 }
             }
 
-            Debug.LogWarning($"[MCPClient] Failed to reconnect after {_reconnectAttempts} attempts");
+            MCPLogger.LogWarning($"[MCPClient] Failed to reconnect after {_reconnectAttempts} attempts");
         }
 
         private void HandleMessage(string message)
@@ -218,7 +236,7 @@ namespace UnityMCPSharp
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPClient] Error parsing message: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Error parsing message: {ex.Message}");
             }
         }
 
@@ -235,7 +253,7 @@ namespace UnityMCPSharp
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[MCPClient] Error processing main thread callback: {ex.Message}");
+                    MCPLogger.LogError($"[MCPClient] Error processing main thread callback: {ex.Message}");
                 }
             }
         }
@@ -244,7 +262,7 @@ namespace UnityMCPSharp
         {
             if (!IsConnected)
             {
-                Debug.LogError("[MCPClient] Cannot send notification: not connected");
+                MCPLogger.LogError("[MCPClient] Cannot send notification: not connected");
                 return;
             }
 
@@ -270,7 +288,7 @@ namespace UnityMCPSharp
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPClient] Error sending notification: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Error sending notification: {ex.Message}");
                 OnError?.Invoke($"Error sending notification: {ex.Message}");
             }
         }
@@ -279,7 +297,7 @@ namespace UnityMCPSharp
         {
             if (!IsConnected)
             {
-                Debug.LogError("[MCPClient] Cannot send response: not connected");
+                MCPLogger.LogError("[MCPClient] Cannot send response: not connected");
                 return;
             }
 
@@ -303,7 +321,7 @@ namespace UnityMCPSharp
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MCPClient] Error sending response: {ex.Message}");
+                MCPLogger.LogError($"[MCPClient] Error sending response: {ex.Message}");
                 OnError?.Invoke($"Error sending response: {ex.Message}");
             }
         }

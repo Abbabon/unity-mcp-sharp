@@ -5,9 +5,99 @@ on:
     tags:
       - 'v*'
 
+env:
+  UNITY_VERSION: 6000.3.0f1
+
 jobs:
+  # Job 1: Sign the package (optional - requires Unity secrets)
+  sign-package:
+    runs-on: ubuntu-latest
+    # Only run if Unity signing secrets are configured
+    if: ${{ vars.ENABLE_PACKAGE_SIGNING == 'true' }}
+    outputs:
+      signed: ${{ steps.sign.outcome == 'success' }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        lfs: true
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    # Cache Unity installation to speed up builds
+    - name: Cache Unity
+      uses: actions/cache@v4
+      with:
+        path: /opt/unity
+        key: unity-${{ env.UNITY_VERSION }}-linux
+
+    - name: Install Unity
+      uses: game-ci/unity-builder@v4
+      id: unity-install
+      with:
+        targetPlatform: StandaloneLinux64
+        unityVersion: ${{ env.UNITY_VERSION }}
+        # Only install, don't build
+        buildMethod: ''
+      env:
+        UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+    - name: Sign UPM Package
+      id: sign
+      env:
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        UNITY_ORG_ID: ${{ secrets.UNITY_ORG_ID }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        PACKAGE_NAME=$(jq -r '.name' package.json)
+        OUTPUT_DIR="dist"
+        EXPECTED_OUTPUT="$OUTPUT_DIR/${PACKAGE_NAME}-${VERSION}.tgz"
+        FINAL_OUTPUT="unity-mcp-sharp-${VERSION}.tgz"
+
+        mkdir -p "$OUTPUT_DIR"
+
+        # Use Unity CLI to sign the package (credentials via env vars to avoid log exposure)
+        /opt/unity/Editor/Unity -batchmode -quit \
+          -username "$UNITY_EMAIL" \
+          -password "$UNITY_PASSWORD" \
+          -upmPack "." "$OUTPUT_DIR" \
+          -cloudOrganization "$UNITY_ORG_ID" \
+          -logfile - || true
+
+        # Unity creates: dist/{package-name}-{version}.tgz
+        if [ -f "$EXPECTED_OUTPUT" ]; then
+          mv "$EXPECTED_OUTPUT" "$FINAL_OUTPUT"
+          rm -rf "$OUTPUT_DIR"
+          echo "Package signed successfully"
+          echo "output_file=$FINAL_OUTPUT" >> $GITHUB_OUTPUT
+        else
+          echo "Package signing failed"
+          ls -la "$OUTPUT_DIR" 2>/dev/null || echo "Output directory not created"
+          exit 1
+        fi
+
+    - name: Upload signed package
+      uses: actions/upload-artifact@v4
+      with:
+        name: signed-package
+        path: unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz
+        retention-days: 30
+
+  # Job 2: Create release (always runs)
   publish:
     runs-on: ubuntu-latest
+    needs: [sign-package]
+    # Run even if signing was skipped or failed
+    if: ${{ always() }}
     permissions:
       contents: write
 
@@ -36,6 +126,28 @@ jobs:
 
         echo "Version check passed: $PACKAGE_VERSION"
 
+    # Download signed package if available
+    - name: Download signed package
+      if: ${{ needs.sign-package.outputs.signed == 'true' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: signed-package
+
+    - name: Prepare release notes
+      id: release-notes
+      run: |
+        SIGNED_NOTE=""
+        if [ -f "unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz" ]; then
+          SIGNED_NOTE="### Signed Package
+        This release includes a signed \`.tgz\` package for Unity 6+ compatibility.
+        Download the attached \`unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz\` to avoid signature warnings.
+
+        "
+        fi
+        echo "signed_note<<EOF" >> $GITHUB_OUTPUT
+        echo "$SIGNED_NOTE" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -44,6 +156,7 @@ jobs:
         body: |
           ## Unity MCP Server v${{ steps.version.outputs.version }}
 
+          ${{ steps.release-notes.outputs.signed_note }}
           ### Installation via OpenUPM
           ```bash
           openupm add com.mezookan.unity-mcp-sharp
@@ -56,6 +169,14 @@ jobs:
           ```bash
           docker pull ghcr.io/${{ github.repository_owner }}/unity-mcp-server:v${{ steps.version.outputs.version }}
           ```
+
+          ### Unity 6+ Users
+          If you see package signature warnings, either:
+          1. Download the signed `.tgz` from this release (if available)
+          2. Or install via OpenUPM (warnings are informational only)
+        files: |
+          unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz
+        fail_on_unmatched_files: false
         draft: false
         prerelease: false
       env:

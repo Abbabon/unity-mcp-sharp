@@ -50,7 +50,7 @@ fi
 
 echo ""
 echo "[2/6] Running server locally..."
-dotnet run --no-build -c Release --urls http://localhost:8080 > /tmp/mcp-server.log 2>&1 &
+dotnet run --no-build -c Release --urls http://localhost:3727 > /tmp/mcp-server.log 2>&1 &
 SERVER_PID=$!
 print_info "Server started with PID: $SERVER_PID"
 sleep 3
@@ -65,7 +65,7 @@ echo ""
 echo "[3/6] Testing server endpoints..."
 
 # Test health endpoint
-if curl -s -f http://localhost:8080/health | grep -q "Healthy"; then
+if curl -s -f http://localhost:3727/health | grep -q "Healthy"; then
     print_success "Health endpoint responded"
 else
     print_error "Health endpoint failed"
@@ -73,7 +73,7 @@ else
 fi
 
 # Test root endpoint
-if curl -s -f http://localhost:8080/ | grep -q "Unity MCP Server"; then
+if curl -s -f http://localhost:3727/ | grep -q "Unity MCP Server"; then
     print_success "Root endpoint responded"
 else
     print_error "Root endpoint failed"
@@ -81,7 +81,7 @@ else
 fi
 
 # Test MCP endpoint exists
-if curl -s -f -o /dev/null -w "%{http_code}" http://localhost:8080/mcp | grep -q "200\|405"; then
+if curl -s -f -o /dev/null -w "%{http_code}" http://localhost:3727/mcp | grep -q "200\|405"; then
     print_success "MCP endpoint exists"
 else
     print_error "MCP endpoint failed"
@@ -107,7 +107,7 @@ fi
 
 echo ""
 echo "[6/6] Testing Docker container..."
-docker run -d --name mcp-smoke-test -p 8080:8080 unity-mcp-server:test
+docker run -d --name mcp-smoke-test -p 3727:3727 -e UNITY_MCP_ASPPORT=3727 unity-mcp-server:test
 sleep 5
 
 # Check container is running
@@ -118,7 +118,7 @@ if ! docker ps | grep -q mcp-smoke-test; then
 fi
 
 # Test health check
-if curl -s -f http://localhost:8080/health | grep -q "Healthy"; then
+if curl -s -f http://localhost:3727/health | grep -q "Healthy"; then
     print_success "Docker container health check passed"
 else
     print_error "Docker container health check failed"
@@ -147,4 +147,4 @@ echo "  2. Open Unity test project (TestProject~)"
 echo "  3. Tools → Unity MCP Server → Dashboard"
 echo "  4. Click Connect"
 echo "  5. Test tools using MCP Inspector:"
-echo "     npx @modelcontextprotocol/inspector http://localhost:8080/mcp"
+echo "     npx @modelcontextprotocol/inspector http://localhost:3727/mcp"
