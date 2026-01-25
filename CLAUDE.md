@@ -777,26 +777,25 @@ chore: bump version to 0.2.0
 ci: add multi-arch Docker build
 ```
 
-### Making Changes
+### Quick Reference Commands
 
 ```bash
-# 1. Check for existing issue or create one
-gh issue list --search "amazing feature"
-gh issue create --title "Feature: Amazing feature" --body "Description..."
+# Check for existing issues
+gh issue list --search "your feature"
 
-# 2. Create feature branch (with issue number)
+# Create issue
+gh issue create --title "Feature: Brief description" --body "Details..."
+
+# Create branch and start work
 git checkout develop && git pull origin develop
-git checkout -b feature/42-amazing-feature
+git checkout -b feature/42-short-title
 
-# 3. Make changes and commit
-git add .
-git commit -m "feat: add amazing feature"
+# Commit and push
+git add . && git commit -m "feat: add feature"
+git push -u origin feature/42-short-title
 
-# 4. Push to GitHub
-git push origin feature/42-amazing-feature
-
-# 5. Create Pull Request targeting develop
-gh pr create --base develop --title "feat: add amazing feature" --body "Closes #42"
+# Create PR
+gh pr create --base develop --title "feat: add feature" --body "Closes #42"
 ```
 
 ## Release Process

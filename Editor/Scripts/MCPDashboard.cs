@@ -545,7 +545,7 @@ namespace UnityMCPSharp.Editor
             // Use Test Image toggle (dev mode)
             _useTestImageToggle = new Toggle("Use test image (dev)");
             _useTestImageToggle.value = _config.dockerImage == "unity-mcp-server:test";
-            _useTestImageToggle.tooltip = "Use local development image (unity-mcp-server:test) instead of registry image. Takes effect immediately.";
+            _useTestImageToggle.tooltip = "Use local development image (unity-mcp-server:test) instead of registry image. Click Save to apply.";
             _useTestImageToggle.style.marginBottom = 10;
             _useTestImageToggle.RegisterValueChangedCallback(evt =>
             {
@@ -554,10 +554,6 @@ namespace UnityMCPSharp.Editor
                     : "ghcr.io/abbabon/unity-mcp-server:latest";
                 _dockerImageField.value = newImage;
                 _dockerImageField.SetEnabled(!evt.newValue);
-                
-                // Apply immediately so Start Server uses the correct image
-                _config.dockerImage = newImage;
-                MCPLogger.Log($"[MCPDashboard] Docker image set to: {newImage}");
             });
             container.Add(_useTestImageToggle);
 
@@ -1047,11 +1043,8 @@ Note: Cursor must support MCP for this to work.";
             _dockerImageField.value = "unity-mcp-server:test";
             _useTestImageToggle.value = true;
             _dockerImageField.SetEnabled(false);
-            
-            // Apply immediately so Start Server uses the correct image
-            _config.dockerImage = "unity-mcp-server:test";
 
-            MCPLogger.Log("[MCPDashboard] Loaded dev configuration (unity-mcp-server:test)");
+            MCPLogger.Log("[MCPDashboard] Loaded dev configuration - click Save to apply");
         }
     }
 }
