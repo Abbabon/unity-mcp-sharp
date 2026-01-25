@@ -80,6 +80,7 @@ packages/
 
 # JetBrains Rider
 .idea/
+!.idea/runConfigurations/
 *.sln.iml
 
 # Visual Studio Code
