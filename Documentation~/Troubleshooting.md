@@ -282,20 +282,31 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 
 **Solutions:**
 
-1. **Keep Unity in focus when using MCP tools:**
+1. **Auto Bring to Foreground (Recommended - Default ON):**
+   - Unity MCP automatically brings the editor to the foreground when receiving MCP operations
+   - This uses platform-specific APIs (SetForegroundWindow on Windows, NSApplication.activate on macOS)
+   - The focus call runs on the WebSocket background thread via P/Invoke, bypassing the throttled main thread
+   - Configure in `Assets/Resources/MCPConfiguration.asset` → `Auto Bring To Foreground`
+   - This is enabled by default - operations should complete without timeout even when Unity is unfocused
+
+2. **Explicit focus via MCP tool:**
+   - Use `unity_bring_editor_to_foreground` tool to manually bring Unity to foreground
+   - Useful if auto-focus is disabled or you need to ensure visibility before a series of operations
+
+3. **Keep Unity in focus when using MCP tools:**
    - Use a multi-monitor setup with Unity visible
    - Or quickly switch to Unity after triggering MCP operations
 
-2. **Increase operation timeout if needed:**
+4. **Increase operation timeout if needed:**
    - In Unity: Open MCP Configuration asset (`Assets/Resources/MCPConfiguration.asset`)
    - Increase `Operation Timeout` (default: 30 seconds, max: 120 seconds)
    - This gives more time for Unity to process when briefly unfocused
 
-3. **Use split screen / multiple monitors:**
+5. **Use split screen / multiple monitors:**
    - Keep Unity Editor visible alongside your IDE
    - Even partially visible, Unity will continue processing
 
-4. **Understand the behavior:**
+6. **Understand the behavior:**
    - Operations are NOT lost - they're queued
    - When Unity regains focus, queued operations execute
    - The connection stays alive via ping/pong mechanism
@@ -308,7 +319,7 @@ This may happen if Unity Editor is unfocused or minimized -
 operations will complete when Unity regains focus.
 ```
 
-**Technical note:** This is an inherent Unity Editor limitation. Unity's `EditorApplication.update` callback, which processes the MCP message queue, is throttled when the editor is unfocused. There is no way to force Unity's main thread to run from a background thread.
+**Technical note:** The auto-focus feature works because the P/Invoke calls (SetForegroundWindow, NSApplication.activate) are pure system calls that don't require Unity's main thread. They run directly on the WebSocket background thread, which remains active even when Unity is unfocused.
 
 ## Server Issues
 

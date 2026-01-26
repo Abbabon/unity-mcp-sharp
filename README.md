@@ -91,6 +91,7 @@ Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Cla
 - 👁️ Visual feedback system with operation tracking
 - 🐳 Docker container lifecycle management
 - 🔄 Auto-connect and auto-start capabilities
+- 🎯 Auto-focus: Automatically brings Unity to foreground when receiving MCP operations
 - ⚙️ Configuration via ScriptableObject
 </details>
 
@@ -683,7 +684,7 @@ Get current play mode state.
 </details>
 
 <details>
-<summary><b>⚙️ System Utilities (1 tool)</b></summary>
+<summary><b>⚙️ System Utilities (2 tools)</b></summary>
 
 ### `unity_run_menu_item`
 Execute any Unity Editor menu item by its path.
@@ -699,6 +700,17 @@ Execute any Unity Editor menu item by its path.
 - `"GameObject/Create Empty"`
 - `"Edit/Undo"`
 - `"Assets/Refresh"`
+
+---
+
+### `unity_bring_editor_to_foreground`
+Bring the Unity Editor window to the foreground.
+
+**Returns:** Confirmation that the foreground request was sent
+
+**💡 Note:** Most MCP operations automatically bring Unity to foreground when the "Auto Bring to Foreground" setting is enabled (default: on). Use this tool explicitly if auto-focus is disabled or you need to ensure Unity is visible before a series of operations.
+
+**🔧 Platform Support:** Windows (SetForegroundWindow) and macOS (NSApplication.activate)
 
 </details>
 
@@ -814,6 +826,7 @@ Access configuration via `Tools → Unity MCP Server → Create MCP Configuratio
 | Docker Image | `ghcr.io/abbabon/unity-mcp-server:latest` | Docker image to use |
 | Auto-connect | `true` | Connect automatically on startup |
 | Auto-start | `false` | Start container automatically |
+| Auto Bring to Foreground | `true` | Automatically bring Unity to foreground when MCP operations require it |
 | Retry Attempts | `3` | Connection retry attempts |
 | Retry Delay | `2000ms` | Delay between retries |
 | Verbose Logging | `false` | Enable detailed logs |

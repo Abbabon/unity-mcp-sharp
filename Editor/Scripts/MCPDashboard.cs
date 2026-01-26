@@ -32,6 +32,7 @@ namespace UnityMCPSharp.Editor
         private ScrollView _operationsScrollView;
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
+        private Toggle _autoBringToForegroundToggle;
         private Toggle _enableMcpLogsToggle;
         private Toggle _verboseLoggingToggle;
         private Toggle _showParametersToggle;
@@ -572,6 +573,13 @@ namespace UnityMCPSharp.Editor
             _autoStartToggle.style.marginBottom = 5;
             container.Add(_autoStartToggle);
 
+            // Auto bring to foreground toggle
+            _autoBringToForegroundToggle = new Toggle("Auto bring to foreground");
+            _autoBringToForegroundToggle.value = _config.autoBringToForeground;
+            _autoBringToForegroundToggle.tooltip = "Automatically bring Unity Editor to foreground when MCP operations are received. This prevents timeout issues when Unity is minimized or behind other windows.";
+            _autoBringToForegroundToggle.style.marginBottom = 5;
+            container.Add(_autoBringToForegroundToggle);
+
             // Enable MCP logs toggle
             _enableMcpLogsToggle = new Toggle("Enable MCP logs in Console");
             _enableMcpLogsToggle.value = _config.enableMcpLogs;
@@ -987,8 +995,15 @@ Note: Cursor must support MCP for this to work.";
             _config.dockerImage = _dockerImageField.value;
             _config.autoConnect = _autoConnectToggle.value;
             _config.autoStartContainer = _autoStartToggle.value;
+            _config.autoBringToForeground = _autoBringToForegroundToggle.value;
             _config.enableMcpLogs = _enableMcpLogsToggle.value;
             _config.verboseLogging = _verboseLoggingToggle.value;
+
+            // Update client with new auto-focus setting
+            if (_client != null)
+            {
+                _client.AutoBringToForeground = _config.autoBringToForeground;
+            }
 
             _config.SaveToResources();
 
@@ -1026,8 +1041,15 @@ Note: Cursor must support MCP for this to work.";
                 _dockerImageField.SetEnabled(_config.dockerImage != "unity-mcp-server:test");
                 _autoConnectToggle.value = _config.autoConnect;
                 _autoStartToggle.value = _config.autoStartContainer;
+                _autoBringToForegroundToggle.value = _config.autoBringToForeground;
                 _enableMcpLogsToggle.value = _config.enableMcpLogs;
                 _verboseLoggingToggle.value = _config.verboseLogging;
+
+                // Update client with reset auto-focus setting
+                if (_client != null)
+                {
+                    _client.AutoBringToForeground = _config.autoBringToForeground;
+                }
 
                 MCPLogger.Log("[MCPDashboard] Configuration reset to defaults");
 

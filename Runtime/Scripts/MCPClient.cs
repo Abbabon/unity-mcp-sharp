@@ -33,6 +33,20 @@ namespace UnityMCPSharp
         public event Action<string, string, object> OnRequestReceived; // requestId, method, parameters
         public event Action<string> OnError;
 
+        // Configuration for auto-focus behavior (set by MCPEditorIntegration)
+        private bool _autoBringToForeground = true;
+
+        /// <summary>
+        /// Gets or sets whether to automatically bring Unity to foreground when receiving MCP operations.
+        /// When enabled, Unity will be brought to the foreground upon receiving certain notifications,
+        /// ensuring operations don't timeout due to main thread throttling when Unity is unfocused.
+        /// </summary>
+        public bool AutoBringToForeground
+        {
+            get => _autoBringToForeground;
+            set => _autoBringToForeground = value;
+        }
+
         public bool IsConnected => _isConnected && _webSocket?.State == WebSocketState.Open;
         public bool AutoReconnect { get => _autoReconnect; set => _autoReconnect = value; }
         public string ServerUrl => _serverUrl;
@@ -223,6 +237,23 @@ namespace UnityMCPSharp
                         return;
                     }
 
+                    // Handle explicit bringToForeground request immediately from background thread
+                    // This uses P/Invoke which doesn't require Unity's main thread
+                    // Note: This always executes regardless of _autoBringToForeground setting,
+                    // since this is an explicit request via the unity_bring_editor_to_foreground tool
+                    if (jsonRpc.method == "unity.bringToForeground")
+                    {
+                        WindowFocusHelper.BringToForeground();
+                        return;
+                    }
+
+                    // For operations that require Unity's main thread, optionally bring to foreground first
+                    // This ensures the main thread isn't throttled when operations are queued
+                    if (_autoBringToForeground && IsMainThreadOperation(jsonRpc.method))
+                    {
+                        WindowFocusHelper.BringToForeground();
+                    }
+
                     // Check if this is a request (has both method and id) or notification (method only)
                     if (!string.IsNullOrEmpty(jsonRpc.id))
                     {
@@ -246,6 +277,15 @@ namespace UnityMCPSharp
             {
                 MCPLogger.LogError($"[MCPClient] Error parsing message: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Determines if a method requires Unity's main thread and would benefit from auto-focus.
+        /// </summary>
+        private static bool IsMainThreadOperation(string method)
+        {
+            // These methods require Unity Editor APIs which must run on the main thread
+            return method.StartsWith("unity.") && method != "unity.ping" && method != "unity.pong" && method != "unity.bringToForeground";
         }
 
         /// <summary>

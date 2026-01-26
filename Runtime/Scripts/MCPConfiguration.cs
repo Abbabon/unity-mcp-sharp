@@ -45,6 +45,9 @@ namespace UnityMCPSharp
         [Range(10, 120)]
         public int operationTimeout = 30;
 
+        [Tooltip("Automatically bring Unity Editor to foreground when MCP operations require it. This uses platform-specific APIs (SetForegroundWindow on Windows, NSApplication.activate on macOS) to focus the Unity window, ensuring operations complete without timeout.")]
+        public bool autoBringToForeground = true;
+
         [Header("Logging")]
         [Tooltip("Enable MCP logs in Unity console (connection, protocol, operations)")]
         public bool enableMcpLogs = true;
@@ -168,6 +171,7 @@ namespace UnityMCPSharp
             retryAttempts = 3;
             retryDelay = 5;
             operationTimeout = 30;
+            autoBringToForeground = true;
             enableMcpLogs = true;
             verboseLogging = false;
             maxLogBuffer = 500;

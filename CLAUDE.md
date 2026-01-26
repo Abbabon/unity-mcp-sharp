@@ -48,7 +48,8 @@ unity-mcp-sharp/
 │   ├── Scripts/
 │   │   ├── MCPClient.cs     # WebSocket JSON-RPC client
 │   │   ├── MCPServerManager.cs  # Docker lifecycle management
-│   │   └── MCPConfiguration.cs  # ScriptableObject config
+│   │   ├── MCPConfiguration.cs  # ScriptableObject config
+│   │   └── WindowFocusHelper.cs # Platform-specific window focus (P/Invoke)
 │   └── UnityMCPSharp.asmdef
 │
 ├── Editor/                  # Unity Editor scripts
@@ -132,6 +133,30 @@ MCP Session C → Unity Editor 1 (same as Session A)
 **New MCP Tools:**
 - `unity_list_editors` - List all connected editors with metadata
 - `unity_select_editor` - Select which editor to use for current session
+
+### Auto-Focus Feature (v0.6.0+)
+
+Unity Editor throttles its main thread when unfocused, causing MCP operations to queue and potentially timeout. The auto-focus feature solves this by automatically bringing Unity to the foreground when operations are received.
+
+**How it works:**
+1. When the WebSocket receives an MCP notification (on background thread)
+2. Before queueing for main thread, `WindowFocusHelper.BringToForeground()` is called
+3. This uses P/Invoke (not Unity APIs) so it runs directly on the background thread
+4. Unity window comes to foreground, main thread resumes normal speed
+5. Queued operation executes immediately
+
+**Platform-specific implementation:**
+- **Windows:** `SetForegroundWindow()` via user32.dll P/Invoke with thread input attachment
+- **macOS:** `NSApplication.activateIgnoringOtherApps:` via libobjc.dylib P/Invoke
+
+**Key files:**
+- `Runtime/Scripts/WindowFocusHelper.cs` - Platform-specific P/Invoke implementation
+- `Runtime/Scripts/MCPClient.cs` - Calls `WindowFocusHelper` when receiving operations
+- `Runtime/Scripts/MCPConfiguration.cs` - `autoBringToForeground` setting (default: true)
+
+**Configuration:**
+- Enable/disable via `MCPConfiguration.autoBringToForeground` (default: true)
+- Or use `unity_bring_editor_to_foreground` MCP tool for explicit control
 
 ### Request Handling Pattern
 
@@ -561,6 +586,31 @@ curl http://localhost:3727/health
 ```bash
 npx @modelcontextprotocol/inspector http://localhost:3727/mcp
 ```
+
+#### Quick Benchmark Test (Fast Validation)
+
+**Purpose**: A fast 2-minute test to verify core MCP functionality is working.
+
+**When to Run**:
+- After making changes to MCP tools or handlers
+- When troubleshooting connection issues
+- Quick sanity check before more comprehensive testing
+
+**Full instructions:** See `Documentation~/QuickBenchmark.md`
+
+**Quick Summary:**
+1. `unity_get_project_info()` - Verify connection
+2. `unity_open_scene("Assets/Scenes/Demo.unity")` - Open test scene
+3. `unity_create_game_object("HelloWorldTester")` - Create test object
+4. `unity_create_script("HelloWorldTest", "Scripts", <HelloWorld script>)` - Create script that logs "Hello World!" 3 times in Start()
+5. Poll `unity_get_compilation_status()` until complete
+6. `unity_add_component_to_object("HelloWorldTester", "HelloWorldTest")` - Attach script
+7. `unity_enter_play_mode()` - Run the game
+8. Wait 2-3 seconds
+9. `unity_exit_play_mode()` - Stop the game
+10. `unity_read_console_log(count: 20)` - Verify 3x "Hello World!" in logs
+
+**Pass Criteria**: Console contains exactly 3 "Hello World!" log entries with no errors.
 
 #### Integration Test Scenario (Pre-Release Validation)
 
