@@ -485,8 +485,11 @@ public class UnityWebSocketService
             _pendingRequests.TryRemove(requestId, out _);
             throw new TimeoutException(
                 $"Request to Unity Editor timed out after {timeoutSeconds} seconds. " +
-                "This may happen if Unity Editor is unfocused or minimized - operations will complete when Unity regains focus. " +
-                "You can also try increasing the timeout.");
+                "This may happen if Unity Editor is unfocused or minimized. " +
+                "Solutions: 1) Enable 'Auto Bring to Foreground' in Unity's MCP Configuration (default: on), " +
+                "2) Use unity_bring_editor_to_foreground tool, " +
+                "3) Manually focus Unity Editor window, " +
+                "4) Increase timeout in MCP Configuration.");
         }
     }
 
@@ -587,8 +590,11 @@ public class UnityWebSocketService
             _pendingRequests.TryRemove(requestId, out _);
             throw new TimeoutException(
                 $"Request to Unity Editor timed out after {timeoutSeconds} seconds. " +
-                "This may happen if Unity Editor is unfocused or minimized - operations will complete when Unity regains focus. " +
-                "You can also try increasing the timeout.");
+                "This may happen if Unity Editor is unfocused or minimized. " +
+                "Solutions: 1) Enable 'Auto Bring to Foreground' in Unity's MCP Configuration (default: on), " +
+                "2) Use unity_bring_editor_to_foreground tool, " +
+                "3) Manually focus Unity Editor window, " +
+                "4) Increase timeout in MCP Configuration.");
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using UnityMcpServer.Models;
 using UnityMcpServer.Services;
 
 namespace UnityMcpServer.Tools.GameObjects;
@@ -13,16 +14,39 @@ public class DeleteGameObjectTool(ILogger<DeleteGameObjectTool> logger, UnityWeb
 
     [McpServerTool]
     [Description("Delete a GameObject from the scene by name. The GameObject and all its children will be permanently destroyed. Use unity_find_game_object first to verify the object exists, or unity_list_scene_objects to see all objects in the scene.")]
-    [return: Description("Confirmation message indicating the GameObject was deleted")]
+    [return: Description("Confirmation message indicating the GameObject was deleted, or error if not found")]
     public async Task<string> UnityDeleteGameObjectAsync(
         [Description("Name of the GameObject to delete")] string name)
     {
         _logger.LogInformation("Deleting GameObject: {Name}", name);
 
-        var parameters = new { name };
+        try
+        {
+            var parameters = new { name };
 
-        await _webSocketService.SendToCurrentSessionEditorAsync("unity.deleteGameObject", parameters);
+            var response = await _webSocketService.SendRequestToCurrentSessionEditorAsync<OperationResponse>("unity.deleteGameObject", parameters);
 
-        return $"GameObject '{name}' deleted from scene";
+            if (response != null)
+            {
+                if (response.Success)
+                {
+                    return response.Message;
+                }
+                else
+                {
+                    return $"Failed to delete GameObject: {response.Message}";
+                }
+            }
+
+            return $"Failed to delete GameObject '{name}': No response from Unity Editor";
+        }
+        catch (TimeoutException)
+        {
+            return "Request timed out. Make sure Unity Editor is running and connected.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"Error: {ex.Message}";
+        }
     }
 }

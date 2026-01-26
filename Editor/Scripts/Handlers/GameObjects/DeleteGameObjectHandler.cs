@@ -15,7 +15,7 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
             public string name;
         }
 
-        public static void Handle(object parameters, MCPConfiguration config)
+        public static void Handle(string requestId, object parameters, MCPClient client, MCPConfiguration config)
         {
             try
             {
@@ -26,29 +26,37 @@ namespace UnityMCPSharp.Editor.Handlers.GameObjects
 
                 if (string.IsNullOrEmpty(data?.name))
                 {
-                    Debug.LogError("[DeleteGameObjectHandler] GameObject name is required");
+                    var errorMsg = "GameObject name is required";
+                    Debug.LogError($"[DeleteGameObjectHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                     return;
                 }
 
                 var gameObject = GameObject.Find(data.name);
                 if (gameObject == null)
                 {
-                    Debug.LogError($"[DeleteGameObjectHandler] GameObject '{data.name}' not found");
+                    var errorMsg = $"GameObject '{data.name}' not found";
+                    Debug.LogError($"[DeleteGameObjectHandler] {errorMsg}");
                     MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                    _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
                     return;
                 }
 
                 var objectName = gameObject.name;
                 Object.DestroyImmediate(gameObject);
 
-                MCPLogger.Log($"[DeleteGameObjectHandler] Deleted GameObject: {objectName}");
+                var successMsg = $"GameObject '{objectName}' deleted from scene";
+                MCPLogger.Log($"[DeleteGameObjectHandler] {successMsg}");
                 MCPOperationTracker.CompleteOperation(true, config.verboseLogging);
+                _ = client.SendResponseAsync(requestId, new { success = true, message = successMsg });
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[DeleteGameObjectHandler] Error: {ex.Message}");
+                var errorMsg = $"Error deleting GameObject: {ex.Message}";
+                Debug.LogError($"[DeleteGameObjectHandler] {errorMsg}");
                 MCPOperationTracker.CompleteOperation(false, config.verboseLogging);
+                _ = client.SendResponseAsync(requestId, new { success = false, message = errorMsg });
             }
         }
     }

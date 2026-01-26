@@ -7,6 +7,11 @@ namespace UnityMCPSharp
     /// Platform-specific helper to bring Unity Editor window to the foreground.
     /// Uses P/Invoke calls that can run from any thread (including WebSocket background thread).
     /// This enables Unity to receive focus even when its main thread is throttled due to being unfocused.
+    /// 
+    /// Platform Support:
+    /// - Windows: Uses SetForegroundWindow via user32.dll
+    /// - macOS: Uses NSApplication.activateIgnoringOtherApps via libobjc.dylib
+    /// - Linux: Not supported - returns false with a warning log
     /// </summary>
     public static class WindowFocusHelper
     {

@@ -254,9 +254,6 @@ namespace UnityMCPSharp.Editor
                     CreateGameObjectHandler.Handle(parameters, _config);
                     break;
 
-                case "unity.deleteGameObject":
-                    DeleteGameObjectHandler.Handle(parameters, _config);
-                    break;
 
                 case "unity.createScript":
                     CreateScriptHandler.Handle(parameters, _config);
@@ -353,6 +350,10 @@ namespace UnityMCPSharp.Editor
 
                 case "unity.setComponentField":
                     SetComponentFieldHandler.Handle(requestId, parameters, _client, _config);
+                    break;
+
+                case "unity.deleteGameObject":
+                    DeleteGameObjectHandler.Handle(requestId, parameters, _client, _config);
                     break;
 
                 default:

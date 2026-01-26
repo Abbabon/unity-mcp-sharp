@@ -710,7 +710,7 @@ Bring the Unity Editor window to the foreground.
 
 **💡 Note:** Most MCP operations automatically bring Unity to foreground when the "Auto Bring to Foreground" setting is enabled (default: on). Use this tool explicitly if auto-focus is disabled or you need to ensure Unity is visible before a series of operations.
 
-**🔧 Platform Support:** Windows (SetForegroundWindow) and macOS (NSApplication.activate)
+**🔧 Platform Support:** Windows (SetForegroundWindow) and macOS (NSApplication.activate). Linux is not currently supported for auto-focus.
 
 </details>
 
