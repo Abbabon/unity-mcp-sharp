@@ -7,6 +7,7 @@ This guide covers common issues you may encounter when using Unity MCP Server an
 - [Installation Issues](#installation-issues)
 - [Docker Issues](#docker-issues)
 - [Connection Issues](#connection-issues)
+  - [Operations timeout when Unity is unfocused](#operations-timeout-when-unity-is-unfocusedminimized)
 - [Server Issues](#server-issues)
 - [Unity Integration Issues](#unity-integration-issues)
 - [Performance Issues](#performance-issues)
@@ -266,6 +267,59 @@ docker pull ghcr.io/abbabon/unity-mcp-server:latest
 4. **Proxy/VPN conflicts**
    - Try disabling VPN
    - Configure proxy settings in Docker
+
+### Operations timeout when Unity is unfocused/minimized
+
+**Symptom:** MCP operations timeout or appear disconnected when Unity Editor is not in the foreground (e.g., when you're working in your IDE)
+
+**Root Cause:** This is a fundamental Unity limitation. When Unity Editor loses focus, its main thread update loop is throttled. Since Unity APIs must be called from the main thread, MCP operations that require Unity API calls (creating GameObjects, modifying scenes, etc.) get queued and wait for the main thread to process them.
+
+**What's happening:**
+- The WebSocket connection stays alive (handled by background thread)
+- The server sends keep-alive pings which Unity responds to from its background thread
+- Operations requiring Unity APIs are queued and will complete when Unity regains focus
+- The server uses a 30-second default timeout to accommodate brief focus loss
+
+**Solutions:**
+
+1. **Auto Bring to Foreground (Recommended - Default ON):**
+   - Unity MCP automatically brings the editor to the foreground when receiving MCP operations
+   - This uses platform-specific APIs (SetForegroundWindow on Windows, NSApplication.activate on macOS)
+   - The focus call runs on the WebSocket background thread via P/Invoke, bypassing the throttled main thread
+   - Configure in `Assets/Resources/MCPConfiguration.asset` → `Auto Bring To Foreground`
+   - This is enabled by default - operations should complete without timeout even when Unity is unfocused
+
+2. **Explicit focus via MCP tool:**
+   - Use `unity_bring_editor_to_foreground` tool to manually bring Unity to foreground
+   - Useful if auto-focus is disabled or you need to ensure visibility before a series of operations
+
+3. **Keep Unity in focus when using MCP tools:**
+   - Use a multi-monitor setup with Unity visible
+   - Or quickly switch to Unity after triggering MCP operations
+
+4. **Increase operation timeout if needed:**
+   - In Unity: Open MCP Configuration asset (`Assets/Resources/MCPConfiguration.asset`)
+   - Increase `Operation Timeout` (default: 30 seconds, max: 120 seconds)
+   - This gives more time for Unity to process when briefly unfocused
+
+5. **Use split screen / multiple monitors:**
+   - Keep Unity Editor visible alongside your IDE
+   - Even partially visible, Unity will continue processing
+
+6. **Understand the behavior:**
+   - Operations are NOT lost - they're queued
+   - When Unity regains focus, queued operations execute
+   - The connection stays alive via ping/pong mechanism
+   - Error messages indicate Unity may be unfocused (not disconnected)
+
+**What the error looks like:**
+```
+Request to Unity Editor timed out after 30 seconds. 
+This may happen if Unity Editor is unfocused or minimized - 
+operations will complete when Unity regains focus.
+```
+
+**Technical note:** The auto-focus feature works because the P/Invoke calls (SetForegroundWindow, NSApplication.activate) are pure system calls that don't require Unity's main thread. They run directly on the WebSocket background thread, which remains active even when Unity is unfocused.
 
 ## Server Issues
 

@@ -1,5 +1,19 @@
 # Unity MCP Server - Test Checklist
 
+## Quick Benchmark (LLM-Executable)
+
+For a fast, automated validation of core MCP functionality, see **[QuickBenchmark.md](QuickBenchmark.md)**.
+
+This benchmark can be executed by any LLM in under 2 minutes and tests:
+- Connection and project info retrieval
+- Scene operations
+- GameObject and script creation
+- Compilation workflow
+- Play mode control
+- Console log verification
+
+---
+
 ## Server Component Tests
 
 ### Build & Run

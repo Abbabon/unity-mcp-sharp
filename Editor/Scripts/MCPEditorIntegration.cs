@@ -60,6 +60,9 @@ namespace UnityMCPSharp.Editor
             // Enable auto-reconnect with configured settings
             _client.AutoReconnect = true;
 
+            // Sync auto-focus setting from configuration
+            _client.AutoBringToForeground = _config.autoBringToForeground;
+
             // IMPORTANT: After domain reload, event delegates are cleared even though the client object survives
             // We need to disconnect and reconnect to ensure the new event subscriptions take effect
             bool wasConnected = _client.IsConnected;
@@ -251,6 +254,7 @@ namespace UnityMCPSharp.Editor
                     CreateGameObjectHandler.Handle(parameters, _config);
                     break;
 
+
                 case "unity.createScript":
                     CreateScriptHandler.Handle(parameters, _config);
                     break;
@@ -346,6 +350,10 @@ namespace UnityMCPSharp.Editor
 
                 case "unity.setComponentField":
                     SetComponentFieldHandler.Handle(requestId, parameters, _client, _config);
+                    break;
+
+                case "unity.deleteGameObject":
+                    DeleteGameObjectHandler.Handle(requestId, parameters, _client, _config);
                     break;
 
                 default:
