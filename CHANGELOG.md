@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned Features
+- Performance monitoring and metrics
+- Advanced scene query capabilities
+- Prefab instantiation support
+- Build pipeline integration
+- Scene View overlay for MCP operations
+
+## [0.6.0] - 2026-01-28
+
 ### Added
 - **Tool Profiles for Token Optimization:** Configurable tool profiles to reduce LLM token usage (#87, #88)
   - Three profiles: Minimal (12 tools, ~1k tokens), Standard (20 tools, ~2k tokens), Full (28 tools, ~3k tokens)
@@ -32,13 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shortened Tool Descriptions:** All 28 tool descriptions significantly shortened to reduce token usage
   - Removed verbose explanations and cross-references
   - Focused on essential information only
-
-### Planned Features
-- Performance monitoring and metrics
-- Advanced scene query capabilities
-- Prefab instantiation support
-- Build pipeline integration
-- Scene View overlay for MCP operations
 
 ## [0.5.0] - 2025-11-23
 
