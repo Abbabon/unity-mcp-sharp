@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
-using UnityMCPSharp;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
 {

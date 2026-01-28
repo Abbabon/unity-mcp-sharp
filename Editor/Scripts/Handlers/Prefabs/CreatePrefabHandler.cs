@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Newtonsoft.Json;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
@@ -19,8 +20,8 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     return;
                 }
 
-                // Find the GameObject in the scene
-                var gameObject = GameObject.Find(data.gameObjectName);
+                // Find the GameObject in the scene (searches root and all children, including inactive)
+                var gameObject = FindGameObjectByName(data.gameObjectName);
                 if (gameObject == null)
                 {
                     Debug.LogError($"[CreatePrefabHandler] GameObject '{data.gameObjectName}' not found in scene");
@@ -34,8 +35,8 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 var folderPath = $"Assets/{data.assetFolderPath}";
                 if (!AssetDatabase.IsValidFolder(folderPath))
                 {
-                    // Create folder structure recursively
-                    var folders = data.assetFolderPath.Split('/');
+                    // Create folder structure recursively (RemoveEmptyEntries handles edge cases like "Prefabs//Characters")
+                    var folders = data.assetFolderPath.Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
                     var currentPath = "Assets";
                     foreach (var folder in folders)
                     {
@@ -69,7 +70,14 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                         return;
                     }
 
-                    // Instantiate a fresh copy from the source prefab - this maintains the prefab link
+                    // VARIANT CREATION APPROACH:
+                    // We can't simply call SaveAsPrefabAsset on the scene instance because that creates
+                    // a disconnected copy. Instead, we:
+                    // 1. InstantiatePrefab from the source - this creates an instance with proper prefab link
+                    // 2. Copy transforms to preserve scene modifications
+                    // 3. SaveAsPrefabAsset - because the instance has a prefab link, Unity creates a variant
+                    // 4. Destroy the temp instance
+                    // This ensures the new prefab maintains the variant relationship with its base prefab.
                     var variantInstance = (GameObject)PrefabUtility.InstantiatePrefab(sourcePrefab);
                     
                     // Copy transforms from the scene object to preserve any modifications
@@ -124,6 +132,45 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
             public string assetFolderPath;
             public string prefabName;
             public bool createVariant;
+        }
+
+        /// <summary>
+        /// Find a GameObject by name, searching all root objects and their children (including inactive).
+        /// This overcomes the limitation of GameObject.Find which only finds root-level active objects.
+        /// </summary>
+        private static GameObject FindGameObjectByName(string name)
+        {
+            // First try the fast path - root-level active objects
+            var result = GameObject.Find(name);
+            if (result != null) return result;
+
+            // Search through all scenes and their hierarchies
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var scene = SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+
+                foreach (var rootObj in scene.GetRootGameObjects())
+                {
+                    var found = FindInHierarchy(rootObj.transform, name);
+                    if (found != null) return found;
+                }
+            }
+
+            return null;
+        }
+
+        private static GameObject FindInHierarchy(Transform parent, string name)
+        {
+            if (parent.name == name) return parent.gameObject;
+
+            foreach (Transform child in parent)
+            {
+                var found = FindInHierarchy(child, name);
+                if (found != null) return found;
+            }
+
+            return null;
         }
     }
 }
