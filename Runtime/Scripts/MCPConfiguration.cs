@@ -3,6 +3,19 @@ using UnityEngine;
 namespace UnityMCPSharp
 {
     /// <summary>
+    /// Tool profile determines which MCP tools are exposed to LLM clients.
+    /// Use Minimal to reduce token usage, Full for all capabilities.
+    /// </summary>
+    public enum ToolProfile
+    {
+        /// <summary>12 core tools for basic workflows (~1k tokens)</summary>
+        Minimal,
+        /// <summary>20 commonly used tools (~2k tokens) - DEFAULT</summary>
+        Standard,
+        /// <summary>All 28 tools including advanced features (~3k tokens)</summary>
+        Full
+    }
+    /// <summary>
     /// Configuration settings for Unity MCP Server integration
     /// </summary>
     [CreateAssetMenu(fileName = "MCPConfiguration", menuName = "Unity MCP/Configuration", order = 1)]
@@ -47,6 +60,10 @@ namespace UnityMCPSharp
 
         [Tooltip("Automatically bring Unity Editor to foreground when MCP operations require it. This uses platform-specific APIs (SetForegroundWindow on Windows, NSApplication.activate on macOS) to focus the Unity window, ensuring operations complete without timeout.")]
         public bool autoBringToForeground = true;
+
+        [Header("Tool Profile")]
+        [Tooltip("Controls which MCP tools are exposed to LLM clients. Minimal (12 tools) reduces token usage, Standard (20 tools) covers common workflows, Full (28 tools) enables all capabilities.")]
+        public ToolProfile toolProfile = ToolProfile.Standard;
 
         [Header("Logging")]
         [Tooltip("Enable MCP logs in Unity console (connection, protocol, operations)")]
@@ -172,6 +189,7 @@ namespace UnityMCPSharp
             retryDelay = 5;
             operationTimeout = 30;
             autoBringToForeground = true;
+            toolProfile = ToolProfile.Standard;
             enableMcpLogs = true;
             verboseLogging = false;
             maxLogBuffer = 500;

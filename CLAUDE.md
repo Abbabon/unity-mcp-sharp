@@ -158,6 +158,35 @@ Unity Editor throttles its main thread when unfocused, causing MCP operations to
 - Enable/disable via `MCPConfiguration.autoBringToForeground` (default: true)
 - Or use `unity_bring_editor_to_foreground` MCP tool for explicit control
 
+### Tool Profiles (Token Optimization)
+
+Tool profiles allow users to reduce token usage by exposing only the MCP tools they need. This addresses LLM context limit concerns when connecting multiple tools.
+
+**Architecture:**
+- Profiles defined in `Server~/Services/ToolProfileService.cs`
+- User selects profile in Unity Dashboard Settings tab → `MCPConfiguration.toolProfile`
+- Profile sent to server during editor registration as metadata
+- Server uses `AddListToolsFilter` to filter tools per MCP session based on connected editor's profile
+
+**Profiles:**
+- `Minimal` - 12 core tools for basic workflows
+- `Standard` - 20 commonly used tools (DEFAULT)
+- `Full` - All 28 tools including multi-editor and batch operations
+
+**Key files:**
+- `Server~/Services/ToolProfileService.cs` - Profile definitions and lookup
+- `Server~/Program.cs` - `AddListToolsFilter` implementation
+- `Runtime/Scripts/MCPConfiguration.cs` - `toolProfile` field
+- `Editor/Scripts/MCPDashboard.cs` - Tool Profile dropdown in Settings tab
+- `Editor/Scripts/MCPEditorIntegration.cs` - Sends `toolProfile` in registration metadata
+- `Server~/Models/EditorMetadata.cs` - `ToolProfile` property
+- `Server~/Services/EditorSessionManager.cs` - `GetCurrentSessionEditorProfile()` method
+
+**Configuration:**
+- Set via MCPConfiguration.toolProfile (Unity Dashboard Settings tab)
+- To apply changes: save in Unity, then disable/re-enable the MCP in Cursor (tool list is cached by client)
+- Per-project configuration stored in MCPConfiguration.asset
+
 ### Request Handling Pattern
 
 1. **MCP Tool Invocation** (from IDE)

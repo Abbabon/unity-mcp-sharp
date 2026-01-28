@@ -238,4 +238,31 @@ public class EditorSessionManager
     /// Check if a specific editor is connected
     /// </summary>
     public bool IsEditorConnected(string connectionId) => _editors.ContainsKey(connectionId);
+
+    /// <summary>
+    /// Get the tool profile for the current MCP session's selected editor.
+    /// Returns "standard" as default if no editor is selected.
+    /// </summary>
+    public string GetCurrentSessionEditorProfile()
+    {
+        var sessionId = McpSessionContext.CurrentSessionId;
+        if (string.IsNullOrEmpty(sessionId))
+        {
+            return "standard";
+        }
+
+        var editorId = GetSelectedEditorForSession(sessionId);
+        if (string.IsNullOrEmpty(editorId))
+        {
+            // Try auto-selection
+            editorId = GetOrAutoSelectEditor(sessionId);
+        }
+
+        if (!string.IsNullOrEmpty(editorId) && _editors.TryGetValue(editorId, out var metadata))
+        {
+            return metadata.ToolProfile ?? "standard";
+        }
+
+        return "standard";
+    }
 }

@@ -13,8 +13,8 @@ public class GetConsoleLogsTool(ILogger<GetConsoleLogsTool> logger, UnityWebSock
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Get recent console logs from Unity Editor. Returns error messages, warnings, and debug logs from the Unity Console window. Useful for debugging runtime issues and monitoring Unity's output. Call this after creating scripts, entering play mode, or when unity_get_compilation_status shows compilation failed.")]
-    [return: Description("Recent console logs from Unity Editor including errors, warnings, and info messages")]
+    [Description("Get recent console logs from Unity (errors, warnings, debug messages).")]
+    [return: Description("Console log entries with type, message, and stack trace")]
     public async Task<string> UnityGetConsoleLogsAsync()
     {
         _logger.LogInformation("Requesting console logs from Unity...");

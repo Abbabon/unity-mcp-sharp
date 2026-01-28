@@ -13,8 +13,8 @@ public class GetProjectInfoTool(ILogger<GetProjectInfoTool> logger, UnityWebSock
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Get metadata about the Unity project including project name, Unity version, currently active scene name and path, data directory path, and whether the Editor is in play mode or paused. Useful for context about the project environment. This is a good first tool to call when starting work on a project to understand the environment.")]
-    [return: Description("Project information: name, Unity version, active scene, paths, and editor state")]
+    [Description("Get Unity project metadata: name, version, active scene, paths, and play state.")]
+    [return: Description("Project info including name, Unity version, scene, and editor state")]
     public async Task<string> UnityGetProjectInfoAsync()
     {
         _logger.LogInformation("Requesting project info from Unity...");

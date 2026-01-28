@@ -13,8 +13,8 @@ public class GetCompilationStatusTool(ILogger<GetCompilationStatusTool> logger, 
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Check if Unity is currently compiling scripts. Returns whether compilation is in progress and if the last compilation succeeded or failed. Useful before running play mode or making additional code changes. If compilation failed, use unity_get_console_logs to see the errors. Use unity_trigger_script_compilation to force recompilation if needed.")]
-    [return: Description("Current compilation status: whether Unity is compiling and if last compilation succeeded")]
+    [Description("Check if Unity is compiling scripts and whether last compilation succeeded.")]
+    [return: Description("Compilation status: compiling state and last result")]
     public async Task<string> UnityGetCompilationStatusAsync()
     {
         _logger.LogInformation("Requesting compilation status from Unity...");

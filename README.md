@@ -4,7 +4,7 @@
 
 **The C# implementation of Model Context Protocol for Unity Editor**
 
-Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Claude, Cursor, etc.) to directly interact with Unity Editor. Built with .NET 9.0 and the official MCP C# SDK, it provides 26 powerful tools for game development automation including scene manipulation, GameObject creation, asset management, and real-time play mode control.
+Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Claude, Cursor, etc.) to directly interact with Unity Editor. Built with .NET 9.0 and the official MCP C# SDK, it provides 28 powerful tools for game development automation including scene manipulation, GameObject creation, asset management, and real-time play mode control.
 
 [![Build Server](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/build-server.yml)
 [![Publish Docker](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/Abbabon/unity-mcp-sharp/actions/workflows/publish-docker.yml)
@@ -51,7 +51,7 @@ Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Cla
 </details>
 
 <details open>
-<summary><b>🛠️ 26 MCP Tools + 7 MCP Resources</b></summary>
+<summary><b>🛠️ 28 MCP Tools + 7 MCP Resources</b></summary>
 
 | Category | Tools & Resources |
 |----------|-------|
@@ -82,6 +82,7 @@ Unity MCP Sharp is a production-ready MCP server that enables AI assistants (Cla
 - 🔗 Tool descriptions include cross-references for chaining operations
 - ⚠️ Side effects and warnings clearly documented
 - 📝 Rich return descriptions help LLMs understand responses
+- 📊 **Tool Profiles**: Reduce token usage with Minimal (12 tools), Standard (20), or Full (28)
 </details>
 
 <details open>
@@ -827,10 +828,47 @@ Access configuration via `Tools → Unity MCP Server → Create MCP Configuratio
 | Auto-connect | `true` | Connect automatically on startup |
 | Auto-start | `false` | Start container automatically |
 | Auto Bring to Foreground | `true` | Automatically bring Unity to foreground when MCP operations require it |
+| Tool Profile | `Standard` | Controls which MCP tools are exposed: Minimal (12), Standard (20), Full (28) |
 | Retry Attempts | `3` | Connection retry attempts |
 | Retry Delay | `2000ms` | Delay between retries |
 | Verbose Logging | `false` | Enable detailed logs |
 | Max Log Buffer | `1000` | Maximum log entries to keep |
+</details>
+
+<details>
+<summary><b>📊 Tool Profiles (Token Optimization)</b></summary>
+
+Tool profiles help reduce token usage by exposing only the MCP tools you need. Configure via the Dashboard Settings tab.
+
+| Profile | Tools | Description |
+|---------|-------|-------------|
+| **Minimal** | 12 | Core tools for basic workflows (create, query, play mode) |
+| **Standard** | 20 | Common tools including component manipulation and asset creation |
+| **Full** | 28 | All tools including batch operations and multi-editor features |
+
+**Minimal Profile includes:**
+- Scene queries: `unity_get_project_info`, `unity_list_scene_objects`, `unity_find_game_object`
+- GameObjects: `unity_create_game_object`, `unity_delete_game_object`
+- Scripts: `unity_create_script`, `unity_get_compilation_status`, `unity_get_console_logs`
+- Play mode: `unity_enter_play_mode`, `unity_exit_play_mode`
+- Scenes: `unity_open_scene`, `unity_save_scene`
+
+**Standard Profile adds:**
+- Component manipulation: `unity_add_component_to_object`, `unity_set_component_field`
+- Assets: `unity_create_asset`, `unity_refresh_assets`, `unity_trigger_script_compilation`
+- Scene info: `unity_get_active_scene`, `unity_list_scenes`, `unity_get_play_mode_state`
+
+**Full Profile adds:**
+- Batch operations: `unity_batch_create_game_objects`
+- Multi-scene: `unity_create_game_object_in_scene`, `unity_close_scene`, `unity_set_active_scene`
+- Multi-editor: `unity_list_editors`, `unity_select_editor`
+- System: `unity_run_menu_item`, `unity_bring_editor_to_foreground`
+
+**To apply profile changes:**
+1. Change the profile in Unity Dashboard (Settings tab) and save
+2. In Cursor: disable the MCP server, then re-enable it (or restart Cursor)
+
+This is required because Cursor caches the tool list. Profile is stored per-project in `MCPConfiguration.asset`.
 </details>
 
 ---
