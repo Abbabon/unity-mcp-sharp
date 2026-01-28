@@ -8,11 +8,11 @@ namespace UnityMCPSharp
     /// </summary>
     public enum ToolProfile
     {
-        /// <summary>12 core tools for basic workflows (~3k tokens)</summary>
+        /// <summary>12 core tools for basic workflows (~1k tokens)</summary>
         Minimal,
-        /// <summary>20 commonly used tools (~5k tokens) - DEFAULT</summary>
+        /// <summary>20 commonly used tools (~2k tokens) - DEFAULT</summary>
         Standard,
-        /// <summary>All 28 tools including advanced features (~7k tokens)</summary>
+        /// <summary>All 28 tools including advanced features (~3k tokens)</summary>
         Full
     }
     /// <summary>

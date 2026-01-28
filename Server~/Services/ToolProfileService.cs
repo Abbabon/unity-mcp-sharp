@@ -43,6 +43,8 @@ public static class ToolProfileService
 
     /// <summary>
     /// Full profile - All 28 tools including advanced/multi-editor features (~3k tokens)
+    /// Note: GetToolsForProfile returns null for "full" (no filtering), but we define this
+    /// HashSet for GetProfileCounts() and potential future validation use.
     /// </summary>
     private static readonly HashSet<string> FullTools = new(StandardTools, StringComparer.OrdinalIgnoreCase)
     {
