@@ -13,14 +13,14 @@ public class SetComponentFieldTool(ILogger<SetComponentFieldTool> logger, UnityW
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Set a field or property value on a component attached to a GameObject. Can set primitive values (int, float, bool, string) or references to other GameObjects/assets by path. Use unity_find_game_object to see available components and fields first.")]
-    [return: Description("Confirmation that the field was set successfully, or error message if it failed")]
+    [Description("Set a field value on a component (primitives or asset references).")]
+    [return: Description("Confirmation or error message")]
     public async Task<string> UnitySetComponentFieldAsync(
-        [Description("Name of the GameObject that has the component")] string gameObjectName,
-        [Description("Type name of the component (e.g., 'Transform', 'Rigidbody', 'PrimitiveSpawner')")] string componentType,
-        [Description("Name of the field or property to set (e.g., 'enabled', 'mass', 'config')")] string fieldName,
-        [Description("Value to set - can be a primitive (number, bool, string) or asset path for references (e.g., 'Assets/ScriptableObjects/DemoPrimitives.asset')")] string value,
-        [Description("Type of the value: 'string', 'int', 'float', 'bool', 'asset', 'gameObject' (default: 'string')")] string valueType = "string")
+        [Description("Target GameObject name")] string gameObjectName,
+        [Description("Component type name")] string componentType,
+        [Description("Field or property name")] string fieldName,
+        [Description("Value (primitive or asset path)")] string value,
+        [Description("'string', 'int', 'float', 'bool', 'asset', 'gameObject'")] string valueType = "string")
     {
         _logger.LogInformation("Setting field {FieldName} on component {ComponentType} of GameObject {GameObjectName} to {Value}",
             fieldName, componentType, gameObjectName, value);

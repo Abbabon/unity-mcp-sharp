@@ -23,6 +23,7 @@ MonoBehaviour:
   retryDelay: 5
   operationTimeout: 30
   autoBringToForeground: 1
+  toolProfile: 0
   enableMcpLogs: 1
   verboseLogging: 0
   maxLogBuffer: 500

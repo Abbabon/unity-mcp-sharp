@@ -74,6 +74,13 @@ public class EditorMetadata
     public bool IsPlaying { get; set; }
 
     /// <summary>
+    /// Tool profile preference for this editor (minimal, standard, full)
+    /// Controls which MCP tools are exposed to LLM clients
+    /// </summary>
+    [JsonPropertyName("toolProfile")]
+    public string ToolProfile { get; set; } = "standard";
+
+    /// <summary>
     /// Display name for this editor (auto-generated from metadata)
     /// </summary>
     [JsonPropertyName("displayName")]

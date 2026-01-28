@@ -12,10 +12,10 @@ public class SetActiveSceneTool(ILogger<SetActiveSceneTool> logger, UnityWebSock
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Set which scene should be the active scene. The active scene is where new GameObjects are created. Only works when multiple scenes are open. Scene must be already loaded. Use unity_get_active_scene after to verify the change.")]
-    [return: Description("Confirmation message with the scene identifier that is now active")]
+    [Description("Set which loaded scene is active (where new GameObjects are created).")]
+    [return: Description("Confirmation of new active scene")]
     public async Task<string> UnitySetActiveSceneAsync(
-        [Description("Name or path of the scene to make active")] string sceneIdentifier)
+        [Description("Scene name or path to make active")] string sceneIdentifier)
     {
         _logger.LogInformation("Setting active scene: {SceneIdentifier}", sceneIdentifier);
 

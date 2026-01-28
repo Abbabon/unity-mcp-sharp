@@ -12,15 +12,15 @@ public class CreateGameObjectTool(ILogger<CreateGameObjectTool> logger, UnityWeb
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create a new GameObject in the currently active Unity scene. You can specify its name, 3D position, components to add (e.g., 'Rigidbody,BoxCollider'), and parent object. The GameObject will be selected in the Hierarchy after creation. Use unity_find_game_object to verify creation or unity_add_component_to_object to add more components later.")]
-    [return: Description("Confirmation message with GameObject name and position")]
+    [Description("Create a GameObject in the active scene with optional position, components, and parent.")]
+    [return: Description("Confirmation with name and position")]
     public async Task<string> UnityCreateGameObjectAsync(
-        [Description("Name of the GameObject to create")] string name,
-        [Description("X position in world space (default: 0)")] float x = 0,
-        [Description("Y position in world space (default: 0)")] float y = 0,
-        [Description("Z position in world space (default: 0)")] float z = 0,
-        [Description("Comma-separated list of Unity components to add (e.g., 'Rigidbody,BoxCollider,AudioSource')")] string? components = null,
-        [Description("Name of parent GameObject in hierarchy (optional, leave empty for root level)")] string? parent = null)
+        [Description("Name for the new GameObject")] string name,
+        [Description("X position (default: 0)")] float x = 0,
+        [Description("Y position (default: 0)")] float y = 0,
+        [Description("Z position (default: 0)")] float z = 0,
+        [Description("Components to add, comma-separated")] string? components = null,
+        [Description("Parent GameObject name (empty for root)")] string? parent = null)
     {
         _logger.LogInformation("Creating GameObject: {Name}", name);
 

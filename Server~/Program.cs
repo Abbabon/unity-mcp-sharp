@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using UnityMcpServer.Middleware;
 using UnityMcpServer.Services;
@@ -53,7 +54,29 @@ builder.Services
         options.MaxIdleSessionCount = 1000;
     })
     .WithToolsFromAssembly(typeof(Program).Assembly)
-    .WithResourcesFromAssembly(typeof(Program).Assembly);
+    .WithResourcesFromAssembly(typeof(Program).Assembly)
+    // Filter tools based on connected Unity editor's tool profile preference
+    .AddListToolsFilter(next => async (context, cancellationToken) =>
+    {
+        var result = await next(context, cancellationToken);
+
+        // Get the tool profile from the current session's Unity editor
+        var sessionManager = context.Services!.GetRequiredService<EditorSessionManager>();
+        var profile = sessionManager.GetCurrentSessionEditorProfile();
+        var enabledTools = ToolProfileService.GetToolsForProfile(profile);
+
+        // Filter tools if a profile filter is active (null means allow all)
+        if (enabledTools != null && result.Tools != null)
+        {
+            result = new ListToolsResult
+            {
+                Tools = result.Tools.Where(t => enabledTools.Contains(t.Name)).ToList(),
+                NextCursor = result.NextCursor
+            };
+        }
+
+        return result;
+    });
 
 // Add health checks
 builder.Services.AddHealthChecks();

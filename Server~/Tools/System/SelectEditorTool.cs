@@ -12,10 +12,10 @@ public class SelectEditorTool(ILogger<SelectEditorTool> logger, EditorSessionMan
     private readonly EditorSessionManager _sessionManager = sessionManager;
 
     [McpServerTool]
-    [Description("Select which Unity Editor instance to use for this MCP session. When multiple Unity Editors are connected, you must select one before using other unity_* tools. The selection persists across compilation reconnects. Use unity_list_editors to see available editors and their connection IDs.")]
-    [return: Description("Confirmation message with the selected editor's display name")]
+    [Description("Select which Unity Editor to use when multiple are connected.")]
+    [return: Description("Confirmation with selected editor name")]
     public async Task<string> UnitySelectEditorAsync(
-        [Description("Connection ID of the Unity Editor to select (get this from unity_list_editors)")] string connectionId,
+        [Description("Connection ID from unity_list_editors")] string connectionId,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Selecting Unity Editor: {ConnectionId}", connectionId);

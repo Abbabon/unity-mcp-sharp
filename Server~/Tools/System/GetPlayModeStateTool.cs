@@ -13,8 +13,8 @@ public class GetPlayModeStateTool(ILogger<GetPlayModeStateTool> logger, UnityWeb
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Get the current play mode state of Unity Editor. Returns whether Unity is currently Playing, Paused, or Stopped. Use unity_enter_play_mode to start play mode, or unity_exit_play_mode to stop it.")]
-    [return: Description("Current play mode state: Playing, Paused, or Stopped")]
+    [Description("Check if Unity is in play mode, paused, or stopped.")]
+    [return: Description("Play mode state: Playing, Paused, or Stopped")]
     public async Task<string> UnityGetPlayModeStateAsync()
     {
         _logger.LogInformation("Requesting play mode state from Unity...");

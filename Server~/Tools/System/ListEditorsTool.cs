@@ -13,8 +13,8 @@ public class ListEditorsTool(ILogger<ListEditorsTool> logger, EditorSessionManag
     private readonly EditorSessionManager _sessionManager = sessionManager;
 
     [McpServerTool]
-    [Description("List all connected Unity Editor instances with their metadata (project name, scene, machine, etc.). Use this to discover available editors before selecting one with unity_select_editor. Shows which editor is currently selected for this session.")]
-    [return: Description("List of connected Unity Editors with their connection IDs, project names, scenes, and other metadata")]
+    [Description("List all connected Unity Editor instances with project, scene, and connection info.")]
+    [return: Description("Connected editors with IDs, project names, scenes, and selection status")]
     public async Task<string> UnityListEditorsAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Listing Unity Editor instances");

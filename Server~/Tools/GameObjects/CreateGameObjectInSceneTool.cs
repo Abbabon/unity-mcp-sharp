@@ -12,16 +12,16 @@ public class CreateGameObjectInSceneTool(ILogger<CreateGameObjectInSceneTool> lo
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create a GameObject in a specific scene (not necessarily the active one). Requires the scene to be loaded. If scene is not loaded, it will be opened additively first. Use unity_list_scenes to find available scenes, then unity_set_active_scene if you want to make that scene active.")]
-    [return: Description("Confirmation message with GameObject name, scene path, and position")]
+    [Description("Create a GameObject in a specific scene (loads scene if needed).")]
+    [return: Description("Confirmation with name, scene, and position")]
     public async Task<string> UnityCreateGameObjectInSceneAsync(
-        [Description("Path to the scene where the GameObject should be created (e.g., 'Scenes/Level1.unity')")] string scenePath,
-        [Description("Name of the GameObject to create")] string name,
-        [Description("X position in world space (default: 0)")] float x = 0,
-        [Description("Y position in world space (default: 0)")] float y = 0,
-        [Description("Z position in world space (default: 0)")] float z = 0,
-        [Description("Comma-separated list of Unity components to add (e.g., 'Rigidbody,BoxCollider,AudioSource')")] string? components = null,
-        [Description("Name of parent GameObject in hierarchy (optional, leave empty for root level)")] string? parent = null)
+        [Description("Scene path (e.g., 'Scenes/Level1.unity')")] string scenePath,
+        [Description("Name for the new GameObject")] string name,
+        [Description("X position (default: 0)")] float x = 0,
+        [Description("Y position (default: 0)")] float y = 0,
+        [Description("Z position (default: 0)")] float z = 0,
+        [Description("Components to add, comma-separated")] string? components = null,
+        [Description("Parent GameObject name (empty for root)")] string? parent = null)
     {
         _logger.LogInformation("Creating GameObject '{Name}' in scene '{ScenePath}'", name, scenePath);
 

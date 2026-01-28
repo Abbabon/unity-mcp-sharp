@@ -13,8 +13,8 @@ public class ListSceneObjectsTool(ILogger<ListSceneObjectsTool> logger, UnityWeb
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Get the complete GameObject hierarchy of the currently active Unity scene. Returns all GameObjects with their parent-child relationships, showing which objects are active or inactive. Useful for understanding scene structure. Use unity_find_game_object to get detailed information about a specific GameObject, or unity_create_game_object to add new objects.")]
-    [return: Description("Hierarchical list of all GameObjects in the active scene with their active/inactive state")]
+    [Description("List all GameObjects in the active scene with hierarchy and active state.")]
+    [return: Description("Hierarchical list of GameObjects")]
     public async Task<string> UnityListSceneObjectsAsync()
     {
         _logger.LogInformation("Requesting scene objects from Unity...");

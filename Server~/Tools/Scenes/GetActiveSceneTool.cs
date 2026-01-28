@@ -13,8 +13,8 @@ public class GetActiveSceneTool(ILogger<GetActiveSceneTool> logger, UnityWebSock
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Get information about the currently active Unity scene. The active scene is where new GameObjects are created by default. Returns scene name, path, isDirty status, and GameObject count. Use unity_list_scene_objects to see all GameObjects in this scene, or unity_save_scene if isDirty is true to save changes.")]
-    [return: Description("Active scene information including name, path, dirty state, and object count")]
+    [Description("Get info about the active scene: name, path, dirty state, object count.")]
+    [return: Description("Active scene details")]
     public async Task<string> UnityGetActiveSceneAsync()
     {
         _logger.LogInformation("Getting active scene info");

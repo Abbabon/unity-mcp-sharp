@@ -221,7 +221,8 @@ namespace UnityMCPSharp.Editor
                 unityVersion = Application.unityVersion,
                 dataPath = Application.dataPath,
                 platform = Application.platform.ToString(),
-                isPlaying = EditorApplication.isPlaying
+                isPlaying = EditorApplication.isPlaying,
+                toolProfile = _config.toolProfile.ToString().ToLowerInvariant()
             };
 
             try

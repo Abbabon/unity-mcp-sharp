@@ -12,8 +12,8 @@ public class RefreshAssetsTool(ILogger<RefreshAssetsTool> logger, UnityWebSocket
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Refresh Unity Asset Database to detect file changes. Use this after batch file operations or when changes aren't detected automatically. Triggers Unity to reimport assets and recompile scripts. Note: This can take a few seconds for large projects. Use unity_get_compilation_status after to check if recompilation is complete.")]
-    [return: Description("Confirmation message that asset refresh was initiated")]
+    [Description("Refresh Asset Database to detect file changes and trigger reimport.")]
+    [return: Description("Confirmation that refresh started")]
     public async Task<string> UnityRefreshAssetsAsync()
     {
         _logger.LogInformation("Refreshing Unity Asset Database");

@@ -12,12 +12,12 @@ public class CreateScriptTool(ILogger<CreateScriptTool> logger, UnityWebSocketSe
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Create a new C# MonoBehaviour script file in the Unity project. The script will be created in the Assets folder and will trigger automatic Unity recompilation. After creation, use unity_get_compilation_status to check if compilation succeeded, or unity_get_console_logs to see any errors.")]
-    [return: Description("Confirmation message with script name and file path")]
+    [Description("Create a C# script file. Triggers automatic recompilation.")]
+    [return: Description("Confirmation with script path")]
     public async Task<string> UnityCreateScriptAsync(
-        [Description("Name of the script (without .cs extension)")] string scriptName,
-        [Description("Relative path within Assets folder (e.g., 'Scripts' or 'Scripts/Player')")] string folderPath,
-        [Description("C# script content (full MonoBehaviour class code)")] string scriptContent)
+        [Description("Script name (without .cs)")] string scriptName,
+        [Description("Folder path in Assets (e.g., 'Scripts')")] string folderPath,
+        [Description("Full C# script content")] string scriptContent)
     {
         _logger.LogInformation("Creating script: {ScriptName} in {FolderPath}", scriptName, folderPath);
 

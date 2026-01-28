@@ -33,6 +33,7 @@ namespace UnityMCPSharp.Editor
         private Toggle _autoConnectToggle;
         private Toggle _autoStartToggle;
         private Toggle _autoBringToForegroundToggle;
+        private EnumField _toolProfileField;
         private Toggle _enableMcpLogsToggle;
         private Toggle _verboseLoggingToggle;
         private Toggle _showParametersToggle;
@@ -580,6 +581,12 @@ namespace UnityMCPSharp.Editor
             _autoBringToForegroundToggle.style.marginBottom = 5;
             container.Add(_autoBringToForegroundToggle);
 
+            // Tool Profile dropdown
+            _toolProfileField = new EnumField("Tool Profile", _config.toolProfile);
+            _toolProfileField.tooltip = "Controls which MCP tools are exposed to LLM clients. Minimal (12 tools, ~1k tokens), Standard (20 tools, ~2k tokens), Full (28 tools, ~3k tokens). Saving will auto-reconnect Unity. You must also disable/re-enable the MCP in Cursor to refresh its tool list.";
+            _toolProfileField.style.marginBottom = 10;
+            container.Add(_toolProfileField);
+
             // Enable MCP logs toggle
             _enableMcpLogsToggle = new Toggle("Enable MCP logs in Console");
             _enableMcpLogsToggle.value = _config.enableMcpLogs;
@@ -977,6 +984,11 @@ Note: Cursor must support MCP for this to work.";
                 return;
             }
 
+            // Track if tool profile changed (requires reconnect to take effect)
+            var oldToolProfile = _config.toolProfile;
+            var newToolProfile = (ToolProfile)_toolProfileField.value;
+            var toolProfileChanged = oldToolProfile != newToolProfile;
+
             // Auto-update URLs if port changed
             var portChanged = port != _config.serverPort;
             if (portChanged)
@@ -996,6 +1008,7 @@ Note: Cursor must support MCP for this to work.";
             _config.autoConnect = _autoConnectToggle.value;
             _config.autoStartContainer = _autoStartToggle.value;
             _config.autoBringToForeground = _autoBringToForegroundToggle.value;
+            _config.toolProfile = newToolProfile;
             _config.enableMcpLogs = _enableMcpLogsToggle.value;
             _config.verboseLogging = _verboseLoggingToggle.value;
 
@@ -1018,9 +1031,33 @@ Note: Cursor must support MCP for this to work.";
 
             MCPLogger.Log("[MCPDashboard] Configuration saved");
 
+            // If tool profile changed and we're connected, reconnect to apply the new profile
+            // The server filters tools based on profile sent during registration
+            if (toolProfileChanged && _client != null && _client.IsConnected)
+            {
+                MCPLogger.Log($"[MCPDashboard] Tool profile changed from {oldToolProfile} to {newToolProfile}, reconnecting...");
+                _ = ReconnectForProfileChangeAsync();
+            }
+
             // Full UI refresh needed to update status indicator (in-memory vs saved state)
             rootVisualElement.Clear();
             CreateGUI();
+        }
+
+        private async Task ReconnectForProfileChangeAsync()
+        {
+            try
+            {
+                await _client.DisconnectAsync();
+                // Small delay to ensure clean disconnect
+                await Task.Delay(500);
+                await _client.ConnectAsync();
+                MCPLogger.Log("[MCPDashboard] Reconnected with new tool profile. Note: You may also need to refresh/restart your MCP client (e.g., disable and re-enable in Cursor) to see the updated tool list.");
+            }
+            catch (System.Exception ex)
+            {
+                MCPLogger.LogError($"[MCPDashboard] Failed to reconnect after profile change: {ex.Message}");
+            }
         }
 
         private void ResetConfiguration()
@@ -1042,6 +1079,7 @@ Note: Cursor must support MCP for this to work.";
                 _autoConnectToggle.value = _config.autoConnect;
                 _autoStartToggle.value = _config.autoStartContainer;
                 _autoBringToForegroundToggle.value = _config.autoBringToForeground;
+                _toolProfileField.value = _config.toolProfile;
                 _enableMcpLogsToggle.value = _config.enableMcpLogs;
                 _verboseLoggingToggle.value = _config.verboseLogging;
 

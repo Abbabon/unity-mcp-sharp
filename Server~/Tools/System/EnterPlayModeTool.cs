@@ -12,8 +12,8 @@ public class EnterPlayModeTool(ILogger<EnterPlayModeTool> logger, UnityWebSocket
     private readonly UnityWebSocketService _webSocketService = webSocketService;
 
     [McpServerTool]
-    [Description("Enter Unity play mode (start running the game/scene). Equivalent to pressing the Play button in Unity Editor. IMPORTANT: Changes made to GameObjects in play mode are NOT saved unless explicitly copied. Any GameObjects created in play mode will be destroyed when exiting. Use unity_get_play_mode_state to check current state, and unity_exit_play_mode when done testing.")]
-    [return: Description("Confirmation message that play mode was entered")]
+    [Description("Start play mode to run the game. WARNING: Changes made in play mode are NOT saved.")]
+    [return: Description("Confirmation that play mode started")]
     public async Task<string> UnityEnterPlayModeAsync()
     {
         _logger.LogInformation("Entering Unity play mode");
