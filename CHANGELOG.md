@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Tool Profiles for Token Optimization:** Configurable tool profiles to reduce LLM token usage (#87, #88)
+  - Three profiles: Minimal (12 tools, ~1k tokens), Standard (20 tools, ~2k tokens), Full (28 tools, ~3k tokens)
+  - Configurable via Unity Dashboard Settings tab
+  - Profile persists per-project in MCPConfiguration.asset
+  - Server filters tool list per MCP session based on connected editor's profile
+  - Auto-reconnect when profile changes; MCP clients (Cursor) need manual refresh to see updated tools
+- **Auto-Focus Unity Editor:** Automatically bring Unity to foreground when MCP operations are received
+  - Prevents timeout issues when Unity is minimized or behind other windows
+  - Uses platform-specific APIs (SetForegroundWindow on Windows, NSApplication.activate on macOS)
+  - Configurable via `autoBringToForeground` setting (default: enabled)
+  - New `unity_bring_editor_to_foreground` tool for explicit control
+- **Delete GameObject Tool:** New `unity_delete_game_object` tool to remove GameObjects from scene
 - **Configurable Server Port:** Default port changed from 8080 to 3727 to avoid conflicts with common applications
   - New `serverPort` field in MCPConfiguration (validated range: 1024-65535)
   - Port configurable via Dashboard Configuration tab
@@ -15,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Docker container uses `UNITY_MCP_ASPPORT` environment variable for dynamic port configuration
   - "Load Dev Config" button for quickly switching to local test image
 - **Option to Disable MCP Logs:** New toggle in Dashboard to enable/disable MCP logs in Unity Console
+
+### Changed
+- **Shortened Tool Descriptions:** All 28 tool descriptions significantly shortened to reduce token usage
+  - Removed verbose explanations and cross-references
+  - Focused on essential information only
 
 ### Planned Features
 - Performance monitoring and metrics

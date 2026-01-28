@@ -7,7 +7,7 @@ namespace UnityMcpServer.Services;
 public static class ToolProfileService
 {
     /// <summary>
-    /// Minimal profile - 12 core tools for basic workflows (~3k tokens)
+    /// Minimal profile - 12 core tools for basic workflows (~1k tokens)
     /// </summary>
     private static readonly HashSet<string> MinimalTools = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -26,7 +26,7 @@ public static class ToolProfileService
     };
 
     /// <summary>
-    /// Standard profile - 20 commonly used tools (~5k tokens)
+    /// Standard profile - 20 commonly used tools (~2k tokens)
     /// Includes all minimal tools plus additional commonly used ones
     /// </summary>
     private static readonly HashSet<string> StandardTools = new(MinimalTools, StringComparer.OrdinalIgnoreCase)
@@ -42,7 +42,7 @@ public static class ToolProfileService
     };
 
     /// <summary>
-    /// Full profile - All 28 tools including advanced/multi-editor features (~7k tokens)
+    /// Full profile - All 28 tools including advanced/multi-editor features (~3k tokens)
     /// </summary>
     private static readonly HashSet<string> FullTools = new(StandardTools, StringComparer.OrdinalIgnoreCase)
     {
