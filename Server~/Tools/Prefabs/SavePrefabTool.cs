@@ -12,10 +12,10 @@ private readonly ILogger<SavePrefabTool> _logger = logger;
 private readonly UnityWebSocketService _webSocketService = webSocketService;
 
 [McpServerTool]
-[Description("Save changes made to a prefab that is currently open in Prefab Mode. This persists modifications to the prefab asset. If no prefab is currently open, this will attempt to save prefab instances back to their source prefab assets. IMPORTANT: Always call this after making changes in Prefab Mode to ensure changes are not lost.")]
-[return: Description("Confirmation message indicating what was saved")]
+[Description("Save changes to current prefab in Prefab Mode or apply instance overrides.")]
+[return: Description("Confirmation of save")]
 public async Task<string> UnitySavePrefabAsync(
-[Description("Optional: Specific prefab asset path to save (e.g., 'Assets/Prefabs/Character.prefab'). If not specified, saves the currently open prefab in Prefab Mode.")] string? prefabPath = null,
+[Description("Prefab path to save (empty = current Prefab Mode)")] string? prefabPath = null,
 CancellationToken cancellationToken = default)
 {
 _logger.LogInformation("Saving prefab: {PrefabPath}", prefabPath ?? "current prefab stage");

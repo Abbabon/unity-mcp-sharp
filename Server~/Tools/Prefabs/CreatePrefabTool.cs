@@ -12,13 +12,13 @@ private readonly ILogger<CreatePrefabTool> _logger = logger;
 private readonly UnityWebSocketService _webSocketService = webSocketService;
 
 [McpServerTool]
-[Description("Create a prefab asset from an existing GameObject in the scene. The GameObject must exist in the current scene. The prefab will be created in the specified Assets folder path. Use unity_find_game_object first to verify the GameObject exists, and unity_get_prefab_info after creation to verify the prefab was created successfully.")]
-[return: Description("Confirmation message with prefab path and source GameObject name")]
+[Description("Create a prefab asset from an existing scene GameObject.")]
+[return: Description("Confirmation with prefab path")]
 public async Task<string> UnityCreatePrefabAsync(
-[Description("Name of the GameObject in the scene to convert to prefab")] string gameObjectName,
-[Description("Path within Assets folder where prefab should be created (e.g., 'Prefabs', 'Prefabs/Characters'). The folder will be created if it doesn't exist.")] string assetFolderPath,
-[Description("Name for the prefab file (without .prefab extension). If not specified, uses the GameObject name.")] string? prefabName = null,
-[Description("If true, creates a prefab variant instead of a regular prefab. Requires the source to be a prefab instance.")] bool createVariant = false,
+[Description("Source GameObject name")] string gameObjectName,
+[Description("Folder path (e.g., 'Prefabs/Characters')")] string assetFolderPath,
+[Description("Prefab filename (defaults to GameObject name)")] string? prefabName = null,
+[Description("Create variant instead of regular prefab")] bool createVariant = false,
 CancellationToken cancellationToken = default)
 {
 _logger.LogInformation("Creating prefab from GameObject: {Name} to {Path}", gameObjectName, assetFolderPath);

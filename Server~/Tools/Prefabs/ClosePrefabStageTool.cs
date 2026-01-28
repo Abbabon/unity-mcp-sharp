@@ -12,10 +12,10 @@ private readonly ILogger<ClosePrefabStageTool> _logger = logger;
 private readonly UnityWebSocketService _webSocketService = webSocketService;
 
 [McpServerTool]
-[Description("Close the currently open Prefab Mode (Prefab Stage) and return to scene editing. If there are unsaved changes, they will be lost unless you called unity_save_prefab first. This is required to exit prefab editing mode and return to normal scene editing. You must close the current prefab before opening another one.")]
-[return: Description("Confirmation message indicating the Prefab Stage was closed")]
+[Description("Close Prefab Mode and return to scene editing.")]
+[return: Description("Confirmation of close")]
 public async Task<string> UnityClosePrefabStageAsync(
-[Description("If true, saves the prefab before closing. If false, discards unsaved changes (default: true)")] bool saveBeforeClosing = true,
+[Description("Save before closing (default: true)")] bool saveBeforeClosing = true,
 CancellationToken cancellationToken = default)
 {
 _logger.LogInformation("Closing Prefab Stage (save: {Save})", saveBeforeClosing);

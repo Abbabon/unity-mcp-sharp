@@ -13,10 +13,10 @@ private readonly ILogger<GetPrefabInfoTool> _logger = logger;
 private readonly UnityWebSocketService _webSocketService = webSocketService;
 
 [McpServerTool]
-[Description("Get detailed information about a GameObject's prefab status and relationships. Returns whether the GameObject is a prefab asset, prefab instance, variant, or regular GameObject. Also provides the asset path for prefabs and information about modifications. Use this to understand prefab relationships before using unity_open_prefab or unity_save_prefab.")]
-[return: Description("JSON object with prefab information including isPrefabAsset, isPrefabInstance, isPrefabVariant, assetPath, isModified, and prefabInstanceStatus")]
+[Description("Get prefab status for a GameObject (asset, instance, variant, modifications).")]
+[return: Description("JSON with prefab info")]
 public async Task<string> UnityGetPrefabInfoAsync(
-[Description("Name of the GameObject to query (can be a scene GameObject or prefab asset path like 'Assets/Prefabs/Character.prefab')")] string gameObjectNameOrPath,
+[Description("GameObject name or asset path")] string gameObjectNameOrPath,
 CancellationToken cancellationToken = default)
 {
 _logger.LogInformation("Getting prefab info for: {Name}", gameObjectNameOrPath);

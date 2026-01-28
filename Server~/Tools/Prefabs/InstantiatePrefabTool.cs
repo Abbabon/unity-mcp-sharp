@@ -12,21 +12,21 @@ private readonly ILogger<InstantiatePrefabTool> _logger = logger;
 private readonly UnityWebSocketService _webSocketService = webSocketService;
 
 [McpServerTool]
-[Description("Instantiate (spawn) a prefab into the currently active scene. The prefab must exist in the Assets folder. You can specify the position, rotation, scale, and parent for the new instance. Use unity_list_scene_objects after instantiation to verify the instance was created, or unity_find_game_object to get details about the spawned instance.")]
-[return: Description("Confirmation message with instance name, position, and prefab source path")]
+[Description("Spawn a prefab instance into the active scene with transform options.")]
+[return: Description("Confirmation with instance details")]
 public async Task<string> UnityInstantiatePrefabAsync(
-[Description("Path to the prefab asset relative to Assets folder (e.g., 'Prefabs/Character.prefab' or 'Prefabs/Enemy')")] string prefabPath,
-[Description("X position in world space where the prefab should be spawned (default: 0)")] float x = 0,
-[Description("Y position in world space where the prefab should be spawned (default: 0)")] float y = 0,
-[Description("Z position in world space where the prefab should be spawned (default: 0)")] float z = 0,
-[Description("X rotation in Euler angles (default: 0)")] float rotationX = 0,
-[Description("Y rotation in Euler angles (default: 0)")] float rotationY = 0,
-[Description("Z rotation in Euler angles (default: 0)")] float rotationZ = 0,
-[Description("X scale multiplier (default: 1)")] float scaleX = 1,
-[Description("Y scale multiplier (default: 1)")] float scaleY = 1,
-[Description("Z scale multiplier (default: 1)")] float scaleZ = 1,
-[Description("Name of parent GameObject in hierarchy (optional, leave empty for root level)")] string? parent = null,
-[Description("Custom name for the instantiated object (optional, defaults to prefab name)")] string? instanceName = null,
+[Description("Prefab path (e.g., 'Prefabs/Character.prefab')")] string prefabPath,
+[Description("X position (default: 0)")] float x = 0,
+[Description("Y position (default: 0)")] float y = 0,
+[Description("Z position (default: 0)")] float z = 0,
+[Description("X rotation in degrees (default: 0)")] float rotationX = 0,
+[Description("Y rotation in degrees (default: 0)")] float rotationY = 0,
+[Description("Z rotation in degrees (default: 0)")] float rotationZ = 0,
+[Description("X scale (default: 1)")] float scaleX = 1,
+[Description("Y scale (default: 1)")] float scaleY = 1,
+[Description("Z scale (default: 1)")] float scaleZ = 1,
+[Description("Parent GameObject name (empty for root)")] string? parent = null,
+[Description("Custom instance name (defaults to prefab name)")] string? instanceName = null,
 CancellationToken cancellationToken = default)
 {
 _logger.LogInformation("Instantiating prefab: {PrefabPath} at ({X}, {Y}, {Z})", prefabPath, x, y, z);
