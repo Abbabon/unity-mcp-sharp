@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Comprehensive Prefab System:** Full prefab workflow automation with 6 new MCP tools (#6)
+  - `unity_create_prefab` - Create prefab assets from scene GameObjects (supports variants)
+  - `unity_instantiate_prefab` - Spawn prefab instances with position, rotation, scale, and parent
+  - `unity_open_prefab` - Open prefabs in Prefab Mode (isolation or context mode)
+  - `unity_save_prefab` - Save prefab changes in Prefab Mode or apply instance overrides
+  - `unity_close_prefab_stage` - Close Prefab Mode with optional save
+  - `unity_get_prefab_info` - Query prefab status, relationships, and modifications
+  - All prefab tools added to Full profile (34 tools total, ~4k tokens)
+
 ### Planned Features
 - Performance monitoring and metrics
 - Advanced scene query capabilities
-- Prefab instantiation support
 - Build pipeline integration
 - Scene View overlay for MCP operations
 

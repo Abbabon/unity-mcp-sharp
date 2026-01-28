@@ -67,10 +67,10 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                         {
                             assetPath = AssetDatabase.GetAssetPath(correspondingAsset);
                         }
+                        
+                        // Check if the instance has modifications - must be called on prefabRoot for accurate results
+                        isModified = PrefabUtility.HasPrefabInstanceAnyOverrides(prefabRoot, false);
                     }
-
-                    // Check if the instance has modifications
-                    isModified = PrefabUtility.HasPrefabInstanceAnyOverrides(gameObject, false);
                 }
                 else if (isPrefabAsset)
                 {

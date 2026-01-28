@@ -74,9 +74,8 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 // Select the new instance
                 Selection.activeGameObject = instance;
 
-                // Mark scene as dirty
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-                    UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                // Mark the instance's scene as dirty (supports multi-scene editing)
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(instance.scene);
 
                 Debug.Log($"[InstantiatePrefabHandler] Instantiated prefab '{instance.name}' from '{assetPath}' at ({data.position.x}, {data.position.y}, {data.position.z})");
             }

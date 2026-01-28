@@ -53,13 +53,37 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 if (data.createVariant)
                 {
                     // Check if the source is a prefab instance
-                    if (!PrefabUtility.IsPartOfAnyPrefab(gameObject))
+                    if (!PrefabUtility.IsPartOfPrefabInstance(gameObject))
                     {
                         Debug.LogError($"[CreatePrefabHandler] GameObject '{data.gameObjectName}' must be a prefab instance to create a variant");
                         return;
                     }
 
-                    var prefabAsset = PrefabUtility.SaveAsPrefabAsset(gameObject, assetPath, out success);
+                    // Get the source prefab that this instance is based on
+                    var prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
+                    var sourcePrefab = PrefabUtility.GetCorrespondingObjectFromSource(prefabRoot);
+                    
+                    if (sourcePrefab == null)
+                    {
+                        Debug.LogError($"[CreatePrefabHandler] Could not find source prefab for '{data.gameObjectName}'");
+                        return;
+                    }
+
+                    // Instantiate a fresh copy from the source prefab - this maintains the prefab link
+                    var variantInstance = (GameObject)PrefabUtility.InstantiatePrefab(sourcePrefab);
+                    
+                    // Copy transforms from the scene object to preserve any modifications
+                    variantInstance.transform.position = gameObject.transform.position;
+                    variantInstance.transform.rotation = gameObject.transform.rotation;
+                    variantInstance.transform.localScale = gameObject.transform.localScale;
+                    variantInstance.name = data.prefabName;
+
+                    // Save as prefab - this creates a variant because the instance is linked to a base prefab
+                    var prefabAsset = PrefabUtility.SaveAsPrefabAsset(variantInstance, assetPath, out success);
+                    
+                    // Clean up the temporary instance
+                    Object.DestroyImmediate(variantInstance);
+                    
                     if (success)
                     {
                         Debug.Log($"[CreatePrefabHandler] Created prefab variant '{assetPath}' from '{data.gameObjectName}'");
@@ -67,7 +91,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 }
                 else
                 {
-                    // Create regular prefab
+                    // Create regular prefab and connect the scene instance to it
                     var prefabAsset = PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, assetPath, InteractionMode.AutomatedAction, out success);
                     if (success)
                     {
@@ -80,6 +104,9 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     Debug.LogError($"[CreatePrefabHandler] Failed to create prefab at '{assetPath}'");
                     return;
                 }
+
+                // Mark scene as dirty after creating prefab from scene object
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
 
                 // Refresh asset database
                 AssetDatabase.SaveAssets();

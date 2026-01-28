@@ -31,6 +31,11 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     PrefabUtility.SaveAsPrefabAsset(prefabStage.prefabContentsRoot, prefabStage.assetPath);
                     Debug.Log($"[ClosePrefabStageHandler] Saved prefab '{prefabPath}' before closing");
                 }
+                else
+                {
+                    // Warn about discarded changes when not saving
+                    Debug.LogWarning($"[ClosePrefabStageHandler] Closing prefab '{prefabPath}' WITHOUT saving - any unsaved changes will be lost!");
+                }
 
                 // Close the prefab stage and return to main stage
                 StageUtility.GoToMainStage();

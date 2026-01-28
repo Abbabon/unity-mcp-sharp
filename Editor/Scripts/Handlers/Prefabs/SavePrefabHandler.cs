@@ -1,7 +1,9 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
 {
@@ -37,27 +39,14 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     }
 
                     // Find instances in the scene and apply overrides
-                    var allObjects = GameObject.FindObjectsOfType<GameObject>();
-                    foreach (var obj in allObjects)
+                    // Use GetRootGameObjects + recursive traversal instead of expensive FindObjectsOfType
+                    var processedRoots = new HashSet<GameObject>();
+                    var activeScene = SceneManager.GetActiveScene();
+                    var rootObjects = activeScene.GetRootGameObjects();
+                    
+                    foreach (var rootObj in rootObjects)
                     {
-                        if (PrefabUtility.IsPartOfPrefabInstance(obj))
-                        {
-                            var prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-                            if (prefabRoot != null)
-                            {
-                                var correspondingAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabRoot);
-                                if (correspondingAsset != null)
-                                {
-                                    var instanceAssetPath = AssetDatabase.GetAssetPath(correspondingAsset);
-                                    if (instanceAssetPath == assetPath)
-                                    {
-                                        // Apply overrides to this prefab
-                                        PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.AutomatedAction);
-                                        Debug.Log($"[SavePrefabHandler] Applied overrides from instance '{prefabRoot.name}' to prefab '{assetPath}'");
-                                    }
-                                }
-                            }
-                        }
+                        FindAndApplyPrefabOverrides(rootObj, assetPath, processedRoots);
                     }
 
                     AssetDatabase.SaveAssets();
@@ -88,6 +77,43 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
         private class SavePrefabData
         {
             public string prefabPath;
+        }
+
+        /// <summary>
+        /// Recursively find prefab instances and apply overrides to matching prefab assets.
+        /// More efficient than FindObjectsOfType for large scenes.
+        /// </summary>
+        private static void FindAndApplyPrefabOverrides(GameObject obj, string targetAssetPath, HashSet<GameObject> processedRoots)
+        {
+            if (obj == null) return;
+
+            // Check if this object is part of a prefab instance
+            if (PrefabUtility.IsPartOfPrefabInstance(obj))
+            {
+                var prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
+                if (prefabRoot != null && !processedRoots.Contains(prefabRoot))
+                {
+                    processedRoots.Add(prefabRoot);
+                    
+                    var correspondingAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabRoot);
+                    if (correspondingAsset != null)
+                    {
+                        var instanceAssetPath = AssetDatabase.GetAssetPath(correspondingAsset);
+                        if (instanceAssetPath == targetAssetPath)
+                        {
+                            // Apply overrides to this prefab
+                            PrefabUtility.ApplyPrefabInstance(prefabRoot, InteractionMode.AutomatedAction);
+                            Debug.Log($"[SavePrefabHandler] Applied overrides from instance '{prefabRoot.name}' to prefab '{targetAssetPath}'");
+                        }
+                    }
+                }
+            }
+
+            // Recursively check children
+            foreach (Transform child in obj.transform)
+            {
+                FindAndApplyPrefabOverrides(child.gameObject, targetAssetPath, processedRoots);
+            }
         }
     }
 }
