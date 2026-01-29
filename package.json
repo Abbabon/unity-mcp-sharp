@@ -1,6 +1,6 @@
 {
   "name": "com.mezookan.unity-mcp-sharp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "displayName": "Unity MCP Server",
   "description": "Model Context Protocol (MCP) server for Unity Editor integration with AI assistants. Dual-transport server supporting stdio for LLMs and WebSocket for Unity. Enables console logs, compilation, and scene manipulation.",
   "unity": "2021.3",

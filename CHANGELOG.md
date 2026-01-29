@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned Features
+- Performance monitoring and metrics
+- Advanced scene query capabilities
+- Build pipeline integration
+- Scene View overlay for MCP operations
+
+## [0.7.0] - 2026-01-29
+
 ### Added
-- **Comprehensive Prefab System:** Full prefab workflow automation with 6 new MCP tools (#6)
+- **Comprehensive Prefab System:** Full prefab workflow automation with 6 new MCP tools (#6, #10, #11, #14, #15, #16, #17, #89)
   - `unity_create_prefab` - Create prefab assets from scene GameObjects (supports variants)
   - `unity_instantiate_prefab` - Spawn prefab instances with position, rotation, scale, and parent
   - `unity_open_prefab` - Open prefabs in Prefab Mode (isolation or context mode)
@@ -16,12 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `unity_close_prefab_stage` - Close Prefab Mode with optional save
   - `unity_get_prefab_info` - Query prefab status, relationships, and modifications
   - All prefab tools added to Full profile (34 tools total, ~4k tokens)
+- **Shared GameObjectFinder Utility:** Extracted recursive GameObject search to shared utility class
+  - Finds GameObjects anywhere in hierarchy, including inactive objects
+  - Used by prefab handlers for robust object lookups
 
-### Planned Features
-- Performance monitoring and metrics
-- Advanced scene query capabilities
-- Build pipeline integration
-- Scene View overlay for MCP operations
+### Changed
+- **Token-Optimized Tool Descriptions:** All 6 prefab tool descriptions follow shortened format from v0.6.0
+- **Improved Asset Path Validation:** Better error messages when prefab assets are not found
 
 ## [0.6.0] - 2026-01-28
 
