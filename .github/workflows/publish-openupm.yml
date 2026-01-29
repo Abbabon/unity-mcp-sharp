@@ -4,16 +4,27 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      sign_package:
+        description: 'Sign the UPM package (requires Unity secrets)'
+        required: true
+        type: boolean
+        default: true
+      tag:
+        description: 'Tag to sign (e.g., v0.7.0)'
+        required: true
+        type: string
 
 env:
   UNITY_VERSION: 6000.3.0f1
 
 jobs:
-  # Job 1: Sign the package (optional - requires Unity secrets)
+  # Job 1: Sign the package (manual only - requires Unity secrets)
   sign-package:
     runs-on: ubuntu-latest
-    # Only run if Unity signing secrets are configured
-    if: ${{ vars.ENABLE_PACKAGE_SIGNING == 'true' }}
+    # Only run on manual trigger with sign_package=true and secrets configured
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.sign_package && vars.ENABLE_PACKAGE_SIGNING == 'true' }}
     outputs:
       signed: ${{ steps.sign.outcome == 'success' }}
 
@@ -23,11 +34,17 @@ jobs:
       with:
         fetch-depth: 0
         lfs: true
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
     - name: Extract version from tag
       id: version
       run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          VERSION="${{ inputs.tag }}"
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     # Cache Unity installation to speed up builds
@@ -92,7 +109,7 @@ jobs:
         path: unity-mcp-sharp-${{ steps.version.outputs.version }}.tgz
         retention-days: 30
 
-  # Job 2: Create release (always runs)
+  # Job 2: Create release (on tag push) or upload signed package (on manual trigger)
   publish:
     runs-on: ubuntu-latest
     needs: [sign-package]
@@ -106,11 +123,17 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
     - name: Extract version from tag
       id: version
       run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          VERSION="${{ inputs.tag }}"
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Extracted version: $VERSION"
 
@@ -133,7 +156,28 @@ jobs:
       with:
         name: signed-package
 
+    # For manual triggers: upload signed package to existing release
+    - name: Upload signed package to existing release
+      if: ${{ github.event_name == 'workflow_dispatch' && needs.sign-package.outputs.signed == 'true' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v${VERSION}"
+        PACKAGE_FILE="unity-mcp-sharp-${VERSION}.tgz"
+        
+        if [ -f "$PACKAGE_FILE" ]; then
+          echo "Uploading signed package to release ${TAG}..."
+          gh release upload "$TAG" "$PACKAGE_FILE" --clobber
+          echo "Signed package uploaded successfully!"
+        else
+          echo "Error: Signed package file not found"
+          exit 1
+        fi
+
+    # For tag push: create new release
     - name: Prepare release notes
+      if: ${{ github.event_name == 'push' }}
       id: release-notes
       run: |
         SIGNED_NOTE=""
@@ -149,6 +193,7 @@ jobs:
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Create GitHub Release
+      if: ${{ github.event_name == 'push' }}
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref }}
@@ -182,17 +227,27 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Notify OpenUPM (Manual Step)
+    - name: Summary
       run: |
-        echo "=========================================="
-        echo "Release v${{ steps.version.outputs.version }} created!"
-        echo "=========================================="
-        echo ""
-        echo "To publish to OpenUPM, follow these steps:"
-        echo "1. Go to https://openupm.com/docs/adding-upm-package.html"
-        echo "2. Create a PR to add your package to OpenUPM"
-        echo "3. Or use the OpenUPM CLI if you have access:"
-        echo ""
-        echo "   openupm publish com.mezookan.unity-mcp-sharp"
-        echo ""
+        VERSION="${{ steps.version.outputs.version }}"
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "=========================================="
+          echo "Signed package uploaded to release v${VERSION}!"
+          echo "=========================================="
+        else
+          echo "=========================================="
+          echo "Release v${VERSION} created!"
+          echo "=========================================="
+          echo ""
+          echo "To sign the package manually, run this workflow with:"
+          echo "  - sign_package: true"
+          echo "  - tag: v${VERSION}"
+          echo ""
+          echo "To publish to OpenUPM, follow these steps:"
+          echo "1. Go to https://openupm.com/docs/adding-upm-package.html"
+          echo "2. Create a PR to add your package to OpenUPM"
+          echo "3. Or use the OpenUPM CLI if you have access:"
+          echo ""
+          echo "   openupm publish com.mezookan.unity-mcp-sharp"
+        fi
         echo "=========================================="
