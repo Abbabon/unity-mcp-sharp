@@ -42,7 +42,7 @@ public static class ToolProfileService
     };
 
     /// <summary>
-    /// Full profile - All 28 tools including advanced/multi-editor features (~3k tokens)
+    /// Full profile - All 34 tools including advanced/multi-editor/prefab features (~4k tokens)
     /// Note: GetToolsForProfile returns null for "full" (no filtering), but we define this
     /// HashSet for GetProfileCounts() and potential future validation use.
     /// </summary>
@@ -55,7 +55,14 @@ public static class ToolProfileService
         "unity_run_menu_item",
         "unity_bring_editor_to_foreground",
         "unity_list_editors",
-        "unity_select_editor"
+        "unity_select_editor",
+        // Prefab tools
+        "unity_create_prefab",
+        "unity_instantiate_prefab",
+        "unity_open_prefab",
+        "unity_save_prefab",
+        "unity_close_prefab_stage",
+        "unity_get_prefab_info"
     };
 
     /// <summary>
