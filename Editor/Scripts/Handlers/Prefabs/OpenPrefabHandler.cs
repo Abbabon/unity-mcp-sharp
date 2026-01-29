@@ -31,11 +31,19 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     assetPath += ".prefab";
                 }
 
+                // Validate asset exists before loading
+                var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                if (string.IsNullOrEmpty(assetGuid))
+                {
+                    Debug.LogError($"[OpenPrefabHandler] Asset not found in database at '{assetPath}'. Verify the path is correct.");
+                    return;
+                }
+
                 // Load the prefab asset
                 var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (prefabAsset == null)
                 {
-                    Debug.LogError($"[OpenPrefabHandler] Prefab not found at '{assetPath}'");
+                    Debug.LogError($"[OpenPrefabHandler] Failed to load prefab at '{assetPath}'. Asset exists but may not be a valid prefab.");
                     return;
                 }
 

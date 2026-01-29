@@ -49,7 +49,6 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                         FindAndApplyPrefabOverrides(rootObj, assetPath, processedRoots);
                     }
 
-                    AssetDatabase.SaveAssets();
                     Debug.Log($"[SavePrefabHandler] Saved prefab '{assetPath}'");
                 }
                 else if (prefabStage != null)

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Newtonsoft.Json;
+using UnityMCPSharp.Editor.Utilities;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
 {
@@ -31,11 +31,19 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     assetPath += ".prefab";
                 }
 
+                // Validate asset exists before loading
+                var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                if (string.IsNullOrEmpty(assetGuid))
+                {
+                    Debug.LogError($"[InstantiatePrefabHandler] Asset not found in database at '{assetPath}'. Verify the path is correct.");
+                    return;
+                }
+
                 // Load the prefab asset
                 var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (prefabAsset == null)
                 {
-                    Debug.LogError($"[InstantiatePrefabHandler] Prefab not found at '{assetPath}'");
+                    Debug.LogError($"[InstantiatePrefabHandler] Failed to load prefab at '{assetPath}'. Asset exists but may not be a valid prefab.");
                     return;
                 }
 
@@ -61,7 +69,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 // Set parent if specified (uses recursive search to find nested/inactive objects)
                 if (!string.IsNullOrEmpty(data.parent))
                 {
-                    var parentObj = FindGameObjectByName(data.parent);
+                    var parentObj = GameObjectFinder.FindByName(data.parent);
                     if (parentObj != null)
                     {
                         instance.transform.SetParent(parentObj.transform);
@@ -115,45 +123,6 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
             public float x;
             public float y;
             public float z;
-        }
-
-        /// <summary>
-        /// Find a GameObject by name, searching all root objects and their children (including inactive).
-        /// This overcomes the limitation of GameObject.Find which only finds root-level active objects.
-        /// </summary>
-        private static GameObject FindGameObjectByName(string name)
-        {
-            // First try the fast path - root-level active objects
-            var result = GameObject.Find(name);
-            if (result != null) return result;
-
-            // Search through all scenes and their hierarchies
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                var scene = SceneManager.GetSceneAt(i);
-                if (!scene.isLoaded) continue;
-
-                foreach (var rootObj in scene.GetRootGameObjects())
-                {
-                    var found = FindInHierarchy(rootObj.transform, name);
-                    if (found != null) return found;
-                }
-            }
-
-            return null;
-        }
-
-        private static GameObject FindInHierarchy(Transform parent, string name)
-        {
-            if (parent.name == name) return parent.gameObject;
-
-            foreach (Transform child in parent)
-            {
-                var found = FindInHierarchy(child, name);
-                if (found != null) return found;
-            }
-
-            return null;
         }
     }
 }

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Newtonsoft.Json;
+using UnityMCPSharp.Editor.Utilities;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
 {
@@ -20,8 +20,14 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     return;
                 }
 
+                if (string.IsNullOrEmpty(data.assetFolderPath))
+                {
+                    Debug.LogError("[CreatePrefabHandler] Asset folder path is required");
+                    return;
+                }
+
                 // Find the GameObject in the scene (searches root and all children, including inactive)
-                var gameObject = FindGameObjectByName(data.gameObjectName);
+                var gameObject = GameObjectFinder.FindByName(data.gameObjectName);
                 if (gameObject == null)
                 {
                     Debug.LogError($"[CreatePrefabHandler] GameObject '{data.gameObjectName}' not found in scene");
@@ -132,45 +138,6 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
             public string assetFolderPath;
             public string prefabName;
             public bool createVariant;
-        }
-
-        /// <summary>
-        /// Find a GameObject by name, searching all root objects and their children (including inactive).
-        /// This overcomes the limitation of GameObject.Find which only finds root-level active objects.
-        /// </summary>
-        private static GameObject FindGameObjectByName(string name)
-        {
-            // First try the fast path - root-level active objects
-            var result = GameObject.Find(name);
-            if (result != null) return result;
-
-            // Search through all scenes and their hierarchies
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                var scene = SceneManager.GetSceneAt(i);
-                if (!scene.isLoaded) continue;
-
-                foreach (var rootObj in scene.GetRootGameObjects())
-                {
-                    var found = FindInHierarchy(rootObj.transform, name);
-                    if (found != null) return found;
-                }
-            }
-
-            return null;
-        }
-
-        private static GameObject FindInHierarchy(Transform parent, string name)
-        {
-            if (parent.name == name) return parent.gameObject;
-
-            foreach (Transform child in parent)
-            {
-                var found = FindInHierarchy(child, name);
-                if (found != null) return found;
-            }
-
-            return null;
         }
     }
 }
