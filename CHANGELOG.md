@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build pipeline integration
 - Scene View overlay for MCP operations
 
+## [0.7.1] - 2026-02-02
+
+### Fixed
+- **Prefab Handler Compilation Errors:** Fixed compilation issues in prefab handlers introduced in v0.7.0
+  - Added missing `using System;` imports across all prefab handlers
+  - Fixed `OpenPrefabHandler` using incorrect `PrefabStageUtility.OpenPrefab` overload with stageMode parameter
+  - Standardized exception handling to use `Exception` instead of `System.Exception`
+  - Added missing `.meta` files for Unity asset tracking
+
 ## [0.7.0] - 2026-01-29
 
 ### Added
