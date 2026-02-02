@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -56,21 +57,23 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 }
 
                 // Open the prefab in prefab mode
-                var stageMode = data.inContext
-                    ? PrefabStage.Mode.InContext
-                    : PrefabStage.Mode.InIsolation;
+                // Note: OpenPrefab(path) opens in isolation mode. Context mode requires a context GameObject.
+                if (data.inContext)
+                {
+                    Debug.LogWarning("[OpenPrefabHandler] Context mode requested but no context object specified. Opening in Isolation mode instead.");
+                }
 
-                var prefabStage = PrefabStageUtility.OpenPrefab(assetPath, stageMode);
+                var prefabStage = PrefabStageUtility.OpenPrefab(assetPath);
                 if (prefabStage == null)
                 {
                     Debug.LogError($"[OpenPrefabHandler] Failed to open prefab '{assetPath}' in Prefab Mode");
                     return;
                 }
 
-                var modeInfo = data.inContext ? "Context" : "Isolation";
+                var modeInfo = "Isolation";
                 Debug.Log($"[OpenPrefabHandler] Opened prefab '{assetPath}' in {modeInfo} mode");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[OpenPrefabHandler] Error: {ex.Message}\n{ex.StackTrace}");
             }

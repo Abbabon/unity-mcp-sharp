@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -88,7 +89,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
 
                 Debug.Log($"[InstantiatePrefabHandler] Instantiated prefab '{instance.name}' from '{assetPath}' at ({data.position.x}, {data.position.y}, {data.position.z})");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[InstantiatePrefabHandler] Error: {ex.Message}\n{ex.StackTrace}");
             }

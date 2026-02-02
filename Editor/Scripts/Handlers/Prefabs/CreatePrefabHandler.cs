@@ -1,7 +1,9 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
 using UnityMCPSharp.Editor.Utilities;
+using Object = UnityEngine.Object;
 
 namespace UnityMCPSharp.Editor.Handlers.Prefabs
 {
@@ -42,7 +44,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 if (!AssetDatabase.IsValidFolder(folderPath))
                 {
                     // Create folder structure recursively (RemoveEmptyEntries handles edge cases like "Prefabs//Characters")
-                    var folders = data.assetFolderPath.Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+                    var folders = data.assetFolderPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                     var currentPath = "Assets";
                     foreach (var folder in folders)
                     {
@@ -126,7 +128,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[CreatePrefabHandler] Error: {ex.Message}\n{ex.StackTrace}");
             }

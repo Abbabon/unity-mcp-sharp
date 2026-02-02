@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -43,7 +44,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 var saveInfo = data.saveBeforeClosing ? " (saved)" : " (unsaved changes discarded)";
                 Debug.Log($"[ClosePrefabStageHandler] Closed prefab stage '{prefabPath}'{saveInfo}");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[ClosePrefabStageHandler] Error: {ex.Message}\n{ex.StackTrace}");
             }

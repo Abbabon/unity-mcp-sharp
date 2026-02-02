@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -97,7 +98,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                     Debug.Log($"[GetPrefabInfoHandler] Retrieved prefab info for '{gameObject.name}': Asset={isPrefabAsset}, Instance={isPrefabInstance}, Variant={isPrefabVariant}");
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[GetPrefabInfoHandler] Error: {ex.Message}\n{ex.StackTrace}");
                 _ = client.SendResponseAsync(requestId, new { error = ex.Message });

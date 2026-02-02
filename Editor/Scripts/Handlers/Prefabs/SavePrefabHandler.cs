@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -67,7 +68,7 @@ namespace UnityMCPSharp.Editor.Handlers.Prefabs
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[SavePrefabHandler] Error: {ex.Message}\n{ex.StackTrace}");
             }
