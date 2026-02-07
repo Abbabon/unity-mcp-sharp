@@ -106,7 +106,9 @@ namespace UnityMCPSharp
                     {
 #if UNITY_EDITOR
                         // Auto-create config file on first run
-                        MCPLogger.Log("[MCPConfiguration] No configuration found. Creating default configuration file...");
+                        // NOTE: Use Debug.Log directly here, NOT MCPLogger — MCPLogger.Config
+                        // accesses this Instance property, causing infinite recursion and StackOverflow.
+                        Debug.Log("[MCPConfiguration] No configuration found. Creating default configuration file...");
                         _instance = CreateInstance<MCPConfiguration>();
 
                         var path = "Assets/Resources";
@@ -118,10 +120,10 @@ namespace UnityMCPSharp
                         var assetPath = $"{path}/MCPConfiguration.asset";
                         UnityEditor.AssetDatabase.CreateAsset(_instance, assetPath);
                         UnityEditor.AssetDatabase.SaveAssets();
-                        MCPLogger.Log($"[MCPConfiguration] Created default configuration at {assetPath}");
+                        Debug.Log($"[MCPConfiguration] Created default configuration at {assetPath}");
 #else
                         // Runtime fallback (shouldn't happen in normal use)
-                        MCPLogger.LogWarning("[MCPConfiguration] No configuration found. Using in-memory defaults.");
+                        Debug.LogWarning("[MCPConfiguration] No configuration found. Using in-memory defaults.");
                         _instance = CreateInstance<MCPConfiguration>();
 #endif
                     }
