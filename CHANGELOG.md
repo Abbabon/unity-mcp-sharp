@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build pipeline integration
 - Scene View overlay for MCP operations
 
+## [0.7.2] - 2026-02-07
+
+### Fixed
+- **StackOverflowException on Startup (Hotfix):** Fixed infinite recursion between `MCPConfiguration.Instance` and `MCPLogger` that caused a crash when no `MCPConfiguration` asset exists (e.g., first-time package install). The Instance getter now uses `Debug.Log` directly instead of `MCPLogger` to avoid the circular dependency. (#102)
+
 ## [0.7.1] - 2026-02-02
 
 ### Fixed
