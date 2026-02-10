@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "td Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/marcus/td/sse"
+    },
+    "Sidecar Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/marcus/sidecar/sse"
+    }
+  }
+}
